@@ -34,13 +34,15 @@ List<ReservationSlotItem> newReservationsOnly(List<ReservationSlotItem> original
 Widget viewListOfSelectedSlots(
     BuildContext context,
     DashboardModel model,
+    List<ReservationItem> bookedReservations,
     List<ReservationSlotItem> reservations,
     List<ReservationSlotItem> cancelledReservations,
     bool isRemovingReservation,
     String profileFacilitySlotTime,
     String profileFacilitySlotBookingLocation,
     String profileFacilitySlotBookingDate,
-    {required Function(ReservationSlotItem) didSelectReservation,
+    ListingManagerForm? listing, {
+      required Function(ReservationSlotItem) didSelectReservation,
       required Function(ReservationTimeFeeSlotItem, ReservationSlotItem) didSelectCancelResSlot,
       required Function(ReservationTimeFeeSlotItem, ReservationSlotItem) didSelectRemoveResSlot}) {
 
@@ -59,7 +61,10 @@ Widget viewListOfSelectedSlots(
 
                 ...entry.value.map((e) {
 
-                return Padding(
+                  final String? spaceBackgroundImage = listing?.listingProfileService.spaceSetting.spaceTypes.value.fold((l) => null, (r) => r.where((element) => element.uid == e.selectedSpaceId).isNotEmpty ? r.firstWhere((element) => element.uid == e.selectedSpaceId).quantity.where((element) => element.spaceId == e.selectedSportSpaceId).isNotEmpty ? r.firstWhere((element) => element.uid == e.selectedSpaceId).quantity.firstWhere((element) => element.spaceId == e.selectedSportSpaceId).photoUri : null : null);
+
+
+                  return Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Visibility(
                     visible: e.selectedSlots.isNotEmpty,
@@ -68,115 +73,24 @@ Widget viewListOfSelectedSlots(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         /// *** Present if slot items is not empty *** ///
-                        if (entry.value.map((e) => e.selectedSlots.isNotEmpty).contains(true)) IgnorePointer(
-                          ignoring: e.selectedDate.isBefore(DateTime.now().subtract(Duration(days: 1))),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(width: 0.5, color: model.paletteColor)
-                            ),
-                            child: TextButton(
-                                style: ButtonStyle(
-                                    backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                                          (Set<MaterialState> states) {
-                                        if (states.contains(MaterialState.selected) && states.contains(MaterialState.pressed) && states.contains(MaterialState.focused)) {
-                                          return model.paletteColor.withOpacity(0.1);
-                                        }
-                                        if (states.contains(MaterialState.hovered)) {
-                                          return model.paletteColor.withOpacity(0.1);
-                                        }
-                                        return Colors.transparent; // Use the component's default.
-                                      },
-                                    ),
-                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                        RoundedRectangleBorder(
-                                          borderRadius: const BorderRadius.all(Radius.circular(20)),
-                                        )
-                                    )
-                                ),
-                                onPressed: () {
-                                  didSelectReservation(e);
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(left: 8.0),
-                                              child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text('$profileFacilitySlotBookingLocation ${getSpaceTypeOptions(context).where((i) => i.uid == e.selectedSpaceId).isNotEmpty ? getSpaceTypeOptions(context).where((i) => i.uid == e.selectedSpaceId).first.spaceTitle : ''}', style: TextStyle(color: model.paletteColor, fontSize: 16.5, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                                                  Text('$profileFacilitySlotBookingDate ${DateFormat.MMMMd().format(e.selectedDate)}', style: TextStyle(color: model.paletteColor, fontSize: 25, fontWeight: FontWeight.bold, decoration: (e.selectedDate.isBefore(DateTime.now().subtract(Duration(days: 1)))) ? TextDecoration.lineThrough : null)),
-                                                  // Text(AppLocalizations.of(context)!.profileFacilitySlotBooking(e.selectedSideOption ?? ''), style: TextStyle(color: model.paletteColor)),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          if (e.selectedDate.isBefore(DateTime.now().subtract(Duration(days: 1)))) Text('Ended', style: TextStyle(color: model.disabledTextColor))
-                                        ],
-                                      ),
-
-
-                                      // for (var f in e.selectedSlots.toList()..sort((a,b) => b.slotRange.start.compareTo(a.slotRange.start)))
-                                      Wrap(
-                                        direction: Axis.horizontal,
-                                        children: e.selectedSlots.map((f) {
-
-                                          if (checkIsReservationIsCancelled(
-                                              currentRes: e,
-                                              cancelledRes: cancelledReservations,
-                                              currentSlot: f,
-                                              cancelledSlot: retrieveCancelledSlot(
-                                                  cancelledReservations, e))) {
-                                            return Container();
-                                          }
-
-                                          return Container(
-                                            height: 40,
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                crossAxisAlignment: CrossAxisAlignment.center,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Visibility(
-                                                    visible: f.slotRange.start.isAfter(DateTime.now()) && isRemovingReservation,
-                                                    child: IconButton(
-                                                        onPressed: () {
-                                                          didSelectCancelResSlot(f, e);
-                                                        },
-                                                        icon:  Icon(Icons.cancel), color: model.paletteColor, padding: EdgeInsets.zero
-                                                    ),
-                                                  ),
-                                                  SizedBox(width: 5),
-                                                  Icon(Icons.calendar_today_outlined, color: model.paletteColor,),
-                                                  SizedBox(width: 5),
-                                                  // if (retrieveHourToUpdate(e.selectedSlots, f.start.hour) == f.start.hour) Text('${AppLocalizations.of(context)!.profileFacilitySlotTime}: ${DateFormat.jm().format(f.start)} - ${DateFormat.jm().format(f.start.add(Duration(minutes: 60)))}', style: TextStyle(color: model.paletteColor, fontSize: 16.5, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis) else
-                                                  Text('$profileFacilitySlotTime: ${DateFormat.jm().format(f.slotRange.start)} - ${DateFormat.jm().format(f.slotRange.end)}', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, decoration: (f.slotRange.start.isBefore(DateTime.now())) ? TextDecoration.lineThrough : null), overflow: TextOverflow.ellipsis),
-                                                  SizedBox(width: 5),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      ).toList()
-                                    )
-
-                                ],
-                              ),
-                            )
-                          ),
-                        ),
+                        if (entry.value.map((e) => e.selectedSlots.isNotEmpty).contains(true)) reservationSlotItemWidget(
+                          context,
+                          model,
+                          e,
+                          bookedReservations,
+                          listing,
+                          cancelledReservations,
+                          isRemovingReservation,
+                          profileFacilitySlotTime,
+                          profileFacilitySlotBookingLocation,
+                          profileFacilitySlotBookingDate,
+                          spaceBackgroundImage,
+                          didSelectReservation: (e) {
+                            return didSelectReservation(e);
+                          },
+                          didSelectCancelResSlot: (f, e) {
+                            return didSelectCancelResSlot(f, e);
+                          }
                       )
                     ],
                   ),
@@ -212,7 +126,11 @@ Widget viewListOfSelectedSlots(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              ...entry.value.map((e) => Padding(
+              ...entry.value.map((e) {
+
+                final String? spaceBackgroundImage = listing?.listingProfileService.spaceSetting.spaceTypes.value.fold((l) => null, (r) => r.where((element) => element.uid == e.selectedSpaceId).isNotEmpty ? r.firstWhere((element) => element.uid == e.selectedSpaceId).quantity.where((element) => element.spaceId == e.selectedSportSpaceId).isNotEmpty ? r.firstWhere((element) => element.uid == e.selectedSpaceId).quantity.firstWhere((element) => element.spaceId == e.selectedSportSpaceId).photoUri : null : null);
+
+                return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Visibility(
                   visible: e.selectedSlots.isNotEmpty,
@@ -255,6 +173,19 @@ Widget viewListOfSelectedSlots(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
+                                        Row(
+                                          children: [
+                                            if (spaceBackgroundImage != null) CircleAvatar(
+                                              foregroundImage: Image.network(spaceBackgroundImage, fit: BoxFit.cover).image,
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Container(
+                                              height: 40,
+                                              width: 40,
+
+                                            )
+                                          ],
+                                        ),
                                         Expanded(
                                           child: Padding(
                                             padding: const EdgeInsets.only(left: 8.0),
@@ -298,28 +229,243 @@ Widget viewListOfSelectedSlots(
                                               // if (retrieveHourToUpdate(e.selectedSlots, f.start.hour) == f.start.hour) Text('${AppLocalizations.of(context)!.profileFacilitySlotTime}: ${DateFormat.jm().format(f.start)} - ${DateFormat.jm().format(f.start.add(Duration(minutes: 60)))}', style: TextStyle(color: model.paletteColor, fontSize: 16.5, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis) else
                                               Text('$profileFacilitySlotTime: ${DateFormat.jm().format(f.slotRange.start)} - ${DateFormat.jm().format(f.slotRange.end)}', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, decoration: TextDecoration.lineThrough), overflow: TextOverflow.ellipsis),
                                               SizedBox(width: 5),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  )
-                                ],
-                              ),
-                            )
+                                    )
+                                  ],
+                                ),
+                              )
+                            ),
                           ),
-                        ),
-                      )
-                    ],
+                        )
+                      ],
+                    ),
                   ),
-                ),
-              )
+                );
+              }
             )
           ],
         )
       ),
-
-
-
     ],
   );
-
 }
+
+
+Widget reservationSlotItemWidget(
+    BuildContext context,
+    DashboardModel model,
+    ReservationSlotItem e,
+    List<ReservationItem> bookedReservations,
+    ListingManagerForm? listing,
+    List<ReservationSlotItem> cancelledReservations,
+    bool isRemovingReservation,
+    String profileFacilitySlotTime,
+    String profileFacilitySlotBookingLocation,
+    String profileFacilitySlotBookingDate,
+    String? spaceImage, {
+     required Function(ReservationSlotItem) didSelectReservation,
+     required Function(ReservationTimeFeeSlotItem, ReservationSlotItem) didSelectCancelResSlot,
+    }) {
+
+   List<ReservationTimeFeeSlotItem> selectedSlots = [];
+   selectedSlots.addAll(e.selectedSlots);
+   selectedSlots.sort((a,b) => a.slotRange.start.compareTo(b.slotRange.start));
+
+  return IgnorePointer(
+    ignoring: e.selectedDate.isBefore(DateTime.now().subtract(Duration(days: 1))),
+    child: Container(
+      decoration: BoxDecoration(
+          color: model.accentColor,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(width: 0.5, color: model.paletteColor)
+      ),
+      child: TextButton(
+          style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                    (Set<MaterialState> states) {
+                  if (states.contains(MaterialState.selected) && states.contains(MaterialState.pressed) && states.contains(MaterialState.focused)) {
+                    return model.paletteColor.withOpacity(0.1);
+                  }
+                  if (states.contains(MaterialState.hovered)) {
+                    return model.paletteColor.withOpacity(0.1);
+                  }
+                  return Colors.transparent; // Use the component's default.
+                },
+              ),
+              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  )
+              )
+          ),
+          onPressed: () {
+            didSelectReservation(e);
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        if (spaceImage != null) CircleAvatar(
+                          foregroundImage: Image.network(spaceImage, fit: BoxFit.cover).image,
+                        ),
+                        const SizedBox(width: 5),
+                        Container(
+                          height: 40,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            color: model.paletteColor,
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(25),
+                            child: SvgPicture.asset(getActivityOptions(context).firstWhere((element) => element.activityId == e.selectedActivityType).iconPath ?? '', color: model.accentColor,
+                            ),
+                          )
+                        )
+                      ],
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('$profileFacilitySlotBookingLocation ${getSpaceTypeOptions(context).where((i) => i.uid == e.selectedSpaceId).isNotEmpty ? getSpaceTypeOptions(context).where((i) => i.uid == e.selectedSpaceId).first.spaceTitle : ''}', style: TextStyle(color: model.paletteColor, fontSize: 16.5, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                            Text('$profileFacilitySlotBookingDate ${DateFormat.MMMMd().format(e.selectedDate)}', style: TextStyle(color: model.paletteColor, fontSize: 25, fontWeight: FontWeight.bold, decoration: (e.selectedDate.isBefore(DateTime.now().subtract(Duration(days: 1)))) ? TextDecoration.lineThrough : null)),
+                            // Text(AppLocalizations.of(context)!.profileFacilitySlotBooking(e.selectedSideOption ?? ''), style: TextStyle(color: model.paletteColor)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (e.selectedDate.isBefore(DateTime.now().subtract(Duration(days: 1)))) Text('Ended', style: TextStyle(color: model.disabledTextColor))
+                  ],
+                ),
+
+
+
+                Wrap(
+                    direction: Axis.horizontal,
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: selectedSlots.map((f) {
+
+                      bool isReservationUnavailable = false;
+                      AvailabilityHoursSettings? availabilityHours = listing?.listingProfileService.spaceSetting.spaceTypes.value.fold((l) => null, (r) => r.where((element) => element.uid == e.selectedSpaceId).isNotEmpty ? r.firstWhere((element) => element.uid == e.selectedSpaceId).quantity.where((element) => element.spaceId == e.selectedSportSpaceId).isNotEmpty ? r.firstWhere((element) => element.uid == e.selectedSpaceId).quantity.firstWhere((element) => element.spaceId == e.selectedSportSpaceId).availabilityHoursSettings : null : null);
+                      ReservationItem? reservationItem = (bookedReservations.where((element) => element.reservationSlotItem.map((slot) => DateTime(slot.selectedDate.year, slot.selectedDate.month, slot.selectedDate.day)).contains(DateTime(e.selectedDate.year, e.selectedDate.month, e.selectedDate.day))).isNotEmpty) ? bookedReservations.where((element) => element.reservationSlotItem.map((slot) => DateTime(slot.selectedDate.year, slot.selectedDate.month, slot.selectedDate.day)).contains(DateTime(e.selectedDate.year, e.selectedDate.month, e.selectedDate.day))).first : null;
+                      // List<DayOptionItem> spaceHours = availabilityHours?.availabilityPeriod.hoursOpen.openHours ?? [];
+                      // DayOptionItem? dayHours = spaceHours.where((element) => element.dayOfWeek == f.slotRange.start.weekday).isNotEmpty ? spaceHours.firstWhere((element) => element.dayOfWeek == f.slotRange.start.weekday) : null;
+                      // int? currentSpaceStartTimeHour = availabilityHours?.startHour.toInt();
+                      // int? currentSpaceEndTimeHour = availabilityHours?.endHour.toInt();
+
+                      /// see if reservation is already booked...or if reservation is outside selected space hours, or outside of selected space start/end time.
+
+                     isReservationUnavailable =
+                          /// if slot is already booked
+                     isReservationBooked(
+                         currentRes: e,
+                         reservations: reservationItem?.reservationSlotItem ?? [],
+                         currentSlot: f,
+                         reservationTimeSlots: retrieveReservationTimeSlots(
+                         reservationItem?.reservationSlotItem ?? [], e))||
+                          /// if space has set weekday to open 24 hours - is not available if time is before the space has opened
+                     isSlotUnavailableBasedOnHours(availabilityHours, f);
+                          // if time slot has started
+
+
+                      if (isReservationBooked(
+                          currentRes: e,
+                          reservations: cancelledReservations,
+                          currentSlot: f,
+                          reservationTimeSlots: retrieveReservationTimeSlots(
+                              cancelledReservations, e))) {
+                        return Container();
+                        /// unavailable res slot
+                      } else if (isReservationUnavailable || (f.slotRange.start.isBefore(DateTime.now()))) {
+                        return Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(25),
+                            color: model.paletteColor,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Visibility(
+                                  visible: f.slotRange.start.isAfter(DateTime.now()) && isRemovingReservation,
+                                  child: IconButton(
+                                      onPressed: () {
+                                        didSelectCancelResSlot(f, e);
+                                      },
+                                      icon:  Icon(Icons.cancel), color: model.accentColor, padding: EdgeInsets.zero
+                                  ),
+                                ),
+                                SizedBox(width: 5),
+                                Icon(Icons.edit_calendar_outlined, color: model.accentColor,),
+                                SizedBox(width: 5),
+                                // if (retrieveHourToUpdate(e.selectedSlots, f.start.hour) == f.start.hour) Text('${AppLocalizations.of(context)!.profileFacilitySlotTime}: ${DateFormat.jm().format(f.start)} - ${DateFormat.jm().format(f.start.add(Duration(minutes: 60)))}', style: TextStyle(color: model.paletteColor, fontSize: 16.5, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis) else
+                                Text('$profileFacilitySlotTime: ${DateFormat.jm().format(f.slotRange.start)} - ${DateFormat.jm().format(f.slotRange.end)}', style: TextStyle(color: model.accentColor, fontWeight: FontWeight.bold, decoration: (f.slotRange.start.isBefore(DateTime.now())) ? TextDecoration.lineThrough : null), overflow: TextOverflow.ellipsis),
+                                SizedBox(width: 5),
+                                Expanded(
+                                  child: Text('Unavailble', style: TextStyle(color: model.accentColor), maxLines: 1, overflow: TextOverflow.ellipsis,)
+                                )
+                              ],
+                            ),
+                          ),
+                        );
+                      } else {
+
+                      return Container(
+                        height: 40,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Visibility(
+                                visible: f.slotRange.start.isAfter(DateTime.now()) && isRemovingReservation,
+                                child: IconButton(
+                                    onPressed: () {
+                                      didSelectCancelResSlot(f, e);
+                                    },
+                                    icon:  Icon(Icons.cancel), color: model.paletteColor, padding: EdgeInsets.zero
+                                ),
+                              ),
+                              SizedBox(width: 5),
+                              Icon(Icons.calendar_today_outlined, color: model.paletteColor,),
+                              SizedBox(width: 5),
+                              // if (retrieveHourToUpdate(e.selectedSlots, f.start.hour) == f.start.hour) Text('${AppLocalizations.of(context)!.profileFacilitySlotTime}: ${DateFormat.jm().format(f.start)} - ${DateFormat.jm().format(f.start.add(Duration(minutes: 60)))}', style: TextStyle(color: model.paletteColor, fontSize: 16.5, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis) else
+                              Text('$profileFacilitySlotTime: ${DateFormat.jm().format(f.slotRange.start)} - ${DateFormat.jm().format(f.slotRange.end)}', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, decoration: (f.slotRange.start.isBefore(DateTime.now())) ? TextDecoration.lineThrough : null), overflow: TextOverflow.ellipsis),
+                              SizedBox(width: 5),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  ).toList()
+                )
+              ],
+            ),
+          )
+      ),
+    ),
+  );
+}
+

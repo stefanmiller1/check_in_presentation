@@ -106,8 +106,9 @@ bool highlightSelectedDates(List<DateTime> selected, DateTime date) {
 Widget calendarListOfSelectableReservations(
     BuildContext context,
     DashboardModel model,
-    int durationType, List<ReservationItem>
-    reservations, UniqueId currentSpaceOption,
+    int durationType,
+    List<ReservationItem> reservations,
+    UniqueId currentSpaceOption,
     List<ReservationTimeFeeSlotItem> listOfReservationOptions,
     List<ReservationTimeFeeSlotItem> listOfSelectedReservations,
     bool isRepeatShown,

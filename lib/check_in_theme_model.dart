@@ -211,8 +211,18 @@ class DashboardModel extends Listenable {
   void changeTheme(ThemeData _themeData) {
     themeData = _themeData;
 
-    sentMessageBodyLinkTextStyle = TextStyle(
+    sentMessageBodyBoldTextStyle = TextStyle(
       color: paletteColor,
+      fontWeight: FontWeight.bold
+    );
+
+    sentMessageBodyCodeTextStyle = TextStyle(
+      color: paletteColor,
+      fontWeight: FontWeight.w400
+    );
+
+    sentMessageBodyLinkTextStyle = TextStyle(
+      color: Colors.blue,
       fontWeight: FontWeight.w500
     );
 
@@ -234,7 +244,7 @@ class DashboardModel extends Listenable {
     sentEmojiMessageTextStyle = const TextStyle(fontSize: 40);
 
     receivedMessageBodyTextStyle = TextStyle(
-      color: accentColor,
+      color: paletteColor,
       fontWeight: FontWeight.w500
     );
 
@@ -249,6 +259,23 @@ class DashboardModel extends Listenable {
     );
 
     receivedEmojiMessageTextStyle = const TextStyle(fontSize: 40);
+
+    receivedMessageBodyLinkTextStyle = TextStyle(
+      color: Colors.blue,
+      decoration: TextDecoration.underline,
+      fontWeight: FontWeight.w400
+    );
+
+    receivedMessageBodyBoldTextStyle = TextStyle(
+      color: accentColor,
+      fontWeight: FontWeight.w800
+    );
+
+
+    receivedMessageBodyCodeTextStyle = TextStyle(
+      color: accentColor,
+      fontWeight: FontWeight.w400
+    );
 
     switch (_themeData.brightness) {
       case Brightness.dark:

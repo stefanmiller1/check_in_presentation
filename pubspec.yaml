@@ -16,6 +16,10 @@ dependencies:
   syncfusion_flutter_datepicker: ^20.2.36
   dropdown_button2: ^1.7.0
   flutter_switch: ^0.3.2
+  avatar_stack: ^1.1.2
+  material_floating_search_bar: ^0.3.4
+  provider: ^6.0.1
+  implicitly_animated_reorderable_list: ^0.4.0
   phone_form_field:
     git:
       url: https://github.com/stefanmiller1/phone_form_field.git

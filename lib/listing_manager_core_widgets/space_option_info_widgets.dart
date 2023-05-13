@@ -173,8 +173,9 @@ Widget getSelectedSpaces(BuildContext context, SpaceOptionSizeDetail spaceDetail
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (spaceDetailOptions.spaceDescription != null) Text(spaceDetailOptions.spaceDescription ?? '', style: TextStyle(color: model.paletteColor), maxLines: 2, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 6),
               Text(spaceDetailOptions.spaceTitle ?? '', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
-              if (spaceDetailOptions.spaceDescription != null) Text(spaceDetailOptions.spaceDescription ?? '', style: TextStyle(color: model.disabledTextColor), maxLines: 2)
             ],
           )
         )

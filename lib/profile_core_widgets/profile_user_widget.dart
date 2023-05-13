@@ -5,6 +5,47 @@ List<String> predefinedGenderOptions() {
   return ['Female','Male','Non-Binary','Prefer Not To Say'];
 }
 
+Widget mobileUserProfileWidget(DashboardModel model, {required UserProfileModel profile, required bool showBadge, required double radius, required Function(UserProfileModel profile) onTapUserProfile}) {
+  return GestureDetector(
+    onTap: () {
+      onTapUserProfile(profile);
+    },
+    child: Stack(
+    children: [
+      if (profile.profileImage != null) ClipRRect(
+        borderRadius: BorderRadius.circular(radius/2),
+        child: SizedBox(
+          height: radius,
+          width: radius,
+          child: Image(image: profile.profileImage!.image, fit: BoxFit.cover),
+        ),
+      ),
+      if (profile.profileImage == null) Container(
+        height: radius,
+        width: radius,
+        decoration: BoxDecoration(
+            color: model.accentColor,
+            borderRadius: BorderRadius.circular(radius/2)
+        ),
+        child: Center(child: Text(profile.legalName.getOrCrash()[0], style: TextStyle(color: model.paletteColor, fontSize: model.questionTitleFontSize))),
+      ),
+      if (profile.isEmailAuth && showBadge) Positioned(
+        bottom: 0,
+        right: 0,
+        child: Container(
+          height: 30,
+          width: 30,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              color: model.webBackgroundColor
+          ),
+          child: Icon(Icons.verified, color: Colors.deepOrange, size: 20),
+          ),
+        )
+      ],
+    )
+  );
+}
 
 Widget userProfileSlotWidget({required UserProfileModel e, required Color backgroundColor, required Color textColor, required DashboardModel model}) {
   return Padding(
@@ -47,7 +88,9 @@ Widget userFirstLetterProfileNameOnly({required UserProfileModel e, required Das
         border: Border.all(color: textColor),
         borderRadius: BorderRadius.all(Radius.circular(30))
     ),
-    child: Center(child: Text((e.legalName.isValid()) ? e.legalName.value.fold((l) => '..', (r) => r)[0] : e.emailAddress.value.fold((l) => 'cannot find', (r) => r)[0], style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15))),
+    child: (e.profileImage != null && e.profileImage?.image != null) ? CircleAvatar(
+      backgroundImage: e.profileImage?.image ?? Image.asset('asset/profile-avatar.png').image,
+    ) : Center(child: Text((e.legalName.isValid()) ? e.legalName.value.fold((l) => '..', (r) => r)[0] : e.emailAddress.value.fold((l) => 'cannot find', (r) => r)[0], style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15))),
   );
 }
 
@@ -74,9 +117,14 @@ Widget userProfileNameAndEmail({required UserProfileModel e, required Color back
         SizedBox(
           width: 10,
         ),
-        IconButton(onPressed: () {
+        InkWell(
+          onTap: () {
             selectedButton(e);
-        }, tooltip: 'Message', icon: Icon(Icons.message_outlined, size: 21, color: textColor,)),
+          },
+          child: (e.profileImage != null && e.profileImage?.image != null) ? CircleAvatar(
+            backgroundImage: e.profileImage!.image,
+          ) : Image.asset('asset/profile-avatar.png'),
+        ),
         SizedBox(
           width: 10,
         ),

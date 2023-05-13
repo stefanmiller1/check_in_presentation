@@ -46,14 +46,15 @@ List<ReservationTimeFeeSlotItem> getLiveCalendarList({
   required List<PricingRuleSettings> pricingRulesSettings,
   required bool isPricingRuleFixed,
   required DateTimeRange startEnd,
-  required ReservationFormState state}) {
+  required List<DayOptionItem> hours,
+  required UniqueId spaceId}) {
 
 
   var numberFormat = NumberFormat('#,##0.00', currency);
   List<ReservationTimeFeeSlotItem> listForCalendar = [];
 
-  for (DateTime generateDates in getSlotsForDate(currentDateTime, state.currentSelectedSpaceOption?.availabilityHoursSettings?.endHour.toInt(), state.currentSelectedSpaceOption?.availabilityHoursSettings?.startHour.toInt(), durationType, [])) {
-    listForCalendar.add(ReservationTimeFeeSlotItem(fee: '${NumberFormat.simpleCurrency(locale: currency).currencySymbol}${numberFormat.format(double.parse(getPricingForSlot(pricingRulesSettings, isPricingRuleFixed, fee, state))/STRIPE_FEE_TO_CENTS)} ${NumberFormat.simpleCurrency(locale: currency).currencyName ?? ''}', slotRange: DateTimeRange(start: generateDates, end: generateDates.add(Duration(minutes: durationType)))));
+  for (DateTime generateDates in getSlotsForDate(currentDateTime, maxHour, minHour, durationType, [])) {
+    listForCalendar.add(ReservationTimeFeeSlotItem(fee: '${NumberFormat.simpleCurrency(locale: currency).currencySymbol}${numberFormat.format(double.parse(getPricingForSlot(pricingRulesSettings, isPricingRuleFixed, fee, spaceId))/STRIPE_FEE_TO_CENTS)} ${NumberFormat.simpleCurrency(locale: currency).currencyName ?? ''}', slotRange: DateTimeRange(start: generateDates, end: generateDates.add(Duration(minutes: durationType)))));
   }
 
   listForCalendar.sort((a, b) => a.slotRange.start.compareTo(b.slotRange.start));
@@ -63,13 +64,12 @@ List<ReservationTimeFeeSlotItem> getLiveCalendarList({
       model,
       durationType,
       DateTimeRange(start: startEnd.start, end: startEnd.end),
-      state.currentSelectedSpaceOption?.availabilityHoursSettings?.availabilityPeriod.hoursOpen.openHours ?? []).where((element) => element.text == 'Blocked').map((e) => e.startTime)) {
+      hours).where((element) => element.text == 'Blocked').map((e) => e.startTime)) {
 
     if (listForCalendar.map((e) => e.slotRange.start).contains(blockedDates)) {
       final index = listForCalendar.map((e) => e.slotRange.start).toList().indexOf(blockedDates);
       listForCalendar.removeAt(index);
     }
-
   }
 
   /// update inserted times based on Calendar - TimeRegions
@@ -83,6 +83,24 @@ List<ReservationTimeFeeSlotItem> getLiveCalendarList({
   for (int day in weekDaysToRemove) {
     listForCalendar.removeWhere((element) => element.slotRange.start.weekday == day);
   }
+
+  return listForCalendar;
+}
+
+/// generateCalendarBased on 24 hours
+List<ReservationTimeFeeSlotItem> getBaseCalendarList({
+    required int durationType,
+    required int minHour,
+    required int maxHour,
+    required DateTime currentDateTime,
+    }) {
+  List<ReservationTimeFeeSlotItem> listForCalendar = [];
+
+  for (DateTime generateDates in getSlotsForDate(currentDateTime, maxHour, minHour, durationType, [])) {
+    listForCalendar.add(ReservationTimeFeeSlotItem(fee: 'Added Later', slotRange: DateTimeRange(start: generateDates, end: generateDates.add(Duration(minutes: durationType)))));
+  }
+
+  listForCalendar.sort((a, b) => a.slotRange.start.compareTo(b.slotRange.start));
 
   return listForCalendar;
 }
@@ -131,9 +149,9 @@ List<ReservationTimeFeeSlotItem> getSelectedDates(List<ReservationSlotItem> rese
 /// --------------------------------------------
 /// Helper functions for Pricing and Payment Details
 /// Retrieve slot pricing
-String getPricingForSlot(List<PricingRuleSettings> pricingList, bool isDynamicPricing, String defaultPricing, ReservationFormState state) {
-  return (!(isDynamicPricing) && pricingList.map((e) => e.spaceId).contains(state.currentSelectedSpaceOption?.spaceId) ?
-  pricingList.firstWhere((element) => element.spaceId == state.currentSelectedSpaceOption?.spaceId).defaultPricingRate.toString() : defaultPricing);
+String getPricingForSlot(List<PricingRuleSettings> pricingList, bool isDynamicPricing, String defaultPricing, UniqueId spaceId) {
+  return (!(isDynamicPricing) && pricingList.map((e) => e.spaceId).contains(spaceId) ?
+  pricingList.firstWhere((element) => element.spaceId == spaceId).defaultPricingRate.toString() : defaultPricing);
 }
 
 

@@ -343,6 +343,21 @@ int getNumberOfSlotsToGo(ReservationItem reservation) {
   return total;
 }
 
+
+/// for retrieve remaining dates in a reservation - based on current time, count number of date items left in [ReservationSlotItem]
+List<DateTime> getAllRemainingDates(List<ReservationSlotItem> reservationSlots) {
+  List<DateTime> datesTogo = [];
+
+  for (ReservationSlotItem resSlot in reservationSlots) {
+  for (ReservationTimeFeeSlotItem resFeeTime in resSlot.selectedSlots.where((element) => element.slotRange.end.isAfter(DateTime.now()))) {
+    datesTogo.add(resFeeTime.slotRange.start);
+    }
+  }
+
+  return datesTogo;
+}
+
+
 /// for retrieving the total number of slots in a reservation
 int getNumberOfSlotsTotal(ReservationItem reservation) {
   int total = 0;
