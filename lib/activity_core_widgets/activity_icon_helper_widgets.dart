@@ -14,9 +14,36 @@ Widget getActivityTypeTabOption(BuildContext context, DashboardModel model, doub
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: Padding(
           padding: const EdgeInsets.only(top: 8.0),
-          child: SvgPicture.asset(getActivityOptions(context).firstWhere((element) => element.activityId == activityOption.activityId).iconPath ?? '', fit: BoxFit.fitHeight, color: (isSelected) ? model.accentColor : model.paletteColor, height: MediaQuery.of(context).size.height * .08),
+          child: SvgPicture.asset(getIconPathForActivity(context, activityOption.activityId), fit: BoxFit.fitHeight, color: (isSelected) ? model.accentColor : model.paletteColor, height: MediaQuery.of(context).size.height * .08),
         ),
       ),
+    ),
+  );
+}
+
+Widget getActivityFromReservationId(BuildContext context, DashboardModel model, double radius, ReservationItem reservation) {
+
+  final UniqueId activityId = reservation.reservationSlotItem.isNotEmpty ? reservation.reservationSlotItem.first.selectedActivityType : getActivityOptions()[0].activityId;
+
+  return CircleAvatar(
+    radius: radius,
+    backgroundColor: model.accentColor,
+    child: ClipRRect(
+        borderRadius: BorderRadius.circular(25),
+        child: SvgPicture.asset(getIconPathForActivity(context, activityId))
+    ),
+  );
+}
+
+
+Widget getActivityIconFromActivityId(BuildContext context, DashboardModel model, double radius, UniqueId activityId) {
+
+  return CircleAvatar(
+    radius: radius,
+    backgroundColor: model.accentColor,
+    child: ClipRRect(
+        borderRadius: BorderRadius.circular(25),
+        child: SvgPicture.asset(getIconPathForActivity(context, activityId))
     ),
   );
 }

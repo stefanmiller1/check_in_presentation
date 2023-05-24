@@ -328,7 +328,7 @@ Widget reservationSlotItemWidget(
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(25),
-                            child: SvgPicture.asset(getActivityOptions(context).firstWhere((element) => element.activityId == e.selectedActivityType).iconPath ?? '', color: model.accentColor,
+                            child: SvgPicture.asset(getIconPathForActivity(context, e.selectedActivityType) ?? '', color: model.accentColor,
                             ),
                           )
                         )

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:avatar_stack/avatar_stack.dart';
+import 'package:check_in_application/auth/update_services/listing_update_create_services/settings_update_create_services/activity_settings/activity_settings_form_bloc.dart';
 import 'package:check_in_application/check_in_application.dart';
 import 'package:check_in_credentials/check_in_credentials.dart';
 import 'package:check_in_domain/check_in_domain.dart';
@@ -50,6 +51,8 @@ part 'reservation_profile_core_widgets/reservation_profile_spaces.dart';
 part 'messenger_core_widgets/messenger_helper.dart';
 
 part 'listing_manager_core_widgets/space_option_info_widgets.dart';
+part 'listing_manager_core_widgets/profile_manager_dashboard.dart';
+part 'listing_manager_core_widgets/facility_listing_settings_helper.dart';
 
 part 'profile_core_widgets/profile_user_widget.dart';
 
@@ -64,5 +67,7 @@ part 'core/main_form_buttons_widget.dart';
 part 'core/list_wheel_scroll_view.dart';
 
 part 'activity_core_widgets/activity_icon_helper_widgets.dart';
+part 'activity_core_widgets/activity_instrutctor_helper_widgets.dart';
+part 'activity_core_widgets/activity_listing_settings_helper.dart';
 
 part 'location_core_widgets/search_locations_google_places.dart';
