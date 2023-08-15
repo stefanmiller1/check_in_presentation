@@ -54,7 +54,7 @@ List<ReservationTimeFeeSlotItem> getLiveCalendarList({
   List<ReservationTimeFeeSlotItem> listForCalendar = [];
 
   for (DateTime generateDates in getSlotsForDate(currentDateTime, maxHour, minHour, durationType, [])) {
-    listForCalendar.add(ReservationTimeFeeSlotItem(fee: '${NumberFormat.simpleCurrency(locale: currency).currencySymbol}${numberFormat.format(double.parse(getPricingForSlot(pricingRulesSettings, isPricingRuleFixed, fee, spaceId))/STRIPE_FEE_TO_CENTS)} ${NumberFormat.simpleCurrency(locale: currency).currencyName ?? ''}', slotRange: DateTimeRange(start: generateDates, end: generateDates.add(Duration(minutes: durationType)))));
+    listForCalendar.add(ReservationTimeFeeSlotItem(fee: '${NumberFormat.simpleCurrency(locale: currency).currencySymbol}${numberFormat.format(double.parse(getPricingForSlot(pricingRulesSettings, isPricingRuleFixed, fee, spaceId)))} ${NumberFormat.simpleCurrency(locale: currency).currencyName ?? ''}', slotRange: DateTimeRange(start: generateDates, end: generateDates.add(Duration(minutes: durationType)))));
   }
 
   listForCalendar.sort((a, b) => a.slotRange.start.compareTo(b.slotRange.start));
@@ -240,7 +240,7 @@ bool checkCompletion(ReservationStepsMarker page, ReservationFormState state) {
       break;
     case ReservationStepsMarker.selectDates:
 
-      return (getTotalPriceDouble(state.newFacilityBooking.reservationSlotItem, state.newFacilityBooking.cancelledSlotItem ?? []) != 0);
+      return (getListingTotalPriceDouble(state.newFacilityBooking.reservationSlotItem, state.newFacilityBooking.cancelledSlotItem ?? []) != 0);
     case ReservationStepsMarker.addAdditionalDetails:
       return true;
     case ReservationStepsMarker.addPaymentMethod:

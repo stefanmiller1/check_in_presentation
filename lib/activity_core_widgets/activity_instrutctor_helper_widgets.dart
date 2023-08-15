@@ -31,6 +31,7 @@ Widget instructorWidgetCard(ClassesInstructorProfile instructor, BuildContext co
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Expanded(child:
                       Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,12 +39,13 @@ Widget instructorWidgetCard(ClassesInstructorProfile instructor, BuildContext co
                           Text(e.certificateTitle.value.fold((l) => 'Add Certificate Title', (r) => r)),
                           Text(getCertificateName(context, e.certificateType), style: TextStyle(color: model.disabledTextColor)),
                         ],
+                        ),
                       ),
-                      Text(DateFormat.yMMM().format(e.dateReceived), style: TextStyle(color: model.disabledTextColor))
-                    ],
-                  ),
+                      Text(DateFormat.yMMM().format(e.dateReceived), style: TextStyle(color: model.disabledTextColor, overflow: TextOverflow.ellipsis), maxLines: 1,)
+                  ],
                 ),
               )
+            )
           ).toList() ?? [],
         ],
       ),
@@ -68,15 +70,14 @@ Widget instructorWidgetCard(ClassesInstructorProfile instructor, BuildContext co
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(e.experienceTitle.value.fold((l) => 'Add Experience', (r) => r)),
+                      Expanded(
+                        child: Text(e.experienceTitle.value.fold((l) => 'Add Experience', (r) => r), maxLines: 1, )),
                       Text('${DateFormat.y().format(e.experiencePeriod.start)} - ${DateFormat.y().format(e.experiencePeriod.end)}', style: TextStyle(color: model.disabledTextColor)),
                     ],
                   ),
                 ),
               )
           ).toList(),
-
-
         ],
       ),
     ],

@@ -542,3 +542,210 @@ Widget headerFilterItemsContainerMain(BuildContext context, DashboardModel model
     ),
   );
 }
+
+Color getBackgroundForRes(ReservationSlotState state, DashboardModel model) {
+  switch (state) {
+
+    case ReservationSlotState.requested:
+      return Colors.transparent;
+    case ReservationSlotState.confirmed:
+      return Colors.transparent;
+    case ReservationSlotState.current:
+      return model.paletteColor;
+    case ReservationSlotState.completed:
+      return Colors.transparent;
+    case ReservationSlotState.cancelled:
+      return model.disabledTextColor.withOpacity(0.4);
+    case ReservationSlotState.refunded:
+      return Colors.transparent;
+  }
+}
+
+bool isSelectedReservation(DateTime selectedDate, DateTime slotTime) {
+  return (selectedDate == slotTime);
+}
+
+Widget getDetailListOfReservations(
+    BuildContext context,
+    DashboardModel model,
+    ReservationItem reservation,
+    DateTime currentSelectedDate,
+    int durationType,
+    MapEntry<String, List<ReservationSlotItem>> entry,
+    {required Function(ReservationSlotItem) didSelectChange}
+    ) {
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+
+      for (var e in entry.value.toList()..sort((a,b) => b.selectedDate.compareTo(a.selectedDate)))
+
+        Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: InkWell(
+            onTap: () {
+              didSelectChange(e);
+            },
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: model.profileContainerWidth,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                    color: getBackgroundForRes(reservation.reservationState, model),
+                    border: (reservation.reservationState == ReservationSlotState.requested) ? null : Border.all(width: 1, color: isReservationSlotItemComplete(e) ? model.disabledTextColor : model.paletteColor),
+                  ),
+                  child: DottedBorder(
+                    color: (reservation.reservationState == ReservationSlotState.requested) ? model.paletteColor : Colors.transparent,
+                    strokeWidth: 1.5,
+                    dashPattern: [2,5],
+                    radius: Radius.circular(20),
+                    borderType: BorderType.RRect,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: IgnorePointer(
+                        ignoring: isReservationSlotItemComplete(e),
+                        child: TextButton(
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                                    (Set<MaterialState> states) {
+                                  if (states.contains(MaterialState.selected) && states.contains(MaterialState.pressed) && states.contains(MaterialState.focused)) {
+                                    return model.paletteColor.withOpacity(0.1);
+                                  }
+                                  if (states.contains(MaterialState.hovered)) {
+                                    return (reservation.reservationState == ReservationSlotState.cancelled) ? Colors.transparent : model.paletteColor.withOpacity(0.1);
+                                  }
+                                  return Colors.transparent; // Use the component's default.
+                                },
+                              ),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: const BorderRadius.all(Radius.circular(20)),
+                                  )
+                              )
+                          ),
+                          onPressed: () {
+                            didSelectChange(e);
+                            // selectedReservation(reservation.reservationId);
+                          },
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+
+                                SizedBox(height: 10),
+
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: isReservationSlotItemComplete(e) ? model.disabledTextColor : model.paletteColor, width: 1),
+                                        borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.only(right: 10.0),
+                                              child: Icon(getIconDataForActivity(context, e.selectedActivityType), color: model.disabledTextColor),
+                                            ),
+                                            Text(getTitleForActivityOption(context, e.selectedActivityType) ?? '', style: TextStyle(color: isReservationSlotItemComplete(e) ? model.disabledTextColor : model.paletteColor, fontWeight: FontWeight.bold))
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+
+                                  ],
+                                ),
+                                SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(left: 8.0),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+
+                                            Text('${AppLocalizations.of(context)!.profileFacilitySlotBookingLocation} ${getSpaceTypeOptions(context).where((i) => i.uid == e.selectedSpaceId).isNotEmpty ? getSpaceTypeOptions(context).where((i) => i.uid == e.selectedSpaceId).first.spaceTitle : ''}', style: TextStyle(color: isReservationSlotItemComplete(e) ? model.disabledTextColor : model.paletteColor, fontSize: 16.5, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                                            Text('Date: ${DateFormat.MMMMEEEEd().format(e.selectedDate)}', style: TextStyle(color: isReservationSlotItemComplete(e) ? model.disabledTextColor : model.paletteColor, fontSize: 18, fontWeight: FontWeight.bold)),
+                                            // Text('Type: ${e.selectedSlotInterval.toString()} minute time slot', style: TextStyle(color: model.paletteColor)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            height: 30,
+                                            width: 40,
+                                            decoration: BoxDecoration(
+                                              color: (e.selectedSideOption == 'TopHalf' || e.selectedSideOption == 'Full') ? model.paletteColor : model.accentColor,
+                                              borderRadius: BorderRadius.only(topRight: Radius.circular(15), topLeft: Radius.circular(15)),
+                                            ),
+                                          ),
+                                          SizedBox(height: 5),
+                                          Container(
+                                            height: 30,
+                                            width: 40,
+                                            decoration: BoxDecoration(
+                                              color: (e.selectedSideOption == 'BottomHalf' || e.selectedSideOption == 'Full') ? model.paletteColor : model.accentColor,
+                                              borderRadius: BorderRadius.only(bottomRight: Radius.circular(15), bottomLeft: Radius.circular(15)),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                ///number of slots
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Number of Slots: ', style: TextStyle(color: isReservationSlotItemComplete(e) ? model.disabledTextColor : model.paletteColor)),
+
+                                      for (var f in e.selectedSlots.toList()..sort((a,b) => b.slotRange.start.compareTo(a.slotRange.start)))
+
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.all(3.0),
+                                              child: getReservationContainerForState(context, AppLocalizations.of(context)!.profileFacilitySlotTime, retrieveReservationSlotState(reservation.reservationState, f.slotRange.start, durationType), model, isSelectedReservation(currentSelectedDate, f.slotRange.start), f.fee, f.slotRange),
+                                            ),
+                                            Text(getReservationStateTitle(getBookingSlotState(retrieveReservationSlotState(reservation.reservationState, f.slotRange.start, durationType).toString())), style: TextStyle(color:  isReservationSlotItemComplete(e) ? model.disabledTextColor : model.paletteColor, fontWeight: FontWeight.bold))
+                                          ],
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                            SizedBox(height: 10,)
+                          ]
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      )
+    ],
+  );
+}

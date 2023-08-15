@@ -1,6 +1,15 @@
 part of check_in_presentation;
 
-Widget getPaymentItemWidget(BuildContext context, DashboardModel model, CardItem e, bool selected, bool isEditing, bool isDefault, bool isSavingAsDefault, bool removeIsSelected, {required Function(CardItem) selectedCard, required Function(bool) selectedSetDefault, required Function(CardItem) saveNewDefault, required Function(CardItem) selectedRemove}) {
+Widget getPaymentItemWidget(
+    BuildContext context,
+    DashboardModel model,
+    CardItem e,
+    bool selected,
+    bool isEditing,
+    bool isDefault,
+    bool isSavingAsDefault,
+    bool showRemove,
+    bool removeIsSelected, {required Function(CardItem) selectedCard, required Function(bool) selectedSetDefault, required Function(CardItem) saveNewDefault, required Function(CardItem) selectedRemove}) {
 
   return Row(
     children: [
@@ -78,7 +87,7 @@ Widget getPaymentItemWidget(BuildContext context, DashboardModel model, CardItem
               ),
             ),
 
-            AnimatedContainer(
+            if (showRemove) AnimatedContainer(
               duration: Duration(milliseconds: 300),
               curve: Curves.easeInOut,
               height: (selected && !isDefault) ? 60 : 0,
@@ -107,7 +116,7 @@ Widget getPaymentItemWidget(BuildContext context, DashboardModel model, CardItem
               ),
             ),
 
-            if (selected) InkWell(
+            if (selected && showRemove) InkWell(
               onTap: () {
                 saveNewDefault(e);
               },
@@ -131,7 +140,7 @@ Widget getPaymentItemWidget(BuildContext context, DashboardModel model, CardItem
         ),
       ),
       if (isEditing) const SizedBox(width: 15),
-      InkWell(
+      if (showRemove) InkWell(
         onTap: () {
           selectedRemove(e);
         },
@@ -159,4 +168,118 @@ Widget getPaymentHistoryOnly(BuildContext context, DashboardModel model, Payment
   return Container(
 
   );
+}
+
+
+Widget labelContainerForPricing(DashboardModel model, int? numberOfLines, TextEditingController controller, {required Function(String) didUpdateLabel, required String hintLabel}) {
+  return TextField(
+    controller: controller,
+    maxLines: numberOfLines,
+    style: TextStyle(color: model.paletteColor),
+    // keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    inputFormatters: [
+      FilteringTextInputFormatter.digitsOnly,
+      // FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,3}')),
+    ],
+    decoration: InputDecoration(
+      hintStyle: TextStyle(color: model.disabledTextColor),
+      hintText: hintLabel,
+      errorStyle: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+        color: model.paletteColor,
+      ),
+      // prefixIcon: Icon(Icons.home_outlined, color: widget.model.disabledTextColor),
+      // labelText: "Email",
+      filled: true,
+      fillColor: model.accentColor,
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(25.0),
+        borderSide: BorderSide(
+          width: 2,
+          color: model.paletteColor,
+        ),
+      ),
+      focusedBorder:  OutlineInputBorder(
+        borderRadius: BorderRadius.circular(25.0),
+        borderSide: BorderSide(
+          color: model.paletteColor,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(25.0),
+        borderSide: const BorderSide(
+          width: 0,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(25.0),
+        borderSide: BorderSide(
+          color: model.disabledTextColor,
+          width: 0,
+        ),
+      ),
+    ),
+    autocorrect: false,
+    onChanged: (value) {
+      didUpdateLabel(value);
+    },
+  );
+}
+
+class ThousandsDividerInputFormatter extends TextInputFormatter {
+  final int numberDivider;
+
+  ThousandsDividerInputFormatter(this.numberDivider);
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    final int oldValueLength = oldValue.text.length;
+    final int newValueLength = newValue.text.length;
+
+    if (newValueLength > oldValueLength) {
+      // User is typing a character
+      final int selectionIndex = newValue.selection.end;
+
+      String newString = newValue.text.replaceAll(',', '');
+      final double parsedValue = double.tryParse(newString) ?? 0;
+      final double dividedValue = parsedValue / numberDivider;
+
+      final List<String> parts = dividedValue.toStringAsFixed(3).split('.');
+      final String wholePart = parts[0];
+      final String decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
+
+      newString = '$wholePart$decimalPart';
+
+      return TextEditingValue(
+        text: newString,
+        selection: TextSelection.collapsed(
+          offset: selectionIndex + (newString.length - newValueLength),
+        ),
+      );
+    } else if (newValueLength < oldValueLength) {
+      // User is deleting a character
+      final int selectionIndex = newValue.selection.end;
+
+      String newString = newValue.text.replaceAll(',', '');
+      final double parsedValue = double.tryParse(newString) ?? 0;
+      final double dividedValue = parsedValue / numberDivider;
+
+      final List<String> parts = dividedValue.toStringAsFixed(3).split('.');
+      final String wholePart = parts[0];
+      final String decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
+
+      newString = '$wholePart$decimalPart';
+
+      return TextEditingValue(
+        text: newString,
+        selection: TextSelection.collapsed(
+          offset: selectionIndex + (newString.length - newValueLength),
+        ),
+      );
+    }
+
+    return newValue;
+  }
 }

@@ -5,18 +5,21 @@ Widget getActivityTypeTabOption(BuildContext context, DashboardModel model, doub
     height: height,
     iconMargin: EdgeInsets.zero,
     icon: Container(
-      width: 100,
+      width: height,
       decoration: BoxDecoration(
         color: (isSelected) ? model.paletteColor : model.disabledTextColor.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(50),
+        borderRadius: BorderRadius.circular(200),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(200),
         child: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: SvgPicture.asset(getIconPathForActivity(context, activityOption.activityId), fit: BoxFit.fitHeight, color: (isSelected) ? model.accentColor : model.paletteColor, height: MediaQuery.of(context).size.height * .08),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: SvgPicture.asset(getIconPathForActivity(context, activityOption.activityId), fit: BoxFit.cover, color: (isSelected) ? model.accentColor : model.paletteColor, height: height),
+            ),
         ),
-      ),
+      )
     ),
   );
 }

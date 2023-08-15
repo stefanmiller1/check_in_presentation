@@ -469,3 +469,134 @@ Widget reservationSlotItemWidget(
   );
 }
 
+Widget reservationSelectionHeader(
+    BuildContext context,
+    DashboardModel model,
+    bool isPerSlotBased,
+    ReservationSlotItem? selectedRes,
+    ReservationTimeFeeSlotItem? selectedResTimeSlot,
+    Map<String, List<ReservationSlotItem>> reservations,
+    {required Function(ReservationSlotItem) didSelectRes,
+    required Function(ReservationSlotItem, ReservationTimeFeeSlotItem) didSelectResTime,
+    }) {
+  return SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        for (var entry in reservations.entries.toList()..sort((a,b) => b.key.compareTo(a.key)))
+
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(getSpaceTypeOptions(context).where((i) => i.uid.getOrCrash() == entry.key).first.spaceTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: model.questionTitleFontSize)),
+            const SizedBox(height: 8),
+
+           if (!(isPerSlotBased)) Row(
+              children: entry.value.map(
+                      (e) {
+                        late bool isSelected = e == selectedRes;
+
+                          return InkWell(
+                            onTap: () {
+                              didSelectRes(e);
+                            },
+                            child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(25),
+                              border: Border.all(color: (isSelected) ? model.paletteColor : Colors.transparent),
+                            ),
+                              child: Padding(
+                                  padding: const EdgeInsets.all(3.0),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                        color: model.paletteColor.withOpacity(0.075),
+                                        borderRadius: BorderRadius.all(Radius.circular(25),
+                                        )
+                                    ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(9.0),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text('${DateFormat.MMMEd().format(e.selectedDate)} X ${e.selectedSlots.length}', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold)),
+                                        const SizedBox(width: 5),
+                                        Icon(Icons.calendar_today_outlined, size: 20, color: model.paletteColor),
+                              ],
+                            ),
+                          )
+                        )
+                      )
+                    )
+                  );
+                }
+              ).toList()
+            ),
+
+
+            if (isPerSlotBased) Row(
+              children: entry.value.map(
+                      (e) {
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+
+                            Text(DateFormat.MMMEd().format(e.selectedDate), style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 10),
+                            ...e.selectedSlots.map((f) {
+
+                              bool isSelected = f == selectedResTimeSlot;
+
+                                return InkWell(
+                                  onTap: () {
+                                    print(f);
+                                    didSelectResTime(e,f);
+                                  },
+                                  child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.transparent,
+                                        borderRadius: BorderRadius.circular(25),
+                                        border: Border.all(color: (isSelected) ? model.paletteColor : Colors.transparent),
+                                      ),
+                                      child: Padding(
+                                          padding: const EdgeInsets.all(3.0),
+                                          child: Container(
+                                              decoration: BoxDecoration(
+                                                  color: model.paletteColor.withOpacity(0.075),
+                                                  borderRadius: BorderRadius.all(Radius.circular(25),
+                                                  )
+                                              ),
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(9.0),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Text('${DateFormat.jm().format(f.slotRange.start)} - ${DateFormat.jm().format(f.slotRange.end)}', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold)),
+                                                    const SizedBox(width: 5),
+                                                    Icon(Icons.calendar_today_outlined, size: 20, color: model.paletteColor),
+                                            ],
+                                          ),
+                                        )
+                                      )
+                                    )
+                                  )
+                                );
+                            }).toList()
+                          ],
+                        );
+                      }
+              ).toList(),
+            )
+          ],
+        ),
+      ]
+    )
+  );
+
+
+}

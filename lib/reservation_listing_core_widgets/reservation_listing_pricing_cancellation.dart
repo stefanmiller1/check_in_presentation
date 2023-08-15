@@ -43,8 +43,8 @@ Widget getPricingDetails(DashboardModel model, List<ReservationSlotItem> allSlot
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(child: Text('${completeTotalPriceWithCurrency((getTotalPriceDouble(allSlots, cancelledSlots)/numberOfSlots), currency)} X $numberOfSlots Slots', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,))),
-              Text(completeTotalPriceWithCurrency(getTotalPriceDouble(allSlots, cancelledSlots), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold))
+              Expanded(child: Text('${completeTotalPriceWithCurrency((getListingTotalPriceDouble(allSlots, cancelledSlots)/numberOfSlots), currency)} X $numberOfSlots Slots', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,))),
+              Text(completeTotalPriceWithCurrency(getListingTotalPriceDouble(allSlots, cancelledSlots), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold))
             ],
           ),
         ),
@@ -55,7 +55,7 @@ Widget getPricingDetails(DashboardModel model, List<ReservationSlotItem> allSlot
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(child: Text('Service Fee', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,))),
-              Text(completeTotalPriceWithCurrency((getTotalPriceDouble(allSlots, cancelledSlots)*CICOReservationPercentageFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+              Text(completeTotalPriceWithCurrency((getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOReservationPercentageFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -66,7 +66,7 @@ Widget getPricingDetails(DashboardModel model, List<ReservationSlotItem> allSlot
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(child: Text('Taxes & Fees HST (13% - Ontario,Canada)', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,))),
-              Text(completeTotalPriceWithCurrency(getTotalPriceDouble(allSlots, cancelledSlots)*CICOTaxesFee, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+              Text(completeTotalPriceWithCurrency(getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOTaxesFee, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -78,9 +78,9 @@ Widget getPricingDetails(DashboardModel model, List<ReservationSlotItem> allSlot
           children: [
             Text('Total', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,)),
             SizedBox(width: 15),
-            Text(completeTotalPriceWithCurrency((getTotalPriceDouble(allSlots, cancelledSlots) +
-                    getTotalPriceDouble(allSlots, cancelledSlots)*CICOReservationPercentageFee +
-                    getTotalPriceDouble(allSlots, cancelledSlots)*CICOTaxesFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+            Text(completeTotalPriceWithCurrency((getListingTotalPriceDouble(allSlots, cancelledSlots) +
+                getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOReservationPercentageFee +
+                getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOTaxesFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
           ],
         )
       ],
@@ -96,7 +96,7 @@ Widget getPricingCancellationForNoCancellations(BuildContext context, DashboardM
         children: [
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
-                child: Text('This Reservation is final - once completed, you cannot cancel or make any changes.', style: TextStyle(color: model.disabledTextColor),
+                child: Text('This Purchase is final - once completed, you cannot cancel or make any changes.', style: TextStyle(color: model.disabledTextColor),
               ),
             )
       ],
@@ -142,27 +142,27 @@ Widget getPricingCancellationWithChangesCancellation(BuildContext context, Dashb
 }
 
 bool checkIfReservationSelected(List<ReservationSlotItem> allSlots,  List<ReservationSlotItem> cancelledSlots) {
-  return ((allSlots.isNotEmpty) && getTotalPriceDouble(allSlots, cancelledSlots) != 0);
+  return ((allSlots.isNotEmpty) && getListingTotalPriceDouble(allSlots, cancelledSlots) != 0);
 }
 
 Widget getTotalPriceOnly(DashboardModel model, List<ReservationSlotItem> allSlots, List<ReservationSlotItem> cancelledSlots, int numberOfSlots, String currency) {
-  return Text(completeTotalPriceWithCurrency((getTotalPriceDouble(allSlots, cancelledSlots) + getTotalPriceDouble(allSlots, cancelledSlots)*CICOReservationPercentageFee + getTotalPriceDouble(allSlots, cancelledSlots)*CICOTaxesFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold));
+  return Text(completeTotalPriceWithCurrency((getListingTotalPriceDouble(allSlots, cancelledSlots) + getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOReservationPercentageFee + getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOTaxesFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold));
 }
 
-Widget getPricingWithFeeCancellation(BuildContext context, DashboardModel model, List<ReservationSlotItem> reservation, List<FeeBasedCancellation> feePercentages) {
+Widget getPricingWithFeeCancellation(BuildContext context, DashboardModel model, List<DateTime> reservation, List<FeeBasedCancellation> feePercentages) {
   return Container(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (reservation.isNotEmpty) for (var slot in reservation.toList()..sort((a,b) => b.selectedDate.compareTo(a.selectedDate))..first)
+        if (reservation.isNotEmpty) for (var slot in reservation.toList()..sort((a,b) => b.compareTo(a))..first)
           Visibility(
           // visible: feePercentages.map((e) => timeUntil.subtract(Duration(days: e.daysBeforeStart))).where((element) => element.isAfter(DateTime.now())).isNotEmpty,
             child: Padding(
               padding: const EdgeInsets.only(left: 8.0),
               child: Column(
                 children: feePercentages.map(
-                        (e) => Text('Cancel before ${DateFormat.yMMMd().format(slot.selectedDate.subtract(Duration(days: e.daysBeforeStart)))} and receive ${e.percentage}% back', style: TextStyle(color: model.disabledTextColor))
+                        (e) => Text('Cancel before ${DateFormat.yMMMd().format(slot.subtract(Duration(days: e.daysBeforeStart)))} and receive ${e.percentage}% back', style: TextStyle(color: model.disabledTextColor))
               ).toList()
             ),
           )
@@ -172,20 +172,20 @@ Widget getPricingWithFeeCancellation(BuildContext context, DashboardModel model,
   );
 }
 
-Widget getPricingWithTimeCancellation(BuildContext context, DashboardModel model, List<ReservationSlotItem> reservation, List<TimeBasedCancellation> timeUntil) {
+Widget getPricingWithTimeCancellation(BuildContext context, DashboardModel model, List<DateTime> reservation, List<TimeBasedCancellation> timeUntil) {
   return Container(
     child:  Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (reservation.isNotEmpty) for (var slot in reservation.toList()..sort((a,b) => b.selectedDate.compareTo(a.selectedDate))..first)
+        if (reservation.isNotEmpty) for (var slot in reservation.toList()..sort((a,b) => b.compareTo(a))..first)
         Visibility(
           // visible: slot.isAfter(DateTime.now()),
           child: Padding(
             padding: const EdgeInsets.only(left: 8.0),
             child: Column(
               children: timeUntil.map(
-                    (e) => Text('Cancel or make Changes anytime before ${DateFormat.yMMMd().format(slot.selectedDate.subtract(Duration(days: e.intervalDuration ?? 0)))}- and get a full Refund.', style: TextStyle(color: model.disabledTextColor)),
+                    (e) => Text('Cancel or make Changes anytime before ${DateFormat.yMMMd().format(slot.subtract(Duration(days: e.intervalDuration ?? 0)))}- and get a full Refund.', style: TextStyle(color: model.disabledTextColor)),
               ).toList()
             ),
           ),

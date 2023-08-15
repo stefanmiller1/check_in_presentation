@@ -5,6 +5,76 @@ List<String> predefinedGenderOptions() {
   return ['Female','Male','Non-Binary','Prefer Not To Say'];
 }
 
+Widget retrieveUserProfile(String profileId, DashboardModel model, Color? backgroundColor, Color? textColor, double? textSize, {required UserProfileType profileType, required Function(UserProfileModel) selectedButton}) {
+  return BlocProvider(create: (context) => getIt<UserProfileWatcherBloc>()..add(UserProfileWatcherEvent.watchSelectedUserProfileStarted(profileId)),
+    child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
+        builder: (context, state) {
+          return state.maybeMap(
+              loadInProgress: (_) => (profileType != UserProfileType.firstLetterNameOnlyProfile) ? progressOverlay(model) : Container(),
+              loadSelectedProfileFailure: (_) => couldNotRetrieveProfile(model),
+              loadSelectedProfileSuccess: (item) {
+
+                switch (profileType) {
+                  case UserProfileType.searchProfile:
+                    return userProfileWidget(
+                        e: item.profile,
+                        model: model,
+                        buttonTitle: AppLocalizations.of(context)!.remove,
+                        selectedButton: (profile) {
+                          selectedButton(profile);
+                        }
+                    );
+                  case UserProfileType.slotProfile:
+                    return userProfileSlotWidget(
+                      e: item.profile,
+                      backgroundColor: backgroundColor ?? Colors.transparent,
+                      textColor: textColor ?? model.paletteColor,
+                      model: model,
+                    );
+                  case UserProfileType.firstLetterNameOnlyProfile:
+                    return userProfileNameOnly(
+                        e: item.profile,
+                        model: model,
+                        textColor: textColor ?? model.paletteColor
+                    );
+                  case UserProfileType.nameOnlyProfile:
+                    return userProfileFullNameOnly(
+                        e: item.profile,
+                        model: model,
+                        textColor: textColor ?? model.paletteColor,
+                        fontSize: textSize ?? model.questionTitleFontSize
+                    );
+                  case UserProfileType.firstLetterOnlyProfile:
+                    return userFirstLetterProfileNameOnly(
+                        e: item.profile,
+                        backgroundColor: backgroundColor ?? Colors.transparent,
+                        textColor: textColor ?? model.paletteColor,
+                        model: model
+                    );
+                  case UserProfileType.nameAndEmail:
+                    return userProfileNameAndEmail(
+                        e: item.profile,
+                        model: model,
+                        backgroundColor: backgroundColor ?? Colors.transparent,
+                        textColor: textColor ?? model.paletteColor,
+                        selectedButton: (profile) {
+                          selectedButton(profile);
+                        }
+                    );
+                  case UserProfileType.listingProfile:
+                    return listingProfileWidget(
+                        e: item.profile,
+                        model: model
+                    );
+                }
+              },
+              orElse: () => couldNotRetrieveProfile(model)
+          );
+        }
+    ),
+  );
+}
+
 Widget mobileUserProfileWidget(DashboardModel model, {required UserProfileModel profile, required bool showBadge, required double radius, required Function(UserProfileModel profile) onTapUserProfile}) {
   return GestureDetector(
     onTap: () {
@@ -89,7 +159,7 @@ Widget userFirstLetterProfileNameOnly({required UserProfileModel e, required Das
         borderRadius: BorderRadius.all(Radius.circular(30))
     ),
     child: (e.profileImage != null && e.profileImage?.image != null) ? CircleAvatar(
-      backgroundImage: e.profileImage?.image ?? Image.asset('asset/profile-avatar.png').image,
+      backgroundImage: e.profileImage?.image ?? Image.asset('assets/profile-avatar.png').image,
     ) : Center(child: Text((e.legalName.isValid()) ? e.legalName.value.fold((l) => '..', (r) => r)[0] : e.emailAddress.value.fold((l) => 'cannot find', (r) => r)[0], style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15))),
   );
 }
@@ -121,9 +191,9 @@ Widget userProfileNameAndEmail({required UserProfileModel e, required Color back
           onTap: () {
             selectedButton(e);
           },
-          child: (e.profileImage != null && e.profileImage?.image != null) ? CircleAvatar(
-            backgroundImage: e.profileImage!.image,
-          ) : Image.asset('asset/profile-avatar.png'),
+          child: CircleAvatar(
+            backgroundImage: (e.profileImage != null && e.profileImage?.image != null) ? e.profileImage!.image : Image.asset('assets/profile-avatar.png').image,
+          ),
         ),
         SizedBox(
           width: 10,

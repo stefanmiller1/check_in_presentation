@@ -45,8 +45,8 @@ class _LocationSearchControllerWidgetState extends State<AddressSearchController
           // width: widget.model.mainContentWidth! - 100,
           duration: const Duration(milliseconds: 300),
           curve: Curves.fastOutSlowIn,
-          child: ChangeNotifierProvider(create: (_) => AutoCompleteSearchModel(),
-              child: Consumer<AutoCompleteSearchModel>(
+          child: ChangeNotifierProvider(create: (_) => facade.AutoCompleteSearchModel(),
+              child: Consumer<facade.AutoCompleteSearchModel>(
                   builder: (context, model, _) {
                     return searchBarMenuItem(context, model);
                   }
@@ -57,7 +57,7 @@ class _LocationSearchControllerWidgetState extends State<AddressSearchController
   }
 
 
-  Widget searchBarMenuItem(BuildContext context, AutoCompleteSearchModel model) {
+  Widget searchBarMenuItem(BuildContext context, facade.AutoCompleteSearchModel model) {
     if (controller?.isClosed ?? true) {
       model.endLoading();
     }
@@ -113,7 +113,7 @@ class _LocationSearchControllerWidgetState extends State<AddressSearchController
             color: Colors.white,
             elevation: 4.0,
             borderRadius: BorderRadius.circular(8),
-            child: ImplicitlyAnimatedList<LocationSearchModel>(
+            child: ImplicitlyAnimatedList<facade.LocationSearchModel>(
               shrinkWrap: true,
               padding: EdgeInsets.zero,
               physics: const NeverScrollableScrollPhysics(),
@@ -180,12 +180,12 @@ class _LocationSearchControllerWidgetState extends State<AddressSearchController
   }
 
 
-  Widget buildItem(BuildContext context, LocationSearchModel location, AutoCompleteSearchModel model) {
+  Widget buildItem(BuildContext context, facade.LocationSearchModel location, facade.AutoCompleteSearchModel model) {
 
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
-    final model = Provider.of<AutoCompleteSearchModel>(context, listen: true);
+    final model = Provider.of<facade.AutoCompleteSearchModel>(context, listen: true);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
