@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_switch/flutter_switch.dart';
+import 'package:glowy_borders/glowy_borders.dart';
 import 'package:implicitly_animated_reorderable_list_2/implicitly_animated_reorderable_list_2.dart';
 import 'package:implicitly_animated_reorderable_list_2/transitions.dart';
 import 'package:intl/intl.dart';
@@ -47,7 +48,10 @@ import 'core/image_picker_core.dart' if (dart.library.html) 'core/image_picker_c
 import 'package:auth_buttons/auth_buttons.dart';
 import 'core/web_core/payment_core/widgets/embedded_stripe_checkout.dart' if (dart.library.html) 'core/web_core/payment_core/widgets/embedded_stripe_checkout_for_web.dart';
 import 'package:lottie/lottie.dart';
-
+import 'package:add_to_wallet/add_to_wallet.dart';
+import 'package:flutter_wallet_card/flutter_wallet_card.dart';
+import 'package:flutter_wallet_card/core/passkit.dart';
+import 'package:pass_flutter/pass_flutter.dart';
 
 part 'check_in_theme_model.dart';
 part 'misc.dart';
@@ -91,6 +95,9 @@ part 'core/web_core/payment_core/check_out_payment_helper.dart';
 part 'core/create_new_main.dart';
 part 'core/completed_task_animation_widget.dart';
 part 'core/web_core/payment_core/widgets/payment_processing_widget.dart';
+part 'core/check_out_view_widget.dart';
+part 'core/animated_complete_button.dart';
+part 'core/on_boarding_pop_over_widget.dart';
 
 part 'activity_core_widgets/activity_icon_helper_widgets.dart';
 part 'activity_core_widgets/activity_instrutctor_helper_widgets.dart';
@@ -106,17 +113,31 @@ part 'activity_core_widgets/activity_general_rules_widget.dart';
 part 'activity_core_widgets/activity_attendee_type_widget.dart';
 part 'activity_core_widgets/activity_ticket_attendee_widget.dart';
 part 'activity_core_widgets/pop_over_main_container_widgets/create_new_vendor/create_new_vendor_merchant.dart';
+part 'activity_core_widgets/pop_over_main_container_widgets/create_new_vendor/vendor_merchant_helper.dart';
 part 'activity_core_widgets/pop_over_main_container_widgets/create_new_partner/create_new_partner.dart';
 part 'activity_core_widgets/pop_over_main_container_widgets/create_new_instructor/create_new_instructor_form.dart';
+part 'activity_core_widgets/pop_over_main_container_widgets/create_new_instructor/instructor_helper.dart';
 part 'activity_core_widgets/pop_over_main_container_widgets/create_new_instructor/create_new_experience.dart';
 part 'activity_core_widgets/pop_over_main_container_widgets/create_new_instructor/create_new_certification.dart';
 part 'activity_core_widgets/pop_over_main_container_widgets/create_new_ticket_holder/create_new_ticket_holder_attendee.dart';
 part 'activity_core_widgets/pop_over_main_container_widgets/create_new_ticket_holder/activity_ticket_pricing_cancellation_helper.dart';
+part 'activity_core_widgets/pop_over_main_container_widgets/present_ticket/present_attendee_ticket_widget.dart';
+part 'activity_core_widgets/pop_over_main_container_widgets/create_new_attendee/create_new_activity_attendee.dart';
+part 'activity_core_widgets/pop_over_main_container_widgets/create_new_attende_helper.dart';
+part 'activity_core_widgets/pop_over_main_container_widgets/request_partnership_attendee/request_new_partner_attendee.dart';
+
+
+part 'attendee_core_widgets/attendee_reservation_settings_helper.dart';
+part 'attendee_core_widgets/attendee_profile_helper.dart';
 
 part 'account/login_signup_core.dart';
+part 'account/login_forgot_password_email.dart';
+part 'account/login_email_core.dart';
 
 part 'location_core_widgets/search_locations_google_places.dart';
 
 part 'dashboard_core_widgets/counter_badge_widget.dart';
 
 part 'booking_widgets/booking_slot_helper.dart';
+
+part 'widget_transitions/create_widget_transitions.dart';

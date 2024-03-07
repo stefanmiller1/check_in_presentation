@@ -266,9 +266,9 @@ class _SearchProfilesState extends State<SearchProfiles> with SingleTickerProvid
                                                       ),
                                                       title: Row(
                                                         children: [
-                                                          Text(user.legalName.getOrCrash(), style: TextStyle(color: (isSelected) ? widget.model.accentColor : widget.model.paletteColor)),
+                                                          Text(user.legalName.value.fold((l) => '', (r) => r), style: TextStyle(color: (isSelected) ? widget.model.accentColor : widget.model.paletteColor)),
                                                           const SizedBox(width: 5),
-                                                          Text(user.legalSurname.getOrCrash(), style: TextStyle(color: (isSelected) ? widget.model.accentColor : widget.model.paletteColor)),
+                                                          Text(user.legalSurname.value.fold((l) => '', (r) => r), style: TextStyle(color: (isSelected) ? widget.model.accentColor : widget.model.paletteColor)),
                                                         ],
                                                       ),
                                                     ),

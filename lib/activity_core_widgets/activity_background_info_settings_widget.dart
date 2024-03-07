@@ -1,6 +1,7 @@
 part of check_in_presentation;
 
-Widget mainContainerForSectionOneRowOne({required BuildContext context, required DashboardModel model, required UpdateActivityFormState state, required Function(String value) activityTitleChanged, required Function(String value) activityDescriptionChanged, required Function(String value) activityDescriptionChangedTwo, }) {
+Widget mainContainerForSectionOneRowOne({required BuildContext context, required DashboardModel model, required UpdateActivityFormState state, required ActivityManagerForm activityManagerForm, required Function(String value) activityTitleChanged, required Function(String value) activityDescriptionChanged, required Function(String value) activityDescriptionChangedTwo, }) {
+  
   return Container(
     width: MediaQuery.of(context).size.width,
         child: Column(
@@ -8,7 +9,7 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
             crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// *** activity name *** ///
-            Text('Activity Name', style: TextStyle(
+            Text('Activity Name*', style: TextStyle(
               fontSize: model.secondaryQuestionTitleFontSize,
               color: model.disabledTextColor,
               ),
@@ -17,16 +18,13 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
             TextFormField(
               maxLength: state.activitySettingsForm.profileService.activityBackground.activityTitle.maxLength,
               style: TextStyle(color: model.paletteColor),
-              initialValue: state
-                  .activitySettingsForm
-                  .profileService
-                  .activityBackground
+              initialValue: activityManagerForm.profileService.activityBackground
                   .activityTitle
                   .value
                   .fold((l) => l.maybeMap(textInputTitleOrDetails: (i) => i.f?.maybeWhen(invalidFacilityName: (e) => e, orElse: () => ''), orElse: () => ''), (r) => r),
               decoration: InputDecoration(
                 hintStyle: TextStyle(color: model.disabledTextColor),
-                hintText: 'Activity Name',
+                hintText: 'Activity Name*',
                 errorStyle: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -74,7 +72,7 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
             ),
             /// *** activity description *** ///
             SizedBox(height: 25),
-            Text('About the Activity', style: TextStyle(
+            Text('About the Activity*', style: TextStyle(
               color: model.disabledTextColor,
               fontSize: model.secondaryQuestionTitleFontSize,
               )
@@ -83,13 +81,11 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
             TextFormField(
             maxLength: state.activitySettingsForm.profileService.activityBackground.activityDescription1.maxLength,
             maxLines: 8,
-            initialValue: state
-                .activitySettingsForm
-                .profileService
+            initialValue: activityManagerForm.profileService
                 .activityBackground
                 .activityDescription1
                 .value
-                .fold((l) => l.maybeMap(textInputTitleOrDetails: (i) => i.f?.maybeWhen(invalidFacilityName: (e) => e, orElse: () => ''), orElse: () => ''), (r) => r),
+                .fold((l) => l.maybeMap(textInputTitleOrDetails: (i) => i.f?.maybeWhen(invalidFacilityName: (e) => e, isEmpty: (e) => e, orElse: () => ''), orElse: () => ''), (r) => r),
                 style: TextStyle(color: model.paletteColor),
                 decoration: InputDecoration(
                 hintStyle: TextStyle(color: model.disabledTextColor),
@@ -139,7 +135,7 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
                     .fold((l) => l.maybeMap(textInputTitleOrDetails: (i) => i.f?.maybeWhen(invalidFacilityName: (e) => AppLocalizations.of(context)!.signUpDashboardPasswordConfirmError2, orElse: () => null), orElse: () => null), (r) => r),
                   ),
                 Visibility(
-                // visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.gameMatches,
+                visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.gameMatches,
                   child: Column(
                   children: [
                   const SizedBox(height: 25),
@@ -155,9 +151,7 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
                   TextFormField(
                   maxLength: state.activitySettingsForm.profileService.activityBackground.activityDescription2?.maxLength,
                   maxLines: 8,
-                  initialValue: context.read<UpdateActivityFormBloc>().state
-                      .activitySettingsForm
-                      .profileService
+                  initialValue: activityManagerForm.profileService
                       .activityBackground
                       .activityDescription2
                       ?.value
@@ -214,7 +208,7 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
                   ),
                 ),
                   Visibility(
-                    // visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.classesLessons,
+                    visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.classesLessons,
                     child: Column(
                     children: [
                     const SizedBox(height: 25),
@@ -230,9 +224,7 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
                     TextFormField(
                     maxLength: state.activitySettingsForm.profileService.activityBackground.activityDescription2?.maxLength,
                     maxLines: 8,
-                    initialValue: state
-                        .activitySettingsForm
-                        .profileService
+                    initialValue:activityManagerForm.profileService
                         .activityBackground
                         .activityDescription2
                         ?.value
@@ -290,7 +282,7 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
                   )
                 ),
                 Visibility(
-                // visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity == ProfileActivityTypeOption.experiences,
+                visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity == ProfileActivityTypeOption.experiences,
                 child: Column(
                 children: [
                 const SizedBox(height: 25),
@@ -306,9 +298,7 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
                 TextFormField(
                 maxLength: state.activitySettingsForm.profileService.activityBackground.activityDescription2?.maxLength,
                 maxLines: 8,
-                initialValue: state
-                    .activitySettingsForm
-                    .profileService
+                initialValue:activityManagerForm.profileService
                     .activityBackground
                     .activityDescription2
                     ?.value
@@ -371,11 +361,36 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
 }
 
 
-Widget mainContainerForSectionOneRowTwo({required BuildContext context, required DashboardModel model, required UpdateActivityFormState state, required Function(bool) isPartnersInviteOnly, required Widget getPartnerAttendees, required Function() didSelectCreateNewPartner, required Widget getInstructorAttendees, required Function() didSelectCreateInstructor}) {
+Widget mainContainerForSectionOneRowTwo({required BuildContext context, required DashboardModel model, required ActivityManagerForm activityForm, required UpdateActivityFormState state, required Function(bool) isPartnersInviteOnly, required Function(bool) isInstructorInviteOnly, required Widget getPartnerAttendees, required Function() didSelectCreateNewPartner, required Widget getInstructorAttendees, required Function() didSelectCreateInstructor}) {
   return Column(
     mainAxisAlignment: MainAxisAlignment.start,
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
+      /// *** link Community *** ///
+      const SizedBox(height: 25),
+      /// *** partnerships *** ///
+      Text('Link to your Communities', style: TextStyle(
+        color: model.disabledTextColor,
+        fontSize: model.secondaryQuestionTitleFontSize,
+        )
+      ),
+      const SizedBox(height: 25),
+      InkWell(
+        onTap: () {
+          didSelectCreateNewPartner();
+        },
+        child: Container(
+          width: 675,
+          height: 60,
+          decoration: BoxDecoration(
+            color: model.webBackgroundColor,
+            borderRadius: const BorderRadius.all(Radius.circular(15)),
+          ),
+          child: Align(
+            child: Text('Link Community', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+          ),
+        ),
+      ),
       const SizedBox(height: 25),
       /// *** partnerships *** ///
       Text('Activity Partners', style: TextStyle(
@@ -393,8 +408,8 @@ Widget mainContainerForSectionOneRowTwo({required BuildContext context, required
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Partners are Invite Only?', style: TextStyle(fontSize: model.secondaryQuestionTitleFontSize, color: model.paletteColor,)),
-                Text('otherwise any partner can request to collaborate with you', style: TextStyle(color: model.disabledTextColor))
+                Text('Partners can request to Join?', style: TextStyle(fontSize: model.secondaryQuestionTitleFontSize, color: model.paletteColor,)),
+                Text('Attendees can request to join as a partner', style: TextStyle(color: model.disabledTextColor))
                 ],
               )
             ),
@@ -403,7 +418,7 @@ Widget mainContainerForSectionOneRowTwo({required BuildContext context, required
               width: 60,
               inactiveColor: model.accentColor,
               activeColor: model.paletteColor,
-              value: state.activitySettingsForm.profileService.activityBackground.isPartnersInviteOnly ?? false,
+              value: state.activitySettingsForm.profileService.activityBackground.isPartnersInviteOnly ?? activityForm.profileService.activityBackground.isPartnersInviteOnly ?? false,
               onToggle: (value) {
                 isPartnersInviteOnly(value);
               },
@@ -450,6 +465,35 @@ Widget mainContainerForSectionOneRowTwo({required BuildContext context, required
             /// *** instructor attendees *** ///
             getInstructorAttendees,
             const SizedBox(height: 20),
+
+            // isInstructorInviteOnly
+            Container(
+              width: 675,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Instructor can request to Join?', style: TextStyle(fontSize: model.secondaryQuestionTitleFontSize, color: model.paletteColor,)),
+                      Text('Attendees can request to join as an Instructor based on a fee set by you.', style: TextStyle(color: model.disabledTextColor))
+                      ],
+                    )
+                  ),
+                  FlutterSwitch(
+                    width: 60,
+                    inactiveColor: model.accentColor,
+                    activeColor: model.paletteColor,
+                    value: state.activitySettingsForm.profileService.activityBackground.isInstructorInviteOnly ?? false,
+                    onToggle: (value) {
+                      isInstructorInviteOnly(value);
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 15),
             InkWell(
               onTap: () {
                 didSelectCreateInstructor();
@@ -465,17 +509,17 @@ Widget mainContainerForSectionOneRowTwo({required BuildContext context, required
                   child: Text('Invite New Instructor', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
                 ),
               ),
-            )
-
+            ),
           ],
         )
-      )
+      ),
+
     ],
   );
 }
 
 
-Widget mainTopContainer({required BuildContext context, required DashboardModel model, required UpdateActivityFormState state, required Function() didSelectImage, required Function(List<ImageUpload>) activityProfileImagesChanged}) {
+Widget mainTopContainer({required BuildContext context, required DashboardModel model, required List<String> numberOfImages, required List<ImageUpload> currentImages, required Function() didSelectImage, required Function(List<ImageUpload>) activityProfileImagesChanged}) {
   Widget buildItem(String text) {
     return GestureDetector(
       onTap: () {
@@ -533,7 +577,7 @@ Widget mainTopContainer({required BuildContext context, required DashboardModel 
                     /// in facade - all imageToUpload[Image] images should be uploaded and removed from array.
 
                       late List<ImageUpload> images = [];
-                      images.addAll(state.activitySettingsForm.profileService.activityBackground.activityProfileImages ?? []);
+                      images.addAll(currentImages);
 
                       final index = images.indexWhere((element) => element.key == imageItem.key);
                       images.removeAt(index);
@@ -557,10 +601,10 @@ Widget mainTopContainer({required BuildContext context, required DashboardModel 
       children: [
         SizedBox(height: 25),
         /// *** select/add profile images for activity *** ///
-        Text('Photos/Videos', style: TextStyle(
+        Text('Photos/Videos*', style: TextStyle(
           fontSize: model.secondaryQuestionTitleFontSize,
           color: model.disabledTextColor,
-        ),
+          ),
         ),
         const SizedBox(height: 10),
         Stack(
@@ -570,7 +614,7 @@ Widget mainTopContainer({required BuildContext context, required DashboardModel 
               child: Container(
                   width: MediaQuery.of(context).size.width,
                   child: Wrap(
-                    children: ['1','2','3','4','5','6'].map((e) => buildItem(e)).toList(),
+                    children: numberOfImages.map((e) => buildItem(e)).toList(),
                   )
               ),
             ),
@@ -579,7 +623,7 @@ Widget mainTopContainer({required BuildContext context, required DashboardModel 
               child: Container(
                   width: MediaQuery.of(context).size.width,
                   child: Wrap(
-                    children: state.activitySettingsForm.profileService.activityBackground.activityProfileImages?.map((e) => buildImageItem(e)).toList() ?? [],
+                    children: currentImages.map((e) => buildImageItem(e)).toList() ?? [],
                   )
               ),
             ),
@@ -590,7 +634,203 @@ Widget mainTopContainer({required BuildContext context, required DashboardModel 
           color: model.disabledTextColor,
           ),
         ),
+        const SizedBox(height: 8),
       ],
     ),
+  );
+}
+
+Widget mainActivityBackgroundContainerFooter({required BuildContext context, required DashboardModel model, required ActivityManagerForm activityForm, required UpdateActivityFormState state, required Function(String value) contactEmailChanged, required Function(String value) contactWebsiteChanged, required Function(String value) contactInstagramChanged}) {
+  return Container(
+    width: 900,
+    decoration: BoxDecoration(
+      color: model.disabledTextColor.withOpacity(0.25),
+      borderRadius: BorderRadius.circular(25)
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// post source
+          /// ways to reach activity owner
+          SizedBox(height: 25),
+          /// *** select/add profile images for activity *** ///
+          Text('Host Details', style: TextStyle(
+            fontSize: model.secondaryQuestionTitleFontSize,
+            color: model.disabledTextColor,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text('If you\'re not the host for this event, please be sure to add the host contact information here', style: TextStyle(
+              color: model.disabledTextColor,
+            ),
+          ),
+          /// *** activity contact detail email *** ///
+          SizedBox(height: 25),
+          Text('Contact Email', style: TextStyle(
+            color: model.disabledTextColor,
+            fontSize: model.secondaryQuestionTitleFontSize,
+            )
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            maxLines: 1,
+            initialValue: activityForm.profileService.postContactEmail,
+            style: TextStyle(color: model.paletteColor),
+            decoration: InputDecoration(
+              hintStyle: TextStyle(color: model.disabledTextColor),
+              hintText: 'Email',
+              errorStyle: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: model.paletteColor,
+              ),
+              filled: true,
+              fillColor: model.accentColor,
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: BorderSide(
+                  width: 2,
+                  color: model.paletteColor,
+                ),
+              ),
+              focusedBorder:  OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: BorderSide(
+                  color: model.paletteColor,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: const BorderSide(
+                  width: 0,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: BorderSide(
+                  color: model.disabledTextColor,
+                  width: 0,
+                ),
+              ),
+            ),
+            autocorrect: false,
+            onChanged: (value) => contactEmailChanged(value),
+          ),
+
+          /// *** activity contact detail email *** ///
+          SizedBox(height: 25),
+          Text('Contact Website', style: TextStyle(
+            color: model.disabledTextColor,
+            fontSize: model.secondaryQuestionTitleFontSize,
+            )
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            maxLines: 1,
+            initialValue: activityForm.profileService.postContactWebsite,
+            style: TextStyle(color: model.paletteColor),
+            decoration: InputDecoration(
+              hintStyle: TextStyle(color: model.disabledTextColor),
+              hintText: 'Website',
+              errorStyle: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: model.paletteColor,
+              ),
+              filled: true,
+              fillColor: model.accentColor,
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: BorderSide(
+                  width: 2,
+                  color: model.paletteColor,
+                ),
+              ),
+              focusedBorder:  OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: BorderSide(
+                  color: model.paletteColor,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: const BorderSide(
+                  width: 0,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: BorderSide(
+                  color: model.disabledTextColor,
+                  width: 0,
+                ),
+              ),
+            ),
+            autocorrect: false,
+            onChanged: (value) => contactWebsiteChanged(value),
+          ),
+
+          /// *** activity contact detail email *** ///
+          SizedBox(height: 25),
+          Text('Contact Instagram', style: TextStyle(
+            color: model.disabledTextColor,
+            fontSize: model.secondaryQuestionTitleFontSize,
+            )
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            maxLines: 1,
+            initialValue: activityForm.profileService.postContactSocialInstagram,
+            style: TextStyle(color: model.paletteColor),
+            decoration: InputDecoration(
+              errorStyle: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: model.paletteColor,
+              ),
+              prefixStyle: TextStyle(
+                fontSize: 16,
+                color: model.disabledTextColor,
+              ),
+              prefixText: 'www.instagram.com/',
+              filled: true,
+              fillColor: model.accentColor,
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: BorderSide(
+                  width: 2,
+                  color: model.paletteColor,
+                ),
+              ),
+              focusedBorder:  OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: BorderSide(
+                  color: model.paletteColor,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: const BorderSide(
+                  width: 0,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25.0),
+                borderSide: BorderSide(
+                  color: model.disabledTextColor,
+                  width: 0,
+                ),
+              ),
+            ),
+            autocorrect: false,
+            onChanged: (value) => contactInstagramChanged(value),
+          ),
+          const SizedBox(height: 25),
+        ]
+      ),
+    )
   );
 }

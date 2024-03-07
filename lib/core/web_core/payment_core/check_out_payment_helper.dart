@@ -7,7 +7,7 @@ bool isNextValid(CheckOutPaymentMarker marker, CardItem? card, bool showProcesse
     case CheckOutPaymentMarker.selectFromPaymentMethod:
       return card != null;
     case CheckOutPaymentMarker.addPaymentMethod:
-      return true;
+      return false;
     case CheckOutPaymentMarker.processPayment:
       return showProcessedPayment;
     case CheckOutPaymentMarker.finishedPayment:

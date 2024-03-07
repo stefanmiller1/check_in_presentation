@@ -66,7 +66,7 @@ Widget ticketCancellationDetails(BuildContext context, DashboardModel model, Lis
     children: [
 
       /// ------------------------ ///
-      /// cencellation policy ///
+      /// cancellation policy ///
       const SizedBox(height: 5),
       Divider(color: model.disabledTextColor),
       const SizedBox(height: 5),

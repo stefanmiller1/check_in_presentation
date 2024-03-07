@@ -271,7 +271,8 @@ Widget reservationSlotItemWidget(
 
    List<ReservationTimeFeeSlotItem> selectedSlots = [];
    selectedSlots.addAll(e.selectedSlots);
-   selectedSlots.sort((a,b) => a.slotRange.start.compareTo(b.slotRange.start));
+   // selectedSlots.sort((a,b) => a.slotRange.start.compareTo(b.slotRange.start));
+
 
   return IgnorePointer(
     ignoring: e.selectedDate.isBefore(DateTime.now().subtract(Duration(days: 1))),
@@ -358,7 +359,7 @@ Widget reservationSlotItemWidget(
                     direction: Axis.horizontal,
                     spacing: 4,
                     runSpacing: 4,
-                    children: selectedSlots.map((f) {
+                    children: groupConsecutiveSlots(selectedSlots).map((f) {
 
                       bool isReservationUnavailable = false;
                       AvailabilityHoursSettings? availabilityHours = listing?.listingProfileService.spaceSetting.spaceTypes.value.fold((l) => null, (r) => r.where((element) => element.uid == e.selectedSpaceId).isNotEmpty ? r.firstWhere((element) => element.uid == e.selectedSpaceId).quantity.where((element) => element.spaceId == e.selectedSportSpaceId).isNotEmpty ? r.firstWhere((element) => element.uid == e.selectedSpaceId).quantity.firstWhere((element) => element.spaceId == e.selectedSportSpaceId).availabilityHoursSettings : null : null);
@@ -396,7 +397,7 @@ Widget reservationSlotItemWidget(
                           height: 40,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(25),
-                            color: model.paletteColor,
+                            color: model.paletteColor.withOpacity(0.86),
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -473,6 +474,7 @@ Widget reservationSelectionHeader(
     BuildContext context,
     DashboardModel model,
     bool isPerSlotBased,
+    bool showSpaceType,
     ReservationSlotItem? selectedRes,
     ReservationTimeFeeSlotItem? selectedResTimeSlot,
     Map<String, List<ReservationSlotItem>> reservations,
@@ -492,8 +494,17 @@ Widget reservationSelectionHeader(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(getSpaceTypeOptions(context).where((i) => i.uid.getOrCrash() == entry.key).first.spaceTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: model.questionTitleFontSize)),
-            const SizedBox(height: 8),
+            Visibility(
+              visible: showSpaceType,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(getSpaceTypeOptions(context).where((i) => i.uid.getOrCrash() == entry.key).first.spaceTitle, style: TextStyle(fontWeight: FontWeight.bold, fontSize: model.questionTitleFontSize)),
+                      const SizedBox(height: 8),
+                ],
+              ),
+            ),
 
            if (!(isPerSlotBased)) Row(
               children: entry.value.map(
@@ -554,7 +565,6 @@ Widget reservationSelectionHeader(
 
                                 return InkWell(
                                   onTap: () {
-                                    print(f);
                                     didSelectResTime(e,f);
                                   },
                                   child: Container(
@@ -597,6 +607,97 @@ Widget reservationSelectionHeader(
       ]
     )
   );
+}
 
+Widget reservationDatesWrapped(
+    BuildContext context,
+    DashboardModel model,
+    Map<String, List<ReservationSlotItem>> reservations
+    ) {
 
+  return Wrap(
+    children: [
+      for (var entry in reservations.entries.toList()..sort((a,b) => b.key.compareTo(a.key)))
+
+        Wrap(
+          children: entry.value.map(
+                  (e) {
+
+                return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: Padding(
+                        padding: const EdgeInsets.all(3.0),
+                        child: Container(
+                            decoration: BoxDecoration(
+                                color: model.paletteColor.withOpacity(0.025),
+                                borderRadius: BorderRadius.all(Radius.circular(25),
+                                )
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(9.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Flexible(child: Text('${DateFormat.MMMEd().format(e.selectedDate)} ·', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade), maxLines: 1)),
+                                  const SizedBox(width: 5),
+                                  ...groupConsecutiveSlots(e.selectedSlots).map(
+                                          (f) => (isFullDaySlot(f)) ? Text('All Day', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade), maxLines: 1,) : Text('${DateFormat.jm().format(f.slotRange.start)} - ${DateFormat.jm().format(f.slotRange.end)}', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade), maxLines: 1,),
+                                  ).toList(),
+                                  const SizedBox(width: 5),
+                                  Icon(Icons.calendar_today_outlined, size: 20, color: model.disabledTextColor),
+                                ],
+                              ),
+                            )
+                        )
+                    )
+                );
+              }
+          ).toList()
+      ),
+    ],
+  );
+}
+
+List<ReservationTimeFeeSlotItem> groupConsecutiveSlots(List<ReservationTimeFeeSlotItem> slots) {
+  if (slots.isEmpty) return [];
+  final List<ReservationTimeFeeSlotItem> slotsToGroup = [];
+  slotsToGroup.addAll(slots);
+
+  // Sort slots based on their start times
+  slotsToGroup.sort((a, b) => a.slotRange.start.compareTo(b.slotRange.start));
+
+  List<ReservationTimeFeeSlotItem> groupedSlots = [];
+  DateTimeRange currentRange = slotsToGroup.first.slotRange;
+
+  for (int i = 1; i < slotsToGroup.length; i++) {
+    ReservationTimeFeeSlotItem currentSlot = slotsToGroup[i];
+
+    // Check if the current slot is consecutive with the current range
+    if (currentSlot.slotRange.start.difference(currentRange.end).inMinutes <= 0) {
+      // Extend the current range's end time if the current slot is consecutive
+      currentRange = DateTimeRange(
+        start: currentRange.start,
+        end: currentSlot.slotRange.end,
+      );
+    } else {
+      // Non-consecutive slot, add the current range to the grouped slots list
+      groupedSlots.add(ReservationTimeFeeSlotItem(
+        fee: slotsToGroup[i - 1].fee,
+        slotRange: currentRange,
+      ));
+      // Start a new range with the current slot
+      currentRange = currentSlot.slotRange;
+    }
+  }
+
+  // Add the last range
+  groupedSlots.add(ReservationTimeFeeSlotItem(
+    fee: slots.last.fee,
+    slotRange: currentRange,
+  ));
+
+  return groupedSlots;
 }

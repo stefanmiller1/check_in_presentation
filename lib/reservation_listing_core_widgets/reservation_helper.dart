@@ -121,7 +121,7 @@ Widget getReservationContainerForState(BuildContext context, String slotTimeStri
   switch (state) {
     case ReservationSlotState.requested:
       return Container(
-        height: 60,
+        // height: 60,
         // width: 275,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -150,7 +150,7 @@ Widget getReservationContainerForState(BuildContext context, String slotTimeStri
     );
     case ReservationSlotState.confirmed:
       return Container(
-        height: 60,
+        // height: 60,
         // width: 275,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -179,7 +179,7 @@ Widget getReservationContainerForState(BuildContext context, String slotTimeStri
       );
     case ReservationSlotState.current:
       return Container(
-        height: 60,
+        // height: 60,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.all(Radius.circular(20)),
               color: isSelectedReservation ? model.paletteColor : Colors.transparent,
@@ -203,7 +203,7 @@ Widget getReservationContainerForState(BuildContext context, String slotTimeStri
         );
     case ReservationSlotState.completed:
       return Container(
-        height: 60,
+        // height: 60,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(20)),
             color: isSelectedReservation ? model.paletteColor : Colors.transparent,
@@ -224,7 +224,7 @@ Widget getReservationContainerForState(BuildContext context, String slotTimeStri
           );
     case ReservationSlotState.cancelled:
       return Container(
-        height: 60,
+        // height: 60,
         // width: 275,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -246,7 +246,7 @@ Widget getReservationContainerForState(BuildContext context, String slotTimeStri
     );
     case ReservationSlotState.refunded:
       return Container(
-        height: 60,
+        // height: 60,
         // width: 275,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -595,7 +595,7 @@ Widget getDetailListOfReservations(
                   width: model.profileContainerWidth,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(20)),
-                    color: getBackgroundForRes(reservation.reservationState, model),
+                    // color: getBackgroundForRes(reservation.reservationState, model),
                     border: (reservation.reservationState == ReservationSlotState.requested) ? null : Border.all(width: 1, color: isReservationSlotItemComplete(e) ? model.disabledTextColor : model.paletteColor),
                   ),
                   child: DottedBorder(

@@ -1,6 +1,6 @@
 part of check_in_presentation;
 
-Widget mainContainerForVisibilitySettings({required BuildContext context, required DashboardModel model, required UpdateActivityFormState state, required Function() isPrivateOnly, required Function() createPrivateList, required Function() isInviteOnly, required Function() isReviewRequired}) {
+Widget mainContainerForVisibilitySettings({required BuildContext context, required DashboardModel model, required ActivityManagerForm activityForm, required Function() isPrivateOnly, required Function() createPrivateList, required Function() isInviteOnly, required Function() isReviewRequired}) {
   return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,7 +34,7 @@ Widget mainContainerForVisibilitySettings({required BuildContext context, requir
                   width: 60,
                   inactiveColor: model.accentColor,
                   activeColor: model.paletteColor,
-                  value: state.activitySettingsForm.rulesService.accessVisibilitySetting.isPrivateOnly ?? false,
+                  value: activityForm.rulesService.accessVisibilitySetting.isPrivateOnly == true,
                   onToggle: (value) {
                     isPrivateOnly();
                   },
@@ -44,7 +44,7 @@ Widget mainContainerForVisibilitySettings({required BuildContext context, requir
           ),
 
           Visibility(
-            visible: state.activitySettingsForm.rulesService.accessVisibilitySetting.isPrivateOnly ?? false,
+            visible: activityForm.rulesService.accessVisibilitySetting.isPrivateOnly == true,
             child: Container(
               width: 675,
               child: Column(
@@ -112,7 +112,7 @@ Widget mainContainerForVisibilitySettings({required BuildContext context, requir
                   width: 60,
                   inactiveColor: model.accentColor,
                   activeColor: model.paletteColor,
-                  value: state.activitySettingsForm.rulesService.accessVisibilitySetting.isInviteOnly ?? false,
+                  value: activityForm.rulesService.accessVisibilitySetting.isInviteOnly == true,
                   onToggle: (value) {
                     isInviteOnly();
                   },
@@ -138,7 +138,7 @@ Widget mainContainerForVisibilitySettings({required BuildContext context, requir
                   width: 60,
                   inactiveColor: model.accentColor,
                   activeColor: model.paletteColor,
-                  value: state.activitySettingsForm.rulesService.accessVisibilitySetting.isReviewRequired ?? false,
+                  value: activityForm.rulesService.accessVisibilitySetting.isReviewRequired == true,
                   onToggle: (value) {
                     isReviewRequired();
                   },

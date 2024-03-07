@@ -11,7 +11,7 @@ Widget mainContainerForSectionOneRowOneReq({required BuildContext context, requi
         Text('Age Limit', style: TextStyle(
           color: model.disabledTextColor,
           fontSize: model.secondaryQuestionTitleFontSize,
-        )
+          )
         ),
         const SizedBox(height: 20),
         Container(
@@ -165,13 +165,13 @@ Widget mainContainerForSectionOneRowOneReq({required BuildContext context, requi
                         value: state.activitySettingsForm.profileService.activityRequirements.isCoEdOnly ?? false,
                         onToggle: (value) {
                           isCoEdOnly();
-                        },
-                      ),
-                    ],
-                  ),
+                      },
+                    ),
+                  ],
                 ),
-              ],
-            )
+              ),
+            ],
+          )
         ),
 
         Visibility(
@@ -186,7 +186,8 @@ Widget mainContainerForSectionOneRowOneReq({required BuildContext context, requi
                   const SizedBox(width: 5),
                   Icon(Icons.videogame_asset_rounded, color: model.paletteColor),
                   const SizedBox(width: 15),
-                  Text('Any Required Skills?', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize)),
+                  Expanded(
+                    child: Text('Any Required Skills?', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize))),
                 ],
               ),
               Text(AppLocalizations.of(context)!.activityRequirementPreferencesSkillsExpected, style: TextStyle(color: model.disabledTextColor)),
@@ -270,7 +271,7 @@ Widget mainContainerForSectionOneRowOneReq({required BuildContext context, requi
   );
 }
 
-Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, required DashboardModel model, required UpdateActivityFormState state, required Function() isAlcoholForSale, required Function() isFoodForSale, required Widget getVendorAttendees, required Function() didSelectCreateVendor}) {
+Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, required DashboardModel model, required UpdateActivityFormState state, required ActivityManagerForm activityManagerForm, required Function() isAlcoholForSale, required Function() isFoodForSale, required Function() isVendorMerchInviteOnly, required Widget getVendorAttendees, required Function() didSelectCreateVendor, required Function(String) didChangeMerchVenFee, required Function(String) didChangeMerchVenLimit}) {
 
   bool activityAgeSetting = state.activitySettingsForm.profileService.activityRequirements.minimumAgeRequirement >= 18 && !state.activitySettingsForm.profileService.activityRequirements.isSeventeenAndUnder;
 
@@ -312,9 +313,9 @@ Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, requi
             ),
             const SizedBox(height: 20),
 
-            IgnorePointer(
-              ignoring: !activityAgeSetting,
-              child: Container(
+            // IgnorePointer(
+              // ignoring: !activityAgeSetting,
+              Container(
                 width: 675,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -327,9 +328,9 @@ Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, requi
                         Visibility(
                             visible: !activityAgeSetting,
                             child: Text('Because this event is 18 and below - alcohol cannot be provided*', style: TextStyle(color: model.disabledTextColor))
-                        )
-                      ],
-                    )
+                          )
+                        ],
+                      )
                     ),
                     FlutterSwitch(
                       width: 60,
@@ -343,7 +344,6 @@ Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, requi
                   ],
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -369,11 +369,206 @@ Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, requi
         ),
       ),
 
+
       const SizedBox(height: 25),
       getVendorAttendees,
 
+      const SizedBox(height: 30),
+      Container(
+        width: 675,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Vendor or Merchant can request to Join?', style: TextStyle(fontSize: model.secondaryQuestionTitleFontSize, color: model.paletteColor,)),
+                  Text('Attendees can request to join as a Vendor or Merchant based on a fee set by you.', style: TextStyle(color: model.disabledTextColor))
+                ],
+              )
+            ),
+            FlutterSwitch(
+              width: 60,
+              inactiveColor: model.accentColor,
+              activeColor: model.paletteColor,
+              value: state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantInviteOnly ?? false,
+              onToggle: (value) {
+                isVendorMerchInviteOnly();
+              },
+            ),
+          ],
+        ),
+      ),
       const SizedBox(height: 15),
-      /// invite merchants or vendors
+      /// merchant limit
+      Visibility(
+        // visible: state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantInviteOnly == true,
+        child: Container(
+          width: 675,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              Container(
+                width: 675,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('How Many Vendors or Merchants?', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
+                    ),
+                    Text('if you leave this blank you will not have a limit to the number of vendors that can join.', style: TextStyle(color: model.disabledTextColor))
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 10),
+              Row(
+                  children: [
+                    Icon(Icons.people_alt_outlined, color: model.paletteColor),
+                    const SizedBox(width: 5),
+                    Container(
+                      width: 160,
+                      child: TextFormField(
+                        style: TextStyle(color: model.paletteColor),
+                        initialValue: (activityManagerForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantLimit != null) ? activityManagerForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantLimit.toString() : null,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: InputDecoration(
+                          hintStyle: TextStyle(color: model.disabledTextColor),
+                          hintText: 'No Limit',
+                          errorStyle: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: model.paletteColor,
+                          ),
+                          prefixIcon: Icon(Icons.home_outlined, color: model.disabledTextColor),
+                          filled: true,
+                          fillColor: model.accentColor,
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25.0),
+                            borderSide: BorderSide(
+                              width: 2,
+                              color: model.paletteColor,
+                            ),
+                          ),
+                          focusedBorder:  OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25.0),
+                            borderSide: BorderSide(
+                              color: model.paletteColor,
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25.0),
+                            borderSide: const BorderSide(
+                              width: 0,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25.0),
+                            borderSide: BorderSide(
+                              color: model.disabledTextColor,
+                              width: 0,
+                            ),
+                          ),
+                        ),
+                        autocorrect: false,
+                        onChanged: (value) => didChangeMerchVenLimit(value),
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Expanded(child: Text('Vendors', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                  ]
+              ),
+
+            ],
+          ),
+        ),
+      ),
+
+      Container(
+        width: 675,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text('How Much Will it Cost to be a Vendor or Merchant?', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 10),
+      Row(
+        children: [
+          Text(NumberFormat.simpleCurrency(locale: state.activitySettingsForm.rulesService.currency).currencySymbol, style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize)),
+          SizedBox(width: 16),
+          Container(
+            width: 160,
+            child: TextFormField(
+              style: TextStyle(color: model.paletteColor),
+              initialValue: (activityManagerForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantFee != null) ? activityManagerForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantFee.toString() : null,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+              ],
+              decoration: InputDecoration(
+                hintStyle: TextStyle(color: model.disabledTextColor),
+                hintText: 'Free',
+                errorStyle: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: model.paletteColor,
+                ),
+                prefixIcon: Icon(Icons.home_outlined, color: model.disabledTextColor),
+                filled: true,
+                fillColor: model.accentColor,
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25.0),
+                  borderSide: BorderSide(
+                    width: 2,
+                    color: model.paletteColor,
+                  ),
+                ),
+                focusedBorder:  OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25.0),
+                  borderSide: BorderSide(
+                    color: model.paletteColor,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25.0),
+                  borderSide: const BorderSide(
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25.0),
+                  borderSide: BorderSide(
+                    color: model.disabledTextColor,
+                    width: 0,
+                  ),
+                ),
+              ),
+              autocorrect: false,
+              onChanged: (value) => didChangeMerchVenFee(value),
+            ),
+          ),
+          const SizedBox(width: 5),
+          Expanded(child: Text(NumberFormat.simpleCurrency(locale: state.activitySettingsForm.rulesService.currency).currencyName ?? '', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize), maxLines: 1, overflow: TextOverflow.ellipsis)),
+        ],
+      ),
+
+      /// merchant fee
+      const SizedBox(height: 25),
+
+
+      /// add or invite merchants or vendors
       InkWell(
         onTap: () {
           didSelectCreateVendor();
@@ -390,6 +585,7 @@ Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, requi
           ),
         ),
       ),
+      const SizedBox(height: 35),
 
     ],
   );
@@ -399,6 +595,7 @@ Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, requi
 Widget mainContainerForSectionFooterReq({required BuildContext context, required DashboardModel model, required UpdateActivityFormState state, required Function() isGearProvided, required Function() isEquipmentProvided, required Function() isAnalyticsProvided, required Function() isOfficiatorProvided, required Function() isAlcoholProvided, required Function() isFoodProvided, required Function() isSecurityProvided}) {
 
   bool activityAgeSetting = state.activitySettingsForm.profileService.activityRequirements.minimumAgeRequirement >= 18 && !state.activitySettingsForm.profileService.activityRequirements.isSeventeenAndUnder;
+  final double iconHeight = 80;
 
   /// TODO: THESE OPTIONS NEED TO TAKE FACILITY RESTRICTIONS INTO ACCOUNT (IF 18+ ACTIVITIES ARE ALLOWED OR NOT)
   return Container(
@@ -418,7 +615,8 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                 children: [
                   Icon(Icons.map, color: model.paletteColor),
                   const SizedBox(width: 15),
-                  Text('Providing Anything?', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize)),
+                  Expanded(
+                    child: Text('Providing Anything?', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize))),
                 ],
               ),
               Text(AppLocalizations.of(context)!.activityRequirementsCoveredSubTitle, style: TextStyle(color: model.disabledTextColor)),
@@ -436,7 +634,7 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                         Text(AppLocalizations.of(context)!.activityRequirementsCoveredJerseyGear, style: TextStyle(fontWeight: FontWeight.bold, color: (state.activitySettingsForm.profileService.activityRequirements.isGearProvided ?? false) ? model.paletteColor : model.disabledTextColor)),
                         const SizedBox(height: 10),
                         Container(
-                            height: 120,
+                            height: iconHeight,
                             child: Image.asset('assets/images/activity_creator/provider_options/provided_activity_options_Jersey_Gear.png', color: (state.activitySettingsForm.profileService.activityRequirements.isGearProvided ?? false) ? model.paletteColor : model.disabledTextColor.withOpacity(0.45), fit: BoxFit.fitHeight, scale: 1, filterQuality: FilterQuality.high)),
                         const SizedBox(height: 18),
                         FlutterSwitch(
@@ -458,7 +656,7 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                         Text(AppLocalizations.of(context)!.activityRequirementsCoveredEquipment, style: TextStyle(fontWeight: FontWeight.bold, color: (state.activitySettingsForm.profileService.activityRequirements.isEquipmentProvided ?? false) ? model.paletteColor : model.disabledTextColor)),
                         const SizedBox(height: 10),
                         Container(
-                            height: 120,
+                            height: iconHeight,
                             child: Image.asset('assets/images/activity_creator/provider_options/provided_activity_options_Equipment.png', color: (state.activitySettingsForm.profileService.activityRequirements.isEquipmentProvided ?? false) ? model.paletteColor : model.disabledTextColor.withOpacity(0.45), fit: BoxFit.fitHeight, scale: 1, filterQuality: FilterQuality.high,)),
                         const SizedBox(height: 18),
                         FlutterSwitch(
@@ -482,8 +680,8 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                           Text(AppLocalizations.of(context)!.activityRequirementsCoveredAnalyticsStandings, style: TextStyle(fontWeight: FontWeight.bold, color: (state.activitySettingsForm.profileService.activityRequirements.isAnalyticsProvided ?? false) ? model.paletteColor : model.disabledTextColor), textAlign: TextAlign.center),
                           const SizedBox(height: 10),
                           Container(
-                              height: 120,
-                              child: Icon(Icons.bar_chart_rounded, size: 110, color: (state.activitySettingsForm.profileService.activityRequirements.isAnalyticsProvided ?? false) ? model.paletteColor : model.disabledTextColor.withOpacity(0.45))),
+                              height: iconHeight,
+                              child: Icon(Icons.bar_chart_rounded, size: 75, color: (state.activitySettingsForm.profileService.activityRequirements.isAnalyticsProvided ?? false) ? model.paletteColor : model.disabledTextColor.withOpacity(0.45))),
                           const SizedBox(height: 18),
                           FlutterSwitch(
                             width: 60,
@@ -507,8 +705,8 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                           Text('Officiator/Referees', style: TextStyle(fontWeight: FontWeight.bold, color: (state.activitySettingsForm.profileService.activityRequirements.isOfficiatorProvided ?? false) ? model.paletteColor : model.disabledTextColor), textAlign: TextAlign.center),
                           const SizedBox(height: 35),
                           Container(
-                              height: 80,
-                              width: 120,
+                              height: 60,
+                              width: iconHeight,
                               child: Image.asset('assets/images/activity_creator/provider_options/provided_activity_options_Referee_Officiator.png', color: (state.activitySettingsForm.profileService.activityRequirements.isOfficiatorProvided ?? false) ? model.paletteColor : model.disabledTextColor.withOpacity(0.45), fit: BoxFit.fitHeight, scale: 1, filterQuality: FilterQuality.high,)),
                           const SizedBox(height: 15),
                           const SizedBox(height: 18),
@@ -523,7 +721,7 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                           )
                         ],
                       ),
-                    )
+                    ),
 
                   ],
                 ),
@@ -546,7 +744,8 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                   children: [
                     Icon(Icons.connect_without_contact_rounded, color: model.paletteColor),
                     const SizedBox(width: 15),
-                    Text('Provided for your Event?', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize)),
+                    Expanded(
+                      child: Text('Provided for your Event?', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize))),
                   ],
                 ),
                 Visibility(
@@ -568,8 +767,8 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                           Text(AppLocalizations.of(context)!.activityRequirementsCoveredEquipment, style: TextStyle(fontWeight: FontWeight.bold, color: (state.activitySettingsForm.profileService.activityRequirements.isEquipmentProvided ?? false) ? model.paletteColor : model.disabledTextColor)),
                           SizedBox(height: 10),
                           Container(
-                              height: 120,
-                              width: 120,
+                              height: iconHeight,
+                              width: iconHeight,
                               child: Image.asset('assets/images/activity_creator/provider_options/provided_activity_options_Equipment.png', color: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.profileService.activityRequirements.isEquipmentProvided ?? false) ? model.paletteColor : model.disabledTextColor.withOpacity(0.45), fit: BoxFit.fitHeight, scale: 1, filterQuality: FilterQuality.high,)),
                           SizedBox(height: 18),
                           FlutterSwitch(
@@ -594,8 +793,8 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                             Text(AppLocalizations.of(context)!.activityRequirementEventAlcohol, style: TextStyle(fontWeight: FontWeight.bold, color: (state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isAlcoholProvided ?? false) ? model.paletteColor : model.disabledTextColor)),
                             SizedBox(height: 10),
                             Container(
-                                height: 120,
-                                width: 120,
+                                height: iconHeight,
+                                width: iconHeight,
                                 child: Image.asset('assets/images/activity_creator/provider_options/provided_activity_options_Alcohol.png', color: (state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isAlcoholProvided ?? false) ? model.paletteColor : model.disabledTextColor.withOpacity(0.45), fit: BoxFit.fitHeight, scale: 1, filterQuality: FilterQuality.high,)),
                             SizedBox(height: 18),
                             FlutterSwitch(
@@ -619,8 +818,8 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                           Text(AppLocalizations.of(context)!.activityRequirementEventFoodOrDrink, style: TextStyle(fontWeight: FontWeight.bold, color: (state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isFoodProvided ?? false) ? model.paletteColor : model.disabledTextColor), textAlign: TextAlign.center),
                           SizedBox(height: 25),
                           Container(
-                              height: 90,
-                              width: 120,
+                              height: 60,
+                              width: iconHeight,
                               child: Image.asset('assets/images/activity_creator/provider_options/provided_activity_options_Food_Drinks.png', color: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isFoodProvided ?? false) ? model.paletteColor : model.disabledTextColor.withOpacity(0.45), fit: BoxFit.fitHeight, scale: 1, filterQuality: FilterQuality.high,)),
                           SizedBox(height: 40),
                           FlutterSwitch(
@@ -644,7 +843,7 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                           Container(
                               height: 120,
                               width: 120,
-                              child: Center(child: Icon(Icons.lock, size: 55, color: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isSecurityProvided ?? false) ? model.paletteColor : model.disabledTextColor.withOpacity(0.45)))),
+                              child: Center(child: Icon(Icons.lock, size: 40, color: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isSecurityProvided ?? false) ? model.paletteColor : model.disabledTextColor.withOpacity(0.45)))),
                           SizedBox(height: 18),
                           FlutterSwitch(
                             width: 60,
@@ -653,15 +852,15 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                             value: (state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isSecurityProvided ?? false),
                             onToggle: (value) {
                               isSecurityProvided();
-                            },
-                          )
-                        ],
-                      ),
-                    ],
-                  ),
-                )
-              ],
-            )
+                          },
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              )
+            ],
+          )
         ),
       ],
     ),

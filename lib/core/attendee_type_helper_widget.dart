@@ -25,6 +25,7 @@ Widget getInstructorAttendeeType(BuildContext context, DashboardModel model, {re
               null,
               null,
               profileType: UserProfileType.nameAndEmail,
+              trailingWidget: null,
               selectedButton: (e) {
               },
             ),
@@ -41,7 +42,8 @@ Widget getInstructorAttendeeType(BuildContext context, DashboardModel model, {re
                   child: Padding(
                     padding: const EdgeInsets.all(4.0),
                     child: Text(attendee.contactStatus == null ? 'Invited' : getContactStatusName(attendee.contactStatus!), style: TextStyle(color: model.disabledTextColor)),
-                  )),
+                  )
+              ),
             )
           ]
         ),
@@ -66,6 +68,7 @@ Widget getPartnerAttendeeType(BuildContext context, DashboardModel model, {requi
         null,
         null,
         profileType: UserProfileType.nameAndEmail,
+        trailingWidget: null,
         selectedButton: (e) {
         },
       ),
@@ -76,6 +79,8 @@ Widget getPartnerAttendeeType(BuildContext context, DashboardModel model, {requi
 
 Widget getVendorAttendeeType(BuildContext context, DashboardModel model, {required AttendeeItem attendee, required Function(AttendeeItem) didSelectAttendee}) {
   return Container(
+    height: 320,
+    width: 190,
     decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: model.webBackgroundColor,
@@ -87,47 +92,78 @@ Widget getVendorAttendeeType(BuildContext context, DashboardModel model, {requir
         onTap: () {
           didSelectAttendee(attendee);
         },
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
+        child: Stack(
+          alignment: Alignment.topCenter,
           children: [
-            retrieveUserProfile(
-              attendee.attendeeOwnerId.getOrCrash(),
-              model,
-              model.paletteColor,
-              null,
-              null,
-              profileType: UserProfileType.nameAndEmail,
-              selectedButton: (e) {
-              },
-            ),
-
-            const SizedBox(height: 3),
-            Text(attendee.eventMerchantVendorProfile!.brandName.value.fold((l) => '', (r) => r), style: TextStyle(color: model.paletteColor, overflow: TextOverflow.ellipsis), maxLines: 1),
-            const SizedBox(height: 4),
-            if (attendee.eventMerchantVendorProfile != null) Row(
-              children: [
-                CircleAvatar(
-                  radius: 26,
-                  backgroundImage: Image.asset('assets/profile-avatar.png').image,
-                  foregroundImage: Image.network(attendee.eventMerchantVendorProfile!.uriImage).image,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 5),
             Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(40),
-                    color: model.accentColor
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Text(attendee.contactStatus == null ? 'Invited' : getContactStatusName(attendee.contactStatus!), style: TextStyle(color: model.disabledTextColor)),
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height
+            ),
+            if (attendee.eventMerchantVendorProfile != null) Container(
+              height: 320,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(attendee.eventMerchantVendorProfile!.uriImage, fit: BoxFit.cover,)
+              ),
+            ),
+
+            if (attendee.eventMerchantVendorProfile == null) Positioned(
+              top: 140,
+              child: Icon(Icons.storefront_outlined, size: 35, color: model.disabledTextColor)
+            ),
+
+          Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: model.webBackgroundColor,
+                    ),
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          retrieveUserProfile(
+                            attendee.attendeeOwnerId.getOrCrash(),
+                            model,
+                            model.accentColor,
+                            null,
+                            null,
+                            profileType: UserProfileType.firstLetterOnlyProfile,
+                            trailingWidget: null,
+                            selectedButton: (e) {
+                            },
+                          ),
+                          // Padding(
+                          //   padding: EdgeInsets.only(left: 8),
+                          //   // child: Text(attendee.eventMerchantVendorProfile?.brandName.value.fold((l) => '', (r) => r) ?? '', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis), maxLines: 1)
+                          // ),
+                        ]
+                )
+              )
+            ),
+
+
+
+
+            Positioned(
+              bottom: 6,
+              right: 6,
+              child: Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(40),
+                      color: model.accentColor
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Text(attendee.contactStatus == null ? 'Invited' : getContactStatusName(attendee.contactStatus!), style: TextStyle(color: model.disabledTextColor)),
+                )
               )
             )
-          ],
-        ),
+
+          ]
+        )
       ),
     ),
   );

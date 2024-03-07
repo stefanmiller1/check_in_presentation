@@ -1,11 +1,11 @@
 part of check_in_presentation;
 
-enum UserProfileType {searchProfile, slotProfile, nameOnlyProfile, nameAndEmail, firstLetterNameOnlyProfile, firstLetterOnlyProfile, listingProfile}
+enum UserProfileType {searchProfile, slotProfile, nameOnlyProfile, nameAndEmail, firstLetterNameOnlyProfile, firstLetterOnlyProfile, listingProfile, attendeeProfile}
 List<String> predefinedGenderOptions() {
   return ['Female','Male','Non-Binary','Prefer Not To Say'];
 }
 
-Widget retrieveUserProfile(String profileId, DashboardModel model, Color? backgroundColor, Color? textColor, double? textSize, {required UserProfileType profileType, required Function(UserProfileModel) selectedButton}) {
+Widget retrieveUserProfile(String profileId, DashboardModel model, Color? backgroundColor, Color? textColor, double? textSize, {required UserProfileType profileType, required Widget? trailingWidget, required Function(UserProfileModel) selectedButton, }) {
   return BlocProvider(create: (context) => getIt<UserProfileWatcherBloc>()..add(UserProfileWatcherEvent.watchSelectedUserProfileStarted(profileId)),
     child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
         builder: (context, state) {
@@ -65,6 +65,14 @@ Widget retrieveUserProfile(String profileId, DashboardModel model, Color? backgr
                     return listingProfileWidget(
                         e: item.profile,
                         model: model
+                    );
+                  case UserProfileType.attendeeProfile:
+                    return attendeeProfileWidget(
+                      model: model,
+                      user: item.profile,
+                      selectedItem: selectedButton,
+                      trailingWidget: trailingWidget,
+                      textColor: textColor ?? model.paletteColor
                     );
                 }
               },
@@ -178,36 +186,55 @@ Widget userProfileFullNameOnly({required UserProfileModel e, required DashboardM
 }
 
 Widget userProfileNameAndEmail({required UserProfileModel e, required Color backgroundColor, required Color textColor, required DashboardModel model, required Function(UserProfileModel) selectedButton}) {
-  return Container(
-    // height: 60,
-    width: 200,
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 10,
-        ),
-        InkWell(
-          onTap: () {
-            selectedButton(e);
-          },
-          child: CircleAvatar(
-            backgroundImage: (e.profileImage != null && e.profileImage?.image != null) ? e.profileImage!.image : Image.asset('assets/profile-avatar.png').image,
+  return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const NeverScrollableScrollPhysics(),
+      child: TextButton(
+          style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                    (Set<MaterialState> states) {
+                  if (states.contains(MaterialState.selected) && states.contains(MaterialState.pressed) && states.contains(MaterialState.focused)) {
+                    return model.paletteColor.withOpacity(0.1);
+                  }
+                  if (states.contains(MaterialState.hovered)) {
+                    return model.paletteColor.withOpacity(0.1);
+                  }
+                  return Colors.transparent; // Use the component's default.
+                },
+              ),
+              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                  const RoundedRectangleBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(13.5)),
+                  )
+              )
           ),
-        ),
-        SizedBox(
-          width: 10,
-        ),
-        Expanded(
-          child: Column(
+        onPressed: () {
+          selectedButton(e);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6.0),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (e.legalName.isValid()) Text(e.legalName.getOrCrash(), style: TextStyle(color: textColor, fontWeight: FontWeight.bold),  overflow: TextOverflow.ellipsis),
-              if (e.emailAddress.isValid()) Text(e.emailAddress.getOrCrash(), style: TextStyle(color: textColor), overflow: TextOverflow.ellipsis),
-            ],
-          ),
+              SizedBox(
+                width: 10,
+              ),
+              CircleAvatar(
+                  backgroundImage: (e.profileImage != null && e.profileImage?.image != null) ? e.profileImage!.image : Image.asset('assets/profile-avatar.png').image,
+              ),
+              SizedBox(
+                width: 10,
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (e.legalName.isValid()) Text(e.legalName.getOrCrash(), style: TextStyle(color: textColor, fontWeight: FontWeight.bold),  overflow: TextOverflow.ellipsis, maxLines: 1),
+                  if (e.emailAddress.isValid()) Text(e.emailAddress.getOrCrash(), style: TextStyle(color: textColor), overflow: TextOverflow.ellipsis, maxLines: 1),
+              ],
+            ),
+          ],
         )
-      ],
+      )
     ),
   );
 }
@@ -279,6 +306,24 @@ Widget userProfileWidget({required UserProfileModel e, required DashboardModel m
         ),
       ],
     ),
+  );
+}
+
+Widget attendeeProfileWidget({required Function(UserProfileModel) selectedItem, required DashboardModel model, required UserProfileModel user, required Widget? trailingWidget, required Color textColor}) {
+  return ListTile(
+      onTap: () {
+        selectedItem(user);
+    },
+    leading: Container(
+        decoration: BoxDecoration(
+          color: textColor,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Padding(
+      padding: const EdgeInsets.all(1.75),
+      child: CircleAvatar(backgroundImage: user.profileImage?.image ?? Image.asset('assets/profile-avatar.png').image))),
+    title: Text('${user.legalName.getOrCrash()} ${user.legalSurname.value.fold((l) => '', (r) => r)}', style: TextStyle(color: textColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+    trailing: trailingWidget,
   );
 }
 

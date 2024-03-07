@@ -293,7 +293,7 @@ class DashboardModel extends Listenable {
           bottomSheetBackgroundColor = const Color.fromRGBO(34, 39, 51, 1);
           topHeaderTextColor = Colors.black.withOpacity(0.3);
           textColor = Colors.deepOrange;
-          disabledTextColor = Colors.grey;
+          disabledTextColor = const Color.fromRGBO(99, 103, 112, 1.0);
           cardThemeColor = const Color.fromRGBO(33, 33, 33, 1);
           break;
         }

@@ -6,6 +6,7 @@ Widget getActivityTypeTabOption(BuildContext context, DashboardModel model, doub
     iconMargin: EdgeInsets.zero,
     icon: Container(
       width: height,
+      height: height,
       decoration: BoxDecoration(
         color: (isSelected) ? model.paletteColor : model.disabledTextColor.withOpacity(0.2),
         borderRadius: BorderRadius.circular(200),
@@ -16,7 +17,12 @@ Widget getActivityTypeTabOption(BuildContext context, DashboardModel model, doub
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           child: Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: SvgPicture.asset(getIconPathForActivity(context, activityOption.activityId), fit: BoxFit.cover, color: (isSelected) ? model.accentColor : model.paletteColor, height: height),
+            child: SvgPicture.asset(
+                getIconPathForActivity(context, activityOption.activityId),
+                fit: BoxFit.fitWidth,
+                color: (isSelected) ? model.accentColor : model.paletteColor,
+                height: height
+              ),
             ),
         ),
       )
@@ -33,7 +39,7 @@ Widget getActivityFromReservationId(BuildContext context, DashboardModel model, 
     backgroundColor: model.accentColor,
     child: ClipRRect(
         borderRadius: BorderRadius.circular(25),
-        child: SvgPicture.asset(getIconPathForActivity(context, activityId))
+        child: SvgPicture.asset(getIconPathForActivity(context, activityId), color: model.paletteColor)
     ),
   );
 }

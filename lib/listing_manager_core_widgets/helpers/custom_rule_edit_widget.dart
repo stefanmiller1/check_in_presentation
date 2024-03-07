@@ -926,7 +926,6 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
 
                                             context.read<CustomRuleFormBloc>().add(CustomRuleFormEvent.customRuleTypeChanged(e));
 
-                                            print(context.read<CustomRuleFormBloc>().state.customRuleOption.customRuleType);
                                           });
                                         },
                                         value: e,

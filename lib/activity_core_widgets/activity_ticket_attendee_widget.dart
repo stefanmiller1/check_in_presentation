@@ -75,6 +75,7 @@ Widget mainContainerTicket({required BuildContext context, required DashboardMod
                   context,
                   model,
                   context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityAttendance.isTicketPerSlotBased ?? false,
+                  true,
                   selectedReservationSlot,
                   selectedResTimeSlot,
                   getGroupBySpaceBookings(context.read<UpdateActivityFormBloc>().state.reservationItem.reservationSlotItem),
@@ -83,10 +84,10 @@ Widget mainContainerTicket({required BuildContext context, required DashboardMod
                   },
                   didSelectResTime: (res, slot) {
                     didSelectSlotRes(res, slot);
-                  }
-                )
-            ],
-          )
+              }
+            )
+          ],
+        )
       ),
 
 
@@ -165,11 +166,13 @@ Widget mainContainerTicket({required BuildContext context, required DashboardMod
   );
 }
 
-Widget getTicketForEntireActivity(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityForm, ActivityTicketOption e, bool showFindTickets, bool showTrailing, {required Function(ActivityTicketOption) didSelectTicket}) {
+Widget getTicketForEntireActivity(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityForm, ActivityTicketOption e, bool showFindTickets, bool showTrailing, bool isSelected, {required Function(ActivityTicketOption) didSelectTicket}) {
+  print('entire ticket $e');
   return Container(
     decoration: BoxDecoration(
         color: model.accentColor,
-        borderRadius: BorderRadius.circular(25)
+        borderRadius: BorderRadius.circular(25),
+        border: isSelected ? Border.all(color: model.paletteColor, width: 1.5) : null
     ),
     child: Padding(
       padding: const EdgeInsets.all(9.0),
@@ -183,7 +186,7 @@ Widget getTicketForEntireActivity(BuildContext context, DashboardModel model, Re
             children: [
               Icon(Icons.airplane_ticket_outlined, color: model.paletteColor),
               const SizedBox(width: 8),
-              Column(
+              if (e.reservationSlot != null) Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(DateFormat.MMM().format(e.reservationSlot?.selectedDate ?? DateTime.now()), style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold)),
@@ -245,23 +248,22 @@ Widget getTicketForEntireActivity(BuildContext context, DashboardModel model, Re
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            if (showFindTickets) Expanded(
-                                child: Container(
-                                    decoration: BoxDecoration(
-                                        color: model.paletteColor,
-                                        borderRadius: BorderRadius.all(Radius.circular(25),
-                                        )
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text('Find Tickets', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+                            if (showFindTickets) Container(
+                                decoration: BoxDecoration(
+                                    color: model.paletteColor,
+                                    borderRadius: BorderRadius.all(Radius.circular(25),
                                     )
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text('Find Tickets', style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis), maxLines: 1),
                                 )
                             ),
+
                             Icon(Icons.keyboard_arrow_right_outlined, color: model.paletteColor)
-                        ],
-                      ),
-                    ),
+                          ],
+                        ),
+                      )
                   ],
                 )
               )
@@ -274,88 +276,93 @@ Widget getTicketForEntireActivity(BuildContext context, DashboardModel model, Re
 }
 
 
-Widget getTicketWithCounterForEntireActivity(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityForm, ActivityTicketOption e, List<TicketItem> ticketCount, {required Function(ActivityTicketOption) didIncreaseAmount, required Function(ActivityTicketOption) didDecreaseAmount}) {
-  return StreamBuilder<int>(
-    stream: facade.AttendeeAuthCore.instance.getTicketCount(reservation: reservation, ticket: e),
-    initialData: 0,
-    builder: (context, snap) {
-      return Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                getTicketForEntireActivity(
-                    context,
-                    model,
-                    reservation,
-                    activityForm,
-                    e,
-                    false,
-                    false,
-                    didSelectTicket: (ticket) {
-                  }
-                ),
-                const SizedBox(height: 8),
-                Row(
+Widget getTicketWithCounterForEntireActivity(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityForm, ActivityTicketOption e, List<TicketItem> ticketCount, bool showSelector, {required Function(ActivityTicketOption) didIncreaseAmount, required Function(ActivityTicketOption) didDecreaseAmount}) {
+  return BlocProvider(create: (context) => getIt<ActivityTicketWatcherBloc>()..add(ActivityTicketWatcherEvent.watchNumberOfTicketsTakenStarted(reservation.reservationId.getOrCrash(), e.ticketId.getOrCrash())),
+      child: BlocBuilder<ActivityTicketWatcherBloc, ActivityTicketWatcherState>(
+          builder: (context, state) {
+            return state.maybeMap(
+                // loadOnHoldTicketsFailure: (_) => activityTicketsLoadingFailure(),
+                loadNumberOfTicketsTakenSuccess: (count) => Row(
                   children: [
-                    Text('Choose Your Number of Tickets', style: TextStyle(color: model.disabledTextColor)),
-                    const SizedBox(width: 15),
-                    Visibility(
-                        visible: (snap.data != null && snap.data! >= e.ticketQuantity),
-                        child: Container(
-                            decoration: BoxDecoration(
-                                color: model.paletteColor,
-                                borderRadius: BorderRadius.all(Radius.circular(25),
-                                )
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text('Sold Out', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
-                            )
-                        )
-                    ),
-                    Visibility(
-                      visible: (snap.data != null && snap.data! < e.ticketQuantity && (snap.data!.toDouble()/e.ticketQuantity.toDouble() >= 0.85)),
-                      child: Container(
-                          decoration: BoxDecoration(
-                              color: model.paletteColor,
-                              borderRadius: BorderRadius.all(Radius.circular(25),
-                              )
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          getTicketForEntireActivity(
+                              context,
+                              model,
+                              reservation,
+                              activityForm,
+                              e,
+                              false,
+                              false,
+                              false,
+                              didSelectTicket: (ticket) {
+                              }
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text('Selling Out', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+                          const SizedBox(height: 8),
+                          Row(
+                              children: [
+                                Expanded(
+                                  child: Text('Choose Your Number of Tickets', style: TextStyle(color: model.disabledTextColor))),
+                                const SizedBox(width: 15),
+                                Visibility(
+                                    visible: (count.amount >= e.ticketQuantity),
+                                    child: Container(
+                                        decoration: BoxDecoration(
+                                            color: model.paletteColor,
+                                            borderRadius: BorderRadius.all(Radius.circular(25),
+                                            )
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text('Sold Out', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+                                        )
+                                    )
+                                ),
+                                Visibility(
+                                  visible: (count.amount < e.ticketQuantity && (count.amount.toDouble()/e.ticketQuantity.toDouble() >= 0.85)),
+                                  child: Container(
+                                      decoration: BoxDecoration(
+                                          color: model.paletteColor,
+                                          borderRadius: BorderRadius.all(Radius.circular(25),
+                                          )
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text('Selling Out', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+                                      )
+                                  ),
+                                ),
+                              ]
                           )
+                        ],
                       ),
                     ),
-                  ]
-                )
-              ],
-            ),
-          ),
-          amountSelector(
-              model,
-              (snap.data != null && snap.data! >= e.ticketQuantity),
-              ticketCount,
-              e,
-              didDecreaseAmount: didDecreaseAmount,
-              didIncreaseAmount: didIncreaseAmount
-          )
-        ],
-      );
-    },
+                    if (showSelector) amountSelector(
+                        model,
+                        (count.amount >= e.ticketQuantity),
+                        ticketCount,
+                        e,
+                        didDecreaseAmount: didDecreaseAmount,
+                        didIncreaseAmount: didIncreaseAmount
+                    )
+                  ],
+                ),
+                orElse: () => getLoadingTicketItem(context, model),
+            );
+          }
+      )
   );
-
-
 }
 
 
-Widget getTicketForDayBasedActivity(BuildContext context, DashboardModel model, ActivityManagerForm activityForm, ActivityTicketOption e, bool showFindTickets, bool showTrailing, {required Function(ActivityTicketOption) didSelectTicket}) {
+Widget getTicketForDayBasedActivity(BuildContext context, DashboardModel model, ActivityManagerForm activityForm, ActivityTicketOption e, bool showFindTickets, bool showTrailing, bool isSelected, {required Function(ActivityTicketOption) didSelectTicket}) {
   return Container(
             decoration: BoxDecoration(
               color: model.accentColor,
-              borderRadius: BorderRadius.circular(25)
+              borderRadius: BorderRadius.circular(25),
+              border: isSelected ? Border.all(color: model.paletteColor, width: 1.5) : null
             ),
               child: Padding(
                 padding: const EdgeInsets.all(9.0),
@@ -432,23 +439,22 @@ Widget getTicketForDayBasedActivity(BuildContext context, DashboardModel model, 
                             crossAxisAlignment: CrossAxisAlignment.end,
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              if (showFindTickets) Expanded(
-                                  child: Container(
-                                      decoration: BoxDecoration(
-                                          color: model.paletteColor,
-                                          borderRadius: BorderRadius.all(Radius.circular(25),
-                                          )
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text('Find Tickets', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+                              if (showFindTickets) Container(
+                                  decoration: BoxDecoration(
+                                      color: model.paletteColor,
+                                      borderRadius: BorderRadius.all(Radius.circular(25),
+                                      )
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text('Find Tickets', style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis), maxLines: 1),
                                   )
-                                )
                               ),
-                            Icon(Icons.keyboard_arrow_right_outlined, color: model.paletteColor)
-                        ],
-                      ),
-                    ),
+
+                              Icon(Icons.keyboard_arrow_right_outlined, color: model.paletteColor)
+                            ],
+                          ),
+                        )
                   ],
                 )
               )
@@ -460,85 +466,91 @@ Widget getTicketForDayBasedActivity(BuildContext context, DashboardModel model, 
   );
 }
 
-Widget getTicketWithCounterForDayBasedActivity(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityForm, ActivityTicketOption e, List<TicketItem> ticketCount, {required Function(ActivityTicketOption) didIncreaseAmount, required Function(ActivityTicketOption) didDecreaseAmount}) {
-  return StreamBuilder<int>(
-      stream: facade.AttendeeAuthCore.instance.getTicketCount(reservation: reservation, ticket: e),
-      initialData: 0,
-      builder: (context, snap) {
-
-        return Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+Widget getTicketWithCounterForDayBasedActivity(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityForm, ActivityTicketOption e, List<TicketItem> ticketCount, bool showAmount, {required Function(ActivityTicketOption) didIncreaseAmount, required Function(ActivityTicketOption) didDecreaseAmount}) {
+  return BlocProvider(create: (context) => getIt<ActivityTicketWatcherBloc>()..add(ActivityTicketWatcherEvent.watchNumberOfTicketsTakenStarted(reservation.reservationId.getOrCrash(), e.ticketId.getOrCrash())),
+      child: BlocBuilder<ActivityTicketWatcherBloc, ActivityTicketWatcherState>(
+          builder: (context, state) {
+            return state.maybeMap(
+              // loadOnHoldTicketsFailure: (_) => activityTicketsLoadingFailure(),
+              loadNumberOfTicketsTakenSuccess: (count) => Row(
                 children: [
-                  getTicketForDayBasedActivity(
-                      context,
-                      model,
-                      activityForm,
-                      e,
-                      false,
-                      false,
-                      didSelectTicket: (ticket) {
-                      }
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Choose Your Number of Tickets', style: TextStyle(color: model.disabledTextColor)),
-                        const SizedBox(width: 15),
-                        Visibility(
-                            visible: (snap.data != null && snap.data! >= e.ticketQuantity),
-                            child: Container(
-                                decoration: BoxDecoration(
-                                    color: model.paletteColor,
-                                    borderRadius: BorderRadius.all(Radius.circular(25),
-                                    )
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text('Sold Out', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
-                                )
-                            )
+                        getTicketForDayBasedActivity(
+                            context,
+                            model,
+                            activityForm,
+                            e,
+                            false,
+                            false,
+                            false,
+                            didSelectTicket: (ticket) {
+                            }
                         ),
-                        Visibility(
-                          visible: (snap.data != null && snap.data! < e.ticketQuantity && (snap.data!.toDouble()/e.ticketQuantity.toDouble() >= 0.85)),
-                          child: Container(
-                              decoration: BoxDecoration(
-                                  color: model.paletteColor,
-                                  borderRadius: BorderRadius.all(Radius.circular(25),
+                        const SizedBox(height: 8),
+                        Row(
+                            children: [
+                              Expanded(
+                                child: Text('Choose Your Number of Tickets', style: TextStyle(color: model.disabledTextColor))),
+                              const SizedBox(width: 15),
+                              Visibility(
+                                  visible: (count.amount >= e.ticketQuantity),
+                                  child: Container(
+                                      decoration: BoxDecoration(
+                                          color: model.paletteColor,
+                                          borderRadius: BorderRadius.all(Radius.circular(25),
+                                          )
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text('Sold Out', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+                                      )
                                   )
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text('Selling Out', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
-                              )
-                          ),
-                        ),
-                      ]
+                              Visibility(
+                                visible: (count.amount < e.ticketQuantity && (count.amount.toDouble()/e.ticketQuantity.toDouble() >= 0.85)),
+                                child: Container(
+                                    decoration: BoxDecoration(
+                                        color: model.paletteColor,
+                                        borderRadius: BorderRadius.all(Radius.circular(25),
+                                        )
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text('Selling Out', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+                                    )
+                                ),
+                              ),
+                            ]
+                        )
+                      ],
+                    ),
+                  ),
+                  if (showAmount) amountSelector(
+                      model,
+                      (count.amount >= e.ticketQuantity),
+                      ticketCount,
+                      e,
+                      didDecreaseAmount: didDecreaseAmount,
+                      didIncreaseAmount: didIncreaseAmount
                   )
                 ],
               ),
-            ),
-            amountSelector(
-              model,
-              (snap.data != null && snap.data! >= e.ticketQuantity),
-              ticketCount,
-              e,
-              didDecreaseAmount: didDecreaseAmount,
-              didIncreaseAmount: didIncreaseAmount
-          )
-        ],
-      );
-    }
+              orElse: () => getLoadingTicketItem(context, model),
+            );
+          }
+      )
   );
 }
 
-Widget getTicketForSlotBasedActivity(BuildContext context, DashboardModel model, ActivityManagerForm activityForm, ActivityTicketOption e, bool showFindTickets, bool showTrailing, {required Function(ActivityTicketOption) didSelectTicket}) {
+Widget getTicketForSlotBasedActivity(BuildContext context, DashboardModel model, ActivityManagerForm activityForm, ActivityTicketOption e, bool showFindTickets, bool showTrailing, bool isSelected, {required Function(ActivityTicketOption) didSelectTicket}) {
   return Container(
         decoration: BoxDecoration(
             color: model.accentColor,
-            borderRadius: BorderRadius.circular(25)
+            borderRadius: BorderRadius.circular(25),
+            border: isSelected ? Border.all(color: model.paletteColor, width: 1.5) : null,
         ),
         child: Padding(
           padding: const EdgeInsets.all(9.0),
@@ -635,77 +647,82 @@ Widget getTicketForSlotBasedActivity(BuildContext context, DashboardModel model,
   );
 }
 
-Widget getTicketWithCounterForSlotBasedActivity(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityForm, ActivityTicketOption e, List<TicketItem> ticketCount, {required Function(ActivityTicketOption) didIncreaseAmount, required Function(ActivityTicketOption) didDecreaseAmount}) {
-  return StreamBuilder<int>(
-      stream: facade.AttendeeAuthCore.instance.getTicketCount(reservation: reservation, ticket: e),
-      initialData: 0,
-      builder: (context, snap) {
-
-        return Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+Widget getTicketWithCounterForSlotBasedActivity(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityForm, ActivityTicketOption e, List<TicketItem> ticketCount, bool showSelector, {required Function(ActivityTicketOption) didIncreaseAmount, required Function(ActivityTicketOption) didDecreaseAmount}) {
+  return BlocProvider(create: (context) => getIt<ActivityTicketWatcherBloc>()..add(ActivityTicketWatcherEvent.watchNumberOfTicketsTakenStarted(reservation.reservationId.getOrCrash(), e.ticketId.getOrCrash())),
+      child: BlocBuilder<ActivityTicketWatcherBloc, ActivityTicketWatcherState>(
+          builder: (context, state) {
+            return state.maybeMap(
+              // loadOnHoldTicketsFailure: (_) => activityTicketsLoadingFailure(),
+              loadNumberOfTicketsTakenSuccess: (count) => Row(
                 children: [
-                  getTicketForSlotBasedActivity(
-                    context,
-                    model,
-                    activityForm,
-                    e,
-                    false,
-                    false,
-                    didSelectTicket: (ticket) {
-                    }
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Choose Your Number of Tickets', style: TextStyle(color: model.disabledTextColor)),
-                        const SizedBox(width: 15),
-                        Visibility(
-                            visible: (snap.data != null && snap.data! >= e.ticketQuantity),
-                            child: Container(
-                                decoration: BoxDecoration(
-                                    color: model.paletteColor,
-                                    borderRadius: BorderRadius.all(Radius.circular(25),
-                                    )
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text('Sold Out', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
-                                )
-                            )
+                        getTicketForSlotBasedActivity(
+                            context,
+                            model,
+                            activityForm,
+                            e,
+                            false,
+                            false,
+                            false,
+                            didSelectTicket: (ticket) {
+                            }
                         ),
-                        Visibility(
-                          visible: (snap.data != null && snap.data! < e.ticketQuantity && (snap.data!.toDouble()/e.ticketQuantity.toDouble() >= 0.85)),
-                          child: Container(
-                              decoration: BoxDecoration(
-                                  color: model.paletteColor,
-                                  borderRadius: BorderRadius.all(Radius.circular(25),
+                        const SizedBox(height: 8),
+                        Row(
+                            children: [
+                              Expanded(
+                                child: Text('Choose Your Number of Tickets', style: TextStyle(color: model.disabledTextColor))),
+                              const SizedBox(width: 15),
+                              Visibility(
+                                  visible: (count.amount >= e.ticketQuantity),
+                                  child: Container(
+                                      decoration: BoxDecoration(
+                                          color: model.paletteColor,
+                                          borderRadius: BorderRadius.all(Radius.circular(25),
+                                          )
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text('Sold Out', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+                                      )
                                   )
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text('Selling Out', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
-                          )
-                        ),
-                      ),
-                    ]
+                              Visibility(
+                                visible: (count.amount < e.ticketQuantity && (count.amount.toDouble()/e.ticketQuantity.toDouble() >= 0.85)),
+                                child: Container(
+                                    decoration: BoxDecoration(
+                                        color: model.paletteColor,
+                                        borderRadius: BorderRadius.all(Radius.circular(25),
+                                        )
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text('Selling Out', style: TextStyle(color: model.accentColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+                                    )
+                                ),
+                              ),
+                            ]
+                        )
+                      ],
+                    ),
+                  ),
+                  if (showSelector) amountSelector(
+                      model,
+                      (count.amount >= e.ticketQuantity),
+                      ticketCount,
+                      e,
+                      didDecreaseAmount: didDecreaseAmount,
+                      didIncreaseAmount: didIncreaseAmount
                   )
                 ],
               ),
-            ),
-            amountSelector(
-              model,
-              (snap.data != null && snap.data! >= e.ticketQuantity),
-              ticketCount,
-              e,
-              didDecreaseAmount: didDecreaseAmount,
-              didIncreaseAmount: didIncreaseAmount
-          )
-        ],
-      );
-    }
+              orElse: () => getLoadingTicketItem(context, model),
+            );
+          }
+      )
   );
 }
 
@@ -737,8 +754,250 @@ Widget amountSelector(DashboardModel model, bool isLocked, List<TicketItem> curr
             IconButton(onPressed: () {
             }, icon: const Icon(Icons.remove_circle_outline_rounded), iconSize: 40, color: model.disabledTextColor),
             Icon(Icons.lock_outline, color: model.paletteColor),
-          ]
-        )
+        ]
+      )
     ]
+  );
+}
+
+
+Widget ticketItemWidget(DashboardModel model, TicketItem ticket, {required Function(TicketItem ticket) didSelectTicketRefund, required Function(TicketItem) didSelectRedeem}) {
+  return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+        child: Container(
+          decoration: BoxDecoration(
+            color: model.accentColor,
+            borderRadius: BorderRadius.all(Radius.circular(25),
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+            // firstLetterOnlyProfile
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                         retrieveUserProfile(
+                             ticket.ticketOwner.getOrCrash(),
+                             model,
+                             null,
+                             model.paletteColor,
+                             20,
+                             profileType: UserProfileType.nameAndEmail,
+                             trailingWidget: null,
+                             selectedButton: (profile) {
+
+                             }
+                         ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 60),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (!ticket.isOnHold) Text('Purchased at: ${DateFormat.MMMEd().format(ticket.createdAt)} ${DateFormat.jms().format(ticket.createdAt)}', style: TextStyle(color: model.disabledTextColor), maxLines: 1),
+                                /// state?
+                                if (ticket.isOnHold) Text('On Hold', style: TextStyle(color: model.disabledTextColor), maxLines: 1),
+                                if (!ticket.isOnHold) Text('Purchased', style: TextStyle(color: model.disabledTextColor), maxLines: 1)
+                              ],
+                            )
+                          ),
+                      ],
+                    )
+                  ),
+
+                  if (!ticket.isOnHold) Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          didSelectTicketRefund(ticket);
+                        },
+                        child: Row(
+                            children: [
+                              Container(
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(25),
+                                      color: model.paletteColor
+                                  ),
+                                  height: 40,
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8),
+                                    child: Center(
+                                        child: Text('Refund', style: TextStyle(color: model.accentColor))),
+                                  )
+                              ),
+                              const SizedBox(width: 10),
+                            ]
+                        ),
+                      ),
+
+                      InkWell(
+                          onTap: () {
+                            didSelectRedeem(ticket);
+                          },
+                          child: Row(
+                            children: [
+                              Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(25),
+                                    color: (ticket.redeemed == true) ? model.paletteColor : model.webBackgroundColor,
+                                  ),
+                                  height: 40,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    child: Center(
+                                        child: (ticket.redeemed == true) ? Text('Un-Redeem', style: TextStyle(color: model.accentColor)) : Text('Redeem', style: TextStyle(color: model.paletteColor))),
+                                  )
+                              ),
+                              const SizedBox(width: 10),
+                            ],
+                          )
+                      )
+                    ]
+                  )
+            /// refund
+
+            /// who
+          ],
+        )
+      )
+    )
+  );
+}
+
+/// redeem ticket?
+/// present ticket/use ticket (QR Code?)?
+/// should be the sending/info of the ticket.
+Widget getAttendeeTicketItemWidget(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityForm, TicketItem ticket, {required Function(TicketItem ticket) didSelectTicket}) {
+  return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+        child: Container(
+          decoration: BoxDecoration(
+            color: model.accentColor,
+            borderRadius: BorderRadius.all(Radius.circular(25),
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            children: [
+              if (ticket.selectedTicketTitle != null) Text(ticket.selectedTicketTitle!, style: TextStyle(color: model.paletteColor)),
+              Visibility(
+                visible: activityForm.activityAttendance.isTicketFixed == true,
+                child: getTicketForEntireActivity(
+                    context,
+                    model,
+                    reservation,
+                    activityForm,
+                    activityForm.activityAttendance.defaultActivityTickets ?? ActivityTicketOption.empty(),
+                    false,
+                    false,
+                    false,
+                    didSelectTicket: (ticket) {
+                    }
+                ),
+              ),
+
+              /// ticket covers day activity
+              Visibility(
+                visible: activityForm.activityAttendance.isTicketPerSlotBased == false && activityForm.activityAttendance.isTicketFixed == false,
+                child: getTicketForDayBasedActivity(
+                    context,
+                    model,
+                    activityForm,
+                    (activityForm.activityAttendance.activityTickets ?? []).firstWhere((element) => ticket.selectedTicketId == element.ticketId, orElse: () => ActivityTicketOption.empty()),
+                    false,
+                    false,
+                    false,
+                    didSelectTicket: (ticket) {
+                    }
+                ),
+              ),
+
+              /// ticket covers slot based activity
+              Visibility(
+                  visible: activityForm.activityAttendance.isTicketPerSlotBased == true && activityForm.activityAttendance.isTicketFixed == false,
+                  child: getTicketForSlotBasedActivity(
+                      context,
+                      model,
+                      activityForm,
+                      (activityForm.activityAttendance.activityTickets ?? []).firstWhere((element) => ticket.selectedTicketId == element.ticketId, orElse: () => ActivityTicketOption.empty()),
+                      false,
+                      false,
+                      false,
+                      didSelectTicket: (ticket) {
+                    }
+                  ),
+                ),
+            ],
+          )
+      )
+    ),
+  );
+}
+
+Widget getLoadingTicketItem(BuildContext context, DashboardModel model) {
+  return Shimmer.fromColors(
+      baseColor: Colors.grey.shade400,
+      highlightColor: Colors.grey.shade100,
+      child: Container(
+        height: 90,
+        decoration: BoxDecoration(
+          color: model.accentColor.withOpacity(0.15),
+          borderRadius: const BorderRadius.all(Radius.circular(25)),
+        ),
+      )
+  );
+}
+
+Widget getLoadingForOverviewFooter(BuildContext context) {
+  return Container(
+      width: MediaQuery.of(context).size.width,
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey.shade400,
+        highlightColor: Colors.grey.shade100,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 40,
+                      width: MediaQuery.of(context).size.width - 120,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.grey.withOpacity(0.15),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      height: 40,
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.grey.withOpacity(0.15),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+            Container(
+              height: 60,
+              width: MediaQuery.of(context).size.width - 120,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: Colors.grey.withOpacity(0.15),
+              ),
+            ),
+
+        ],
+      ),
+    )
   );
 }

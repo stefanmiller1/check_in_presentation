@@ -25,7 +25,7 @@ Widget selectedCalendarDatesSlotReservations(DashboardModel model, DateTime init
                 initialSelectedDate: initialSelection,
                 view: DateRangePickerView.month,
                 selectionColor: model.paletteColor,
-                allowViewNavigation: false,
+                allowViewNavigation: true,
                 navigationMode: DateRangePickerNavigationMode.snap,
                 navigationDirection: DateRangePickerNavigationDirection.horizontal,
                 enablePastDates: true,
@@ -125,91 +125,89 @@ Widget calendarListOfSelectableReservations(
           // color: model.cardColor,
         ),
         width: 600,
-        height: 475,
-        child: SingleChildScrollView(
-          child: Center(
-            child: Wrap(
-              direction: Axis.horizontal,
-              children: listOfReservationOptions.map(
-                      (e) => IgnorePointer(
-                        ignoring: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: Container(
-                            // width: 150,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.all(Radius.circular(20)),
-                              color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.webBackgroundColor : model.paletteColor : Colors.transparent,
-                              border: Border.all(width: 1, color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor)
-                          ),
+        // height: 475,
+        child: Center(
+          child: Wrap(
+            direction: Axis.horizontal,
+            children: listOfReservationOptions.map(
+                    (e) => IgnorePointer(
+                      ignoring: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Container(
+                          width: (kIsWeb) ? 250 : null,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                            color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.webBackgroundColor : model.paletteColor : Colors.transparent,
+                            border: Border.all(width: 1, color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor)
+                        ),
 
-                            child: TextButton(
-                              style: ButtonStyle(
-                                  backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                                        (Set<MaterialState> states) {
-                                      if (states.contains(MaterialState.selected) && states.contains(MaterialState.pressed) && states.contains(MaterialState.focused)) {
-                                        return model.paletteColor.withOpacity(0.1);
-                                      }
-                                      if (states.contains(MaterialState.hovered)) {
-                                        return model.paletteColor.withOpacity(0.1);
-                                      }
-                                      return Colors.transparent; // Use the component's default.
-                                    },
+                          child: TextButton(
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                                      (Set<MaterialState> states) {
+                                    if (states.contains(MaterialState.selected) && states.contains(MaterialState.pressed) && states.contains(MaterialState.focused)) {
+                                      return model.paletteColor.withOpacity(0.1);
+                                    }
+                                    if (states.contains(MaterialState.hovered)) {
+                                      return model.paletteColor.withOpacity(0.1);
+                                    }
+                                    return Colors.transparent; // Use the component's default.
+                                  },
+                                ),
+                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                                    )
+                                )
+                            ),
+                            onPressed: () {
+                              selectedReservation(e);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text("$slotTimeString: ${DateFormat.jm().format(e.slotRange.start)} - ${DateFormat.jm().format(e.slotRange.start.add(Duration(minutes: durationType)))}",
+                                          style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor, fontSize: 16.5, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                                        Text("Price: ${e.fee}", style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor), overflow: TextOverflow.ellipsis)
+                                      ],
+                                    ),
                                   ),
-                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                      RoundedRectangleBorder(
-                                        borderRadius: const BorderRadius.all(Radius.circular(20)),
-                                      )
-                                  )
-                              ),
-                              onPressed: () {
-                                selectedReservation(e);
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text("$slotTimeString: ${DateFormat.jm().format(e.slotRange.start)} - ${DateFormat.jm().format(e.slotRange.start.add(Duration(minutes: durationType)))}",
-                                            style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor, fontSize: 16.5, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                                          Text("Price: ${e.fee}", style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor), overflow: TextOverflow.ellipsis)
-                                        ],
+
+                                  Visibility(
+                                    visible: !(highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start)),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                                          color: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.accentColor : Colors.transparent,
+                                          border: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? null : Border.all(width: 1, color: model.paletteColor)
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(3.0),
+                                        child: Text(addLocationString, style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
                                       ),
                                     ),
+                                  ),
 
-                                    Visibility(
-                                      visible: !(highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start)),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                                            color: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.accentColor : Colors.transparent,
-                                            border: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? null : Border.all(width: 1, color: model.paletteColor)
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(3.0),
-                                          child: Text(addLocationString, style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
-                                        ),
-                                      ),
-                                    ),
-
-                                    Visibility(
-                                        visible: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start),
-                                        child: Icon(Icons.cancel, color: model.webBackgroundColor, size: 35)),
-                            ],
-                          ),
+                                  Visibility(
+                                      visible: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start),
+                                      child: Icon(Icons.cancel, color: model.webBackgroundColor, size: 35)),
+                          ],
                         ),
                       ),
                     ),
-                  )
+                  ),
                 )
-              ).toList(),
-            ),
+              )
+            ).toList(),
           ),
         ),
       ),

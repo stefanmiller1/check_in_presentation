@@ -13,6 +13,7 @@ class GetLoginSignUpWidget extends StatefulWidget {
 class _GetLoginSignUpWidgetState extends State<GetLoginSignUpWidget> {
 
   late PhoneController _phoneController;
+  late bool _showEmailSignIn = false;
 
   @override
   void initState() {
@@ -56,7 +57,21 @@ class _GetLoginSignUpWidgetState extends State<GetLoginSignUpWidget> {
           },
           buildWhen: (p, c) => p.isSubmitting != c.isSubmitting,
           builder: (context, state) {
-            return getLoginSignupWidget(
+
+            return (_showEmailSignIn) ? LoginEmailWidget(
+
+              didCompleteSuccessfully: () {
+                setState(() {
+                  context.read<UserProfileWatcherBloc>().add(const UserProfileWatcherEvent.watchUserProfileStarted());
+                });
+              },
+              model: widget.model,
+              goBack: () {
+                setState(() {
+                  _showEmailSignIn = false;
+                });
+              },
+            ) : getLoginSignupWidget(
                 context: context,
                 model: widget.model,
                 isLoading: state.isSubmitting,
@@ -64,21 +79,26 @@ class _GetLoginSignUpWidgetState extends State<GetLoginSignUpWidget> {
                 validateMode: state.showErrorMessages,
                 onPhoneChanged: (p) {
 
-                },
-                onContinuePressed: () {
+                  },
+                  onContinuePressed: () {
 
-                },
-                onAppleSignInPressed: () {
-                  setState(() {
-                    context.read<UserProfileWatcherBloc>().add(const UserProfileWatcherEvent.userProfileStreamClosed());
-                    context.read<CreateAuthUserAccountBloc>().add(const CreateAuthUserAccountEvent.signInWithApplePressed());
-                  });
-                },
-                onGoogleSignInPressed: () {
-                  setState(() {
-                    context.read<UserProfileWatcherBloc>().add(const UserProfileWatcherEvent.userProfileStreamClosed());
-                    context.read<CreateAuthUserAccountBloc>().add(const CreateAuthUserAccountEvent.signInWithGooglePressed());
-                  });
+                  },
+                  onAppleSignInPressed: () {
+                    setState(() {
+                      context.read<UserProfileWatcherBloc>().add(const UserProfileWatcherEvent.userProfileStreamClosed());
+                      context.read<CreateAuthUserAccountBloc>().add(const CreateAuthUserAccountEvent.signInWithApplePressed());
+                    });
+                  },
+                  onGoogleSignInPressed: () {
+                    setState(() {
+                      context.read<UserProfileWatcherBloc>().add(const UserProfileWatcherEvent.userProfileStreamClosed());
+                      context.read<CreateAuthUserAccountBloc>().add(const CreateAuthUserAccountEvent.signInWithGooglePressed());
+                    });
+                  },
+                  onEmailSignInPressed: () {
+                    setState(() {
+                      _showEmailSignIn = !_showEmailSignIn;
+                    });
                 }
             );
           },
@@ -88,7 +108,7 @@ class _GetLoginSignUpWidgetState extends State<GetLoginSignUpWidget> {
 }
 
 
-Widget getLoginSignupWidget({required BuildContext context, required DashboardModel model, required bool isLoading, required PhoneController phoneController, required AutovalidateMode validateMode, required Function(PhoneNumber) onPhoneChanged, required Function() onContinuePressed, required Function() onAppleSignInPressed, required Function() onGoogleSignInPressed}) {
+Widget getLoginSignupWidget({required BuildContext context, required DashboardModel model, required bool isLoading, required PhoneController phoneController, required AutovalidateMode validateMode, required Function(PhoneNumber) onPhoneChanged, required Function() onContinuePressed, required Function() onAppleSignInPressed, required Function() onEmailSignInPressed, required Function() onGoogleSignInPressed}) {
   return Container(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -181,6 +201,23 @@ Widget getLoginSignupWidget({required BuildContext context, required DashboardMo
               borderRadius: 12,
               iconColor: model.paletteColor,
               textStyle: TextStyle(color: model.paletteColor)
+          ),
+        ),
+        const SizedBox(height: 8),
+        EmailAuthButton(
+          onPressed: onEmailSignInPressed,
+          isLoading: isLoading,
+          text: 'CONTINUE WITH EMAIL',
+          style: AuthButtonStyle(
+            buttonColor: model.webBackgroundColor,
+            height: 45,
+            width: MediaQuery.of(context).size.width,
+            elevation: 0,
+            borderWidth: 0.5,
+            borderColor: model.paletteColor,
+            borderRadius: 12,
+            iconColor: model.paletteColor,
+            textStyle: TextStyle(color: model.paletteColor)
           ),
         )
       ],

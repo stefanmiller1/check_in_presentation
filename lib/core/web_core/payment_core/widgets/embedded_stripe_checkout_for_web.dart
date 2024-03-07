@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:html';
-import 'dart:ui' as ui;
+import 'dart:ui_web' as ui;
+import 'package:check_in_credentials/check_in_credentials.dart';
+import 'package:check_in_domain/check_in_domain.dart';
 import 'package:flutter/cupertino.dart';
 
 
@@ -55,9 +57,9 @@ class _EmbeddedStripeCheckoutFormState extends State<EmbeddedStripeCheckoutForm>
       window.postMessage(jsonString, '*');
 
       window.addEventListener('message', (event) {
-
         final data = (event as MessageEvent).data ?? '-';
 
+        print('data? $data');
         if (data == 'success') {
           widget.didCompleteCheckout();
         } else if (data != widget.client_secret) {
@@ -68,7 +70,7 @@ class _EmbeddedStripeCheckoutFormState extends State<EmbeddedStripeCheckoutForm>
 
 
     ui.platformViewRegistry.registerViewFactory(
-          'html-view',
+          widget.client_secret,
           (int viewId) => _iFrameElement!,
     );
   }
@@ -79,6 +81,13 @@ class _EmbeddedStripeCheckoutFormState extends State<EmbeddedStripeCheckoutForm>
   }
 
   @override
+  void dispose() {
+    _iFrameElement?.remove();
+    super.dispose();
+  }
+
+
+  @override
   Widget build(BuildContext context) {
 
     if (_iFrameElement!.src != htmlForEmbeddedMap()) {
@@ -86,7 +95,7 @@ class _EmbeddedStripeCheckoutFormState extends State<EmbeddedStripeCheckoutForm>
     }
 
    return HtmlElementView(
-     viewType: 'html-view',
+     viewType: widget.client_secret,
    );
   }
 }

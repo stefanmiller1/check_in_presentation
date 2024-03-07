@@ -20,30 +20,33 @@ Widget instructorWidgetCard(ClassesInstructorProfile instructor, BuildContext co
           const Text('Certificates:'),
           const SizedBox(height: 8),
           ...instructor.certificates.map(
-                  (e) => Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: model.accentColor
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child:
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(e.certificateTitle.value.fold((l) => 'Add Certificate Title', (r) => r)),
-                          Text(getCertificateName(context, e.certificateType), style: TextStyle(color: model.disabledTextColor)),
-                        ],
+                  (e) => Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                child: Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: model.accentColor
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child:
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(e.certificateTitle.value.fold((l) => 'Add Certificate Title', (r) => r)),
+                            Text(getCertificateName(context, e.certificateType), style: TextStyle(color: model.disabledTextColor)),
+                            ],
+                          ),
                         ),
-                      ),
                       Text(DateFormat.yMMM().format(e.dateReceived), style: TextStyle(color: model.disabledTextColor, overflow: TextOverflow.ellipsis), maxLines: 1,)
-                  ],
-                ),
+                    ],
+                  ),
+                )
               )
             )
           ).toList() ?? [],
@@ -59,7 +62,9 @@ Widget instructorWidgetCard(ClassesInstructorProfile instructor, BuildContext co
           const Text('Experience:'),
           const SizedBox(height: 8),
           ...instructor.experience.map(
-                  (e) => Container(
+                  (e) => Padding(
+                      padding: const EdgeInsets.only(top: 6),
+              child: Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                     color: model.accentColor
@@ -77,6 +82,7 @@ Widget instructorWidgetCard(ClassesInstructorProfile instructor, BuildContext co
                   ),
                 ),
               )
+            )
           ).toList(),
         ],
       ),

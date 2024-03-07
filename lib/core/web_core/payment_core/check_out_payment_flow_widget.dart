@@ -8,10 +8,12 @@ class WebCheckOutPaymentWidget extends StatefulWidget {
   final UserProfileModel currentUser;
   final String amount;
   final String currency;
+  final String description;
   final ReservationItem reservation;
   final Function(String paymentId) didFinishPayment;
+  final Function() didPressFinished;
 
-  const WebCheckOutPaymentWidget({super.key, required this.model, required this.currentUser, required this.ownerUser, required this.reservation, required this.amount, required this.currency, required this.didFinishPayment});
+  const WebCheckOutPaymentWidget({super.key, required this.model, required this.currentUser, required this.ownerUser, required this.reservation, required this.amount, required this.currency, required this.description, required this.didFinishPayment, required this.didPressFinished});
 
   @override
   State<WebCheckOutPaymentWidget> createState() => _WebCheckOutPaymentWidgetState();
@@ -22,12 +24,8 @@ class _WebCheckOutPaymentWidgetState extends State<WebCheckOutPaymentWidget> {
   CheckOutPaymentMarker _currentMainContainer = CheckOutPaymentMarker.selectFromPaymentMethod;
   late CardItem? cardItem = null;
   late bool _showProcessedPayment = false;
+  late bool _showFinishedButton = false;
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
 
   Widget getMainContainer(
       BuildContext context,
@@ -61,7 +59,10 @@ class _WebCheckOutPaymentWidgetState extends State<WebCheckOutPaymentWidget> {
                       widget.currentUser,
                       widget.amount,
                       widget.currency,
-                      null)
+                      widget.description,
+                      null,
+
+                  )
                 );
               });
             }
@@ -87,40 +88,49 @@ class _WebCheckOutPaymentWidgetState extends State<WebCheckOutPaymentWidget> {
                    });
                  }
                ),
-            (r) => successResult(context, widget.model)
+            (r) => successResult(context, widget.model, _showFinishedButton, didPressFinished: widget.didPressFinished)
           )
         );
       case CheckOutPaymentMarker.finishedPayment:
-        return successResult(context, widget.model);
+        return successResult(context, widget.model, _showFinishedButton, didPressFinished: widget.didPressFinished);
       case CheckOutPaymentMarker.failedPayment:
         return errorResult('Payment Did Not Go Through', widget.model);
     }
   }
 
-  Widget getPaymentMethodToAdd(CheckOutServicesState state,) {
+  Widget getPaymentMethodToAdd(CheckOutServicesState state) {
     return state.authPaymentFailureOrSuccessOption.fold(
           () => Container(
           height: 600,
           width: 600,
           child: JumpingDots(color: widget.model.paletteColor, numberOfDots: 3)),
           (a) => a.fold(
-              (l) => Container(child: Text('Failed To Load Checkout Form')),
+              (l) => Container(child: Text('Failed To Load Checkout Form ${l.toString()}')),
               (r) => Container(
               height: 600,
               width: 600,
               child:  EmbeddedStripeCheckoutForm(
                 client_secret: r.stringItemOne,
                 didCompleteCheckout: () {
-                  setState(() {
-                    _currentMainContainer = CheckOutPaymentMarker.finishedPayment;
+                  if (mounted) {
+                    setState(() {
+                      _currentMainContainer = CheckOutPaymentMarker.finishedPayment;
+                    });
+
                     widget.didFinishPayment(r.stringItemTwo);
-                },
-              );
+                  // setState(() {
+                    // _currentMainContainer = CheckOutPaymentMarker.finishedPayment;
+                    // widget.didFinishPayment(r.stringItemTwo);
+                // },
+              // );
+              }
             },
             didNotCompleteSuccessfully: () {
-              setState(() {
-                _currentMainContainer = CheckOutPaymentMarker.failedPayment;
-              });
+              if (mounted) {
+                setState(() {
+                  _currentMainContainer = CheckOutPaymentMarker.failedPayment;
+                });
+              }
             },
           )
         )
@@ -150,11 +160,23 @@ class _WebCheckOutPaymentWidgetState extends State<WebCheckOutPaymentWidget> {
            paymentMethods.isEmpty,
            widget.amount,
            widget.currency,
-           widget.currentUser)
+           widget.description,
+           widget.currentUser,
+         )
         ),
         child: BlocConsumer<CheckOutServicesBloc, CheckOutServicesState>(
          listenWhen: (p,c) => p.isSubmitting != c.isSubmitting || p.authPaymentFailureOrSuccessOption != c.authPaymentFailureOrSuccessOption || p.authPaymentConfirmationFailureOrSuccessOption != c.authPaymentConfirmationFailureOrSuccessOption,
          listener: (context, state) {
+
+         state.authPaymentFailureOrSuccessOption.fold(
+               () => {},
+             (either) => either.fold((failure) {
+               print('failed');
+              },
+             (r) {
+               _showFinishedButton = true;
+            })
+         );
 
          state.authPaymentConfirmationFailureOrSuccessOption.fold(
                  () => {},
@@ -173,7 +195,9 @@ class _WebCheckOutPaymentWidgetState extends State<WebCheckOutPaymentWidget> {
            }, (r) {
               /// payment completed successfully
               _showProcessedPayment = true;
-             widget.didFinishPayment(r.stringItemTwo);
+              widget.didFinishPayment(r.stringItemTwo);
+              _showFinishedButton = true;
+
            })
          );
 
@@ -265,6 +289,7 @@ class _WebCheckOutPaymentWidgetState extends State<WebCheckOutPaymentWidget> {
                                          widget.currentUser,
                                          widget.amount,
                                          widget.currency,
+                                         widget.description,
                                          cardItem?.paymentId,
                                        ));
                                      }

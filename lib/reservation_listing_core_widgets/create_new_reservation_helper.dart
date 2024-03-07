@@ -109,13 +109,13 @@ List<ReservationTimeFeeSlotItem> getBaseCalendarList({
 /// Retrieve Dates that are closed
 List<DateTime> getClosedDatesForCalendar(
     DashboardModel model,
-    ReservationFormState state,
+    SpaceOptionSizeDetail? currentSelectedSpaceOption,
     int durationType,
     DateTimeRange startEnd,
     ) {
   List<DateTime> listForCalendar = [];
 
-  for (DateTime closedDates in getAvailabilityHoursTimeRegion(model, durationType, DateTimeRange(start: startEnd.start, end: startEnd.end), state.currentSelectedSpaceOption?.availabilityHoursSettings?.availabilityPeriod.hoursOpen.openHours.where((element) => element.isClosed).toList() ?? []).where((element) => element.text == 'Blocked').map((e) => e.startTime)) {
+  for (DateTime closedDates in getAvailabilityHoursTimeRegion(model, durationType, DateTimeRange(start: startEnd.start, end: startEnd.end), currentSelectedSpaceOption?.availabilityHoursSettings?.availabilityPeriod.hoursOpen.openHours.where((element) => element.isClosed).toList() ?? []).where((element) => element.text == 'Blocked').map((e) => e.startTime)) {
     listForCalendar.add(closedDates);
   }
   return listForCalendar;
@@ -124,21 +124,21 @@ List<DateTime> getClosedDatesForCalendar(
 
 
 /// Retrieve current session selected dates
-List<ReservationTimeFeeSlotItem> getSelectedDates(List<ReservationSlotItem> reservations, ReservationFormState state, DateTime currentDateTime) {
+List<ReservationTimeFeeSlotItem> getSelectedDates(List<ReservationSlotItem> reservations, SpaceOptionSizeDetail? currentSelectedSpaceOption, FacilityActivityCreatorForm? currentListingActivityOption, SpaceOption? currentSelectedSpace, DateTime currentDateTime) {
   List<ReservationTimeFeeSlotItem> selected = [];
 
   if (reservations.where(
           (element) =>
-      element.selectedActivityType == (state.currentListingActivityOption?.activity.activityId ?? FacilityActivityCreatorForm.empty().activity.activityId) &&
+      element.selectedActivityType == (currentListingActivityOption?.activity.activityId ?? FacilityActivityCreatorForm.empty().activity.activityId) &&
           element.selectedDate == (currentDateTime) &&
-          element.selectedSpaceId == (state.currentSelectedSpace?.uid ?? ReservationSlotItem.empty().selectedSpaceId) &&
-          element.selectedSportSpaceId == state.currentSelectedSpaceOption?.spaceId
+          element.selectedSpaceId == (currentSelectedSpace?.uid ?? ReservationSlotItem.empty().selectedSpaceId) &&
+          element.selectedSportSpaceId == currentSelectedSpaceOption?.spaceId
   ).isNotEmpty) {
     selected.addAll(reservations.firstWhere(
-            (element) => element.selectedActivityType == (state.currentListingActivityOption?.activity.activityId ?? FacilityActivityCreatorForm.empty().activity.activityId) &&
+            (element) => element.selectedActivityType == (currentListingActivityOption?.activity.activityId ?? FacilityActivityCreatorForm.empty().activity.activityId) &&
             element.selectedDate == (currentDateTime) &&
-            element.selectedSpaceId == (state.currentSelectedSpace?.uid ?? ReservationSlotItem.empty().selectedSpaceId) &&
-            element.selectedSportSpaceId == state.currentSelectedSpaceOption?.spaceId
+            element.selectedSpaceId == (currentSelectedSpace?.uid ?? ReservationSlotItem.empty().selectedSpaceId) &&
+            element.selectedSportSpaceId == currentSelectedSpaceOption?.spaceId
     ).selectedSlots);
   }
 
@@ -231,7 +231,7 @@ List<ReservationSlotItem> getReservationsForFutureDatesOnly(List<ReservationSlot
 
 }
 
-/// --------------------------------------------
+/// -------------------------------------------- ///
 /// Helper functions for container navigation and form completion
 bool checkCompletion(ReservationStepsMarker page, ReservationFormState state) {
   switch (page) {
@@ -239,7 +239,6 @@ bool checkCompletion(ReservationStepsMarker page, ReservationFormState state) {
     // TODO: Handle this case.
       break;
     case ReservationStepsMarker.selectDates:
-
       return (getListingTotalPriceDouble(state.newFacilityBooking.reservationSlotItem, state.newFacilityBooking.cancelledSlotItem ?? []) != 0);
     case ReservationStepsMarker.addAdditionalDetails:
       return true;

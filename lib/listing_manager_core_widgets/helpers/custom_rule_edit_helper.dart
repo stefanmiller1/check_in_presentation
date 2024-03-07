@@ -40,15 +40,21 @@ Widget widgetForCustomRule(
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
+                  Expanded(
+                      child: Row(
                     children: [
-                      Text(customRule.customRuleTitleLabel, style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize),),
+                      Expanded(
+                          child: Text(customRule.customRuleTitleLabel, style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize)
+                        )
+                      ),
                       if (customRule.customRuleOptionDetail?.isRequiredOption ?? false) Text('*', style: TextStyle(color: model.paletteColor),),
-                    ],
+                      ],
+                    ),
                   ),
                   if (customRule.customRuleOptionDetail?.labelHelpText != null && customRule.customRuleOptionDetail?.labelHelpText != '') IconButton(icon: Icon(Icons.info_outlined, color: model.paletteColor, size: 13.5,), tooltip: customRule.customRuleOptionDetail?.labelHelpText ?? '', onPressed: () {},)
                 ],
               ),
+
               SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -126,11 +132,13 @@ Widget widgetForCustomRule(
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
+                  Expanded(child: Row(
                     children: [
-                      Text(customRule.customRuleTitleLabel, style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize),),
+                      Expanded(
+                          child: Text(customRule.customRuleTitleLabel, style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize))),
                       if (customRule.customRuleOptionDetail?.isRequiredOption ?? false) Text('*', style: TextStyle(color: model.paletteColor),),
-                    ],
+                      ],
+                    ),
                   ),
                   if (customRule.customRuleOptionDetail?.labelHelpText != null && customRule.customRuleOptionDetail?.labelHelpText != '') IconButton(icon: Icon(Icons.info_outlined, color: model.paletteColor, size: 13.5,), tooltip: customRule.customRuleOptionDetail?.labelHelpText ?? '', onPressed: () {},)
                 ],
@@ -248,16 +256,20 @@ Widget widgetForCustomRule(
               SizedBox(height: 5),
               Row(
                 children: [
-                  Row(
+                  Expanded(
+                      child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(customRule.customRuleTitleLabel, style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize),),
+                      Expanded(
+                          child: Text(customRule.customRuleTitleLabel, style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize))),
                       if (customRule.customRuleOptionDetail?.isRequiredOption ?? false) Text('*', style: TextStyle(color: model.paletteColor),),
-                    ],
+                      ],
+                    ),
                   ),
                   if (customRule.customRuleOptionDetail?.labelHelpText != null && customRule.customRuleOptionDetail?.labelHelpText != '') IconButton(icon: Icon(Icons.info_outlined, color: model.paletteColor, size: 13.5,), tooltip: customRule.customRuleOptionDetail?.labelHelpText ?? '', onPressed: () {},)
                 ],
               ),
+
               SizedBox(height: 10),
               ...?customRule.selectionLabelOption?.selectionLabelOptions.where((element) => element.stringItem != '').map(
                       (e) => Padding(

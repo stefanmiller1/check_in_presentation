@@ -47,15 +47,16 @@ Widget getPaymentProcessingWidget(BuildContext context, DashboardModel model, Pa
   );
 }
 
-Widget successResult(BuildContext context, DashboardModel model) {
+Widget successResult(BuildContext context, DashboardModel model, bool showFinishButton,{required Function() didPressFinished}) {
   return Column(
     children: [
       Lottie.asset('assets/lottie_animations/uo8RQ4Hhlc.json'),
       const SizedBox(height: 20),
       Text('You\'re All Set', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
       const SizedBox(height: 20),
-      InkWell(
+      if (showFinishButton) InkWell(
         onTap: () {
+          didPressFinished();
           Navigator.of(context).pop();
         },
         child: Container(

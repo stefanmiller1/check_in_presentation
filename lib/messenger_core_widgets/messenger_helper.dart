@@ -9,7 +9,7 @@ Widget getRoomListTile(DashboardModel model, Room room, bool selected, bool hasN
   final Message? lastMessage = hasMessages ? messages.first : null;
   final textMessage = (lastMessage != null) ? lastMessage as TextMessage : null;
   late List<ReservationSlotItem> resSorted = slots..sort(((a,b) => a.selectedDate.compareTo(b.selectedDate)));
-  final bool resHasStarted = (resSorted.isNotEmpty) ? resSorted.first.selectedSlots.first.slotRange.start.isBefore(DateTime.now()) : false;
+  final bool resHasStarted = (resSorted.isNotEmpty && resSorted.first.selectedSlots.isNotEmpty) ? resSorted.first.selectedSlots.first.slotRange.start.isBefore(DateTime.now()) : false;
 
   room.users.removeWhere((element) => element.id == facade.FirebaseChatCore.instance.firebaseUser?.uid);
 
@@ -90,7 +90,7 @@ Widget getRoomListTile(DashboardModel model, Room room, bool selected, bool hasN
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (!isArchived && slots.isNotEmpty && !resHasStarted) Expanded(
+                          if (!isArchived && slots.isNotEmpty && !resHasStarted && resSorted.isNotEmpty && getAllRemainingDates(slots).isNotEmpty) Expanded(
                               child: Container(
                               decoration: BoxDecoration(
                                 color: (hasNewMessage) ? model.paletteColor : model.webBackgroundColor.withOpacity(0.4),
