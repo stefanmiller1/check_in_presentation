@@ -161,13 +161,13 @@ class _PaymentsSettingWidgetState extends State<PaymentsSettingWidget> {
                     const SizedBox(height: 10),
                     DropdownButtonHideUnderline(
                         child: DropdownButton2(
-                            offset: const Offset(-10,-15),
+                            // offset: const Offset(-10,-15),
                             isDense: true,
-                            buttonElevation: 0,
-                            buttonDecoration: BoxDecoration(
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(35),
-                            ),
+                            // buttonElevation: 0,
+                            // buttonDecoration: BoxDecoration(
+                            //   color: Colors.transparent,
+                            //   borderRadius: BorderRadius.circular(35),
+                            // ),
                             customButton: Container(
                               height: 50,
                               decoration: BoxDecoration(
@@ -194,24 +194,24 @@ class _PaymentsSettingWidgetState extends State<PaymentsSettingWidget> {
                             ),
                             onChanged: (Object? navItem) {
                             },
-                            buttonWidth: 80,
-                            buttonHeight: 70,
-                            dropdownElevation: 1,
-                            dropdownPadding: const EdgeInsets.all(1),
-                            dropdownDecoration: BoxDecoration(
-                                boxShadow: [BoxShadow(
-                                    color: Colors.black.withOpacity(0.07),
-                                    spreadRadius: 1,
-                                    blurRadius: 15,
-                                    offset: Offset(0, 2)
-                                )
-                                ],
-                                color: widget.model.accentColor,
-                                border: Border.all(color: widget.model.disabledTextColor),
-                                borderRadius: BorderRadius.circular(20)),
-                            itemHeight: 50,
-                            // dropdownWidth: mainWidth,
-                            focusColor: Colors.grey.shade100,
+                            // buttonWidth: 80,
+                            // buttonHeight: 70,
+                            // dropdownElevation: 1,
+                            // dropdownPadding: const EdgeInsets.all(1),
+                            // dropdownDecoration: BoxDecoration(
+                            //     boxShadow: [BoxShadow(
+                            //         color: Colors.black.withOpacity(0.07),
+                            //         spreadRadius: 1,
+                            //         blurRadius: 15,
+                            //         offset: Offset(0, 2)
+                            //     )
+                            //     ],
+                            //     color: widget.model.accentColor,
+                            //     border: Border.all(color: widget.model.disabledTextColor),
+                            //     borderRadius: BorderRadius.circular(20)),
+                            // itemHeight: 50,
+                            // // dropdownWidth: mainWidth,
+                            // focusColor: Colors.grey.shade100,
                             items: numberFormatSymbols.keys
                                 .map((key)=> key.toString().split('_'))
                                 .map((split)=>Locale(split[0],split.length == 1 ? null:split[1]))

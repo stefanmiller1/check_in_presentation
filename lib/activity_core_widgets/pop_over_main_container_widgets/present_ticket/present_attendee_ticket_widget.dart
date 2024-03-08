@@ -1,12 +1,5 @@
 part of check_in_presentation;
 
-// import 'dart:io';
-//
-// import 'package:check_in_domain/check_in_domain.dart';
-// import 'package:check_in_presentation/check_in_presentation.dart';
-// import 'package:flutter/material.dart';
-// import 'package:add_to_wallet/add_to_wallet.dart';
-
 
 class AttendeeTicketWidget extends StatefulWidget {
 

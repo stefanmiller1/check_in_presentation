@@ -26,6 +26,7 @@ import 'package:intl/intl.dart';
 import 'package:intl/number_symbols_data.dart';
 import 'package:material_floating_search_bar_2/material_floating_search_bar_2.dart';
 // import 'package:pattern_formatter/pattern_formatter.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'package:patterns_canvas/patterns_canvas.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:shimmer/shimmer.dart';
@@ -98,6 +99,7 @@ part 'core/web_core/payment_core/widgets/payment_processing_widget.dart';
 part 'core/check_out_view_widget.dart';
 part 'core/animated_complete_button.dart';
 part 'core/on_boarding_pop_over_widget.dart';
+part 'core/webview_controller_widget.dart';
 
 part 'activity_core_widgets/activity_icon_helper_widgets.dart';
 part 'activity_core_widgets/activity_instrutctor_helper_widgets.dart';
