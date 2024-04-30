@@ -23,7 +23,10 @@ dependencies:
   pattern_formatter: ^3.0.0
   image_picker_web: ^3.0.0+1
   image_picker: ^1.0.7
+  file_picker: ^8.0.0+1
   lottie: ^3.1.0
+  image: ^4.1.7
+  add_2_calendar: ^3.0.1
   glowy_borders: ^1.0.2
   auth_buttons:
     git:
@@ -37,6 +40,18 @@ dependencies:
   pass_flutter: ^2.0.2
   qr_flutter: ^4.1.0
   webview_flutter: ^4.0.2
+  badges: ^3.1.2
+  cupertino_icons: ^1.0.2
+  collection: ^1.16.0
+  geolocator: ^11.0.0
+  geocoding: ^2.0.5
+  fluster: ^1.2.0
+  flutter_cache_manager: ^3.3.0
+  flutter_contacts: ^1.1.7
+  map_launcher: ^3.2.0
+  alphabet_list_scroll_view:
+    git:
+      url: https://github.com/stefanmiller1/alphabet_list_scroll_view.git
   check_in_application:
     path: /Users/stefanmiller/AndroidStudioProjects/check_in_application
 

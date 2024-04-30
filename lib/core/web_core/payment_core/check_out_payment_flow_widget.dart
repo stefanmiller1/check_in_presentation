@@ -221,30 +221,28 @@ class _WebCheckOutPaymentWidgetState extends State<WebCheckOutPaymentWidget> {
                   ),
                 ),
 
-                CreateNewMain(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 65),
-                        Row(
-                          children: [
-                            Flexible(
-                                child: Container(
-                                    constraints: const BoxConstraints(maxWidth: 600),
-                                    child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: getMainContainer(
-                                                  context,
-                                                  state,
-                                                  _currentMainContainer,
-                                                  paymentMethods
-                                )
+                Column(
+                  children: [
+                    const SizedBox(height: 65),
+                      Row(
+                        children: [
+                          Flexible(
+                              child: Container(
+                                  constraints: const BoxConstraints(maxWidth: 600),
+                                  child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: getMainContainer(
+                                                context,
+                                                state,
+                                                _currentMainContainer,
+                                                paymentMethods
                               )
                             )
                           )
-                        ]
-                      )
-                    ]
-                  )
+                        )
+                      ]
+                    )
+                  ]
                 ),
 
                 Positioned(

@@ -116,7 +116,7 @@ Widget getContainerForSelectedAttendeeColumn({required BuildContext context, req
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (attendeeItem.classesInstructorProfile != null) instructorWidgetCard(attendeeItem.classesInstructorProfile!, context, model),
+            // if (attendeeItem.classesInstructorProfile != null) instructorWidgetCard(attendeeItem.classesInstructorProfile!, context, model),
             const SizedBox(height: 10),
             Align(
               alignment: Alignment.bottomRight,
@@ -213,7 +213,7 @@ Widget getContainerForSelectedAttendeeRow({required BuildContext context, requir
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (attendeeItem.classesInstructorProfile != null) instructorWidgetCard(attendeeItem.classesInstructorProfile!, context, model),
+                // if (attendeeItem.classesInstructorProfile != null) instructorWidgetCard(attendeeItem.classesInstructorProfile!, context, model),
                 const SizedBox(height: 10),
                 Align(
                   alignment: Alignment.bottomRight,

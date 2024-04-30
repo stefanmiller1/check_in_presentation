@@ -17,6 +17,7 @@ class ReservationRequestPartnershipAttendee extends StatefulWidget {
 class _ReservationRequestPartnershipAttendeeState extends State<ReservationRequestPartnershipAttendee> {
 
   NewAttendeeStepsMarker currentMarkerItem = NewAttendeeStepsMarker.requestToJoinComplete;
+  late bool isLoading = false;
 
   List<NewAttendeeContainerModel> attendeeMainContainer(BuildContext context, UserProfileModel? user, AttendeeFormState state) => [
     if (activityHasRules(widget.activityForm)) NewAttendeeContainerModel(
@@ -175,12 +176,15 @@ class _ReservationRequestPartnershipAttendeeState extends State<ReservationReque
                     ),
 
                     if (state.isSubmitting == false) CreateNewMain(
-                        child: attendeeMainContainer(context, item.profile, state).firstWhere((element) => element.markerItem == currentMarkerItem).childWidget
+                        model: widget.model,
+                        isLoading: isLoading,
+                        isPreviewer: false,
+                        child: attendeeMainContainer(context, item.profile, state)
                     ),
 
                     if (currentMarkerItem != NewAttendeeStepsMarker.requestToJoinComplete) ClipRRect(
                         child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                            filter: UI.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
                             child: Container(
                               height: 90,
                               width: MediaQuery.of(context).size.width,
@@ -188,9 +192,12 @@ class _ReservationRequestPartnershipAttendeeState extends State<ReservationReque
                               child: footerWidgetForNewAttendee(
                                 context,
                                 widget.model,
+                                false,
                                 currentMarkerItem,
+                                null,
                                 widget.activityForm,
                                 state,
+                                null,
                                 attendeeMainContainer(context, null, state).last.markerItem == currentMarkerItem,
                                 didSelectBack: () {
 
@@ -226,7 +233,7 @@ class _ReservationRequestPartnershipAttendeeState extends State<ReservationReque
                   ],
                 );
               },
-              orElse: () => GetLoginSignUpWidget(model: widget.model)
+              orElse: () => GetLoginSignUpWidget(model: widget.model, didLoginSuccess: () {  },)
           );
         },
       ),

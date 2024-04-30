@@ -163,7 +163,7 @@ Widget getSelectedSpaces(BuildContext context, SpaceOptionSizeDetail spaceDetail
            child: Container(
              height: 120,
               width: 120,
-              child: Image(image: spaceDetailOptions.spacePhoto!.image, fit: BoxFit.fill)
+              child: Image(image: spaceDetailOptions.spacePhoto!.image, fit: BoxFit.cover)
            )
          ),
        ),
@@ -179,8 +179,6 @@ Widget getSelectedSpaces(BuildContext context, SpaceOptionSizeDetail spaceDetail
             ],
           )
         )
-
-
       ],
     ),
   );

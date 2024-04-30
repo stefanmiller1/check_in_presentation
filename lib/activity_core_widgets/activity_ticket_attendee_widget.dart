@@ -158,16 +158,13 @@ Widget mainContainerTicket({required BuildContext context, required DashboardMod
             ),
             const SizedBox(width: 5),
             Text('Tickets', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize)),
-          ]
+        ]
       )
-
-
     ]
   );
 }
 
 Widget getTicketForEntireActivity(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityForm, ActivityTicketOption e, bool showFindTickets, bool showTrailing, bool isSelected, {required Function(ActivityTicketOption) didSelectTicket}) {
-  print('entire ticket $e');
   return Container(
     decoration: BoxDecoration(
         color: model.accentColor,

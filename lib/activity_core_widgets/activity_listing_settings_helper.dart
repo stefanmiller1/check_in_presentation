@@ -34,6 +34,8 @@ List<SettingsItemModel> subActivitySettingItems(ActivityManagerForm? activityFor
     SettingsItemModel(settingIcon: Icons.create_outlined ,sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.customFields, settingsTitle: 'Custom Rules', settingSubTitle: '', resSlotItem: null),
     SettingsItemModel(settingIcon: Icons.sticky_note_2_outlined ,sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.checkIns, settingsTitle: 'Check-Ins', settingSubTitle: '', resSlotItem: null),
     SettingsItemModel(settingIcon: Icons.rule_rounded ,sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.activityRules, settingsTitle: 'Activity Rules', settingSubTitle: '', resSlotItem: null),
+    SettingsItemModel(settingIcon: Icons.note_alt_outlined, sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.vendorForm, settingsTitle: 'Vendor Forms', settingSubTitle: 'create forms for vendors', resSlotItem: null),
+
     if ((activityForm?.activityAttendance.isTicketBased ?? false) || (activityForm?.activityAttendance.isPassBased ?? false)) SettingsItemModel(settingIcon: Icons.cancel_outlined ,sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.cancellations, settingsTitle: 'Cancellations', settingSubTitle: '', resSlotItem: null),
 
     /// payments dependant on activity attendees type (if tickets, then show, tickkets cannot be bought until stripe account is set),

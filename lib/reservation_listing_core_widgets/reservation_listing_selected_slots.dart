@@ -622,7 +622,6 @@ Widget reservationDatesWrapped(
         Wrap(
           children: entry.value.map(
                   (e) {
-
                 return Container(
                     decoration: BoxDecoration(
                       color: Colors.transparent,
@@ -633,8 +632,7 @@ Widget reservationDatesWrapped(
                         child: Container(
                             decoration: BoxDecoration(
                                 color: model.paletteColor.withOpacity(0.025),
-                                borderRadius: BorderRadius.all(Radius.circular(25),
-                                )
+                                borderRadius: BorderRadius.all(Radius.circular(25))
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(9.0),
@@ -643,61 +641,20 @@ Widget reservationDatesWrapped(
                                 children: [
                                   Flexible(child: Text('${DateFormat.MMMEd().format(e.selectedDate)} ·', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade), maxLines: 1)),
                                   const SizedBox(width: 5),
-                                  ...groupConsecutiveSlots(e.selectedSlots).map(
-                                          (f) => (isFullDaySlot(f)) ? Text('All Day', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade), maxLines: 1,) : Text('${DateFormat.jm().format(f.slotRange.start)} - ${DateFormat.jm().format(f.slotRange.end)}', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade), maxLines: 1,),
+                                  ...groupConsecutiveSlots(e.selectedSlots).map((f) => (isFullDaySlot(f)) ? Text('All Day', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade), maxLines: 1,) : Text('${DateFormat.jm().format(f.slotRange.start)} - ${DateFormat.jm().format(f.slotRange.end)}', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade), maxLines: 1,),
                                   ).toList(),
                                   const SizedBox(width: 5),
                                   Icon(Icons.calendar_today_outlined, size: 20, color: model.disabledTextColor),
-                                ],
-                              ),
-                            )
-                        )
-                    )
-                );
-              }
-          ).toList()
+                      ],
+                    ),
+                  )
+                )
+              )
+            );
+          }
+        ).toList()
       ),
     ],
   );
 }
 
-List<ReservationTimeFeeSlotItem> groupConsecutiveSlots(List<ReservationTimeFeeSlotItem> slots) {
-  if (slots.isEmpty) return [];
-  final List<ReservationTimeFeeSlotItem> slotsToGroup = [];
-  slotsToGroup.addAll(slots);
-
-  // Sort slots based on their start times
-  slotsToGroup.sort((a, b) => a.slotRange.start.compareTo(b.slotRange.start));
-
-  List<ReservationTimeFeeSlotItem> groupedSlots = [];
-  DateTimeRange currentRange = slotsToGroup.first.slotRange;
-
-  for (int i = 1; i < slotsToGroup.length; i++) {
-    ReservationTimeFeeSlotItem currentSlot = slotsToGroup[i];
-
-    // Check if the current slot is consecutive with the current range
-    if (currentSlot.slotRange.start.difference(currentRange.end).inMinutes <= 0) {
-      // Extend the current range's end time if the current slot is consecutive
-      currentRange = DateTimeRange(
-        start: currentRange.start,
-        end: currentSlot.slotRange.end,
-      );
-    } else {
-      // Non-consecutive slot, add the current range to the grouped slots list
-      groupedSlots.add(ReservationTimeFeeSlotItem(
-        fee: slotsToGroup[i - 1].fee,
-        slotRange: currentRange,
-      ));
-      // Start a new range with the current slot
-      currentRange = currentSlot.slotRange;
-    }
-  }
-
-  // Add the last range
-  groupedSlots.add(ReservationTimeFeeSlotItem(
-    fee: slots.last.fee,
-    slotRange: currentRange,
-  ));
-
-  return groupedSlots;
-}

@@ -2,7 +2,7 @@ part of check_in_presentation;
 
 
 enum SettingSectionMarker {profile, type, requirements, reservation, attendees, rules}
-enum SettingNavMarker {backgroundInfo, requirementsInfo, locationInfo, spaces, reservations, reservation, spaceOption, activity, hoursAndAvailability, accessAndVisibility, cancellations, customFields, spaceRules, activityRules, payments, checkIns, reservationConditions, pricingRules, quotas, attendanceType, ticketBased, passesBased}
+enum SettingNavMarker {backgroundInfo, requirementsInfo, locationInfo, spaces, reservations, reservation, spaceOption, activity, hoursAndAvailability, accessAndVisibility, cancellations, customFields, spaceRules, activityRules, payments, checkIns, vendorForm, reservationConditions, pricingRules, quotas, attendanceType, ticketBased, passesBased}
 
 class SettingsSectionItemModel {
 

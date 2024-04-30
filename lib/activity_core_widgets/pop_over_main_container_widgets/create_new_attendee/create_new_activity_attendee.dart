@@ -19,6 +19,7 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
 
   /// new attendee main container
   NewAttendeeStepsMarker currentMarkerItem = NewAttendeeStepsMarker.addActivityCustomRules;
+  late bool isLoading = false;
 
   List<NewAttendeeContainerModel> attendeeMainContainer(BuildContext context, UserProfileModel? user, AttendeeFormState state) => [
 
@@ -98,8 +99,6 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
             contactStatus: (widget.activityForm.rulesService.accessVisibilitySetting.isReviewRequired == true) ? ContactStatus.requested : ContactStatus.joined,
             customFieldRuleSetting: widget.activityForm.rulesService.customFieldRuleSetting,
             checkInSetting: widget.activityForm.rulesService.checkInSetting,
-            classesInstructorProfile: ClassesInstructorProfile.empty(),
-            eventMerchantVendorProfile: EventMerchantVendorProfile.empty(),
             dateCreated: DateTime.now())
           ),
           dart.optionOf(widget.reservation),
@@ -146,11 +145,13 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
             child: Scaffold(
               resizeToAvoidBottomInset: true,
               appBar: AppBar(
-              elevation: 0,
-              backgroundColor: widget.model.paletteColor,
-              automaticallyImplyLeading: false,
-              title: Text('Join Activity', style: TextStyle(color: widget.model.accentColor)),
-              centerTitle: true,
+                backgroundColor: (widget.model.systemTheme.brightness != Brightness.dark) ? widget.model.paletteColor : widget.model.mobileBackgroundColor,
+                elevation: 0,
+                automaticallyImplyLeading: true,
+                centerTitle: true,
+                toolbarHeight: 80,
+                title: Text('Join Activity'),
+                titleTextStyle: TextStyle(color: (widget.model.systemTheme.brightness != Brightness.dark) ? widget.model.accentColor : widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
                 actions: [
                  if (currentMarkerItem != NewAttendeeStepsMarker.joinComplete || currentMarkerItem != NewAttendeeStepsMarker.requestToJoinComplete) Visibility(
                    visible: state.isSubmitting == false,
@@ -185,7 +186,7 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
 
                 ClipRRect(
                     child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                      filter: UI.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
                       child: Container(
                         height: 90,
                         width: MediaQuery.of(context).size.width,
@@ -193,9 +194,12 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
                         child: footerWidgetForNewAttendee(
                             context,
                             widget.model,
+                            false,
                             currentMarkerItem,
+                            null,
                             widget.activityForm,
                             state,
+                            null,
                             attendeeMainContainer(context, null, state).last.markerItem == currentMarkerItem,
                             didSelectBack: () {
 
@@ -253,10 +257,16 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
           return authState.maybeMap(
               loadUserProfileSuccess: (item) {
                 return CreateNewMain(
-                    child: attendeeMainContainer(context, item.profile, state).firstWhere((element) => element.markerItem == currentMarkerItem).childWidget
+                    isLoading: isLoading,
+                    model: widget.model,
+                    isPreviewer: false,
+                    child: attendeeMainContainer(context, item.profile, state)
                 );
               },
-              orElse: () => GetLoginSignUpWidget(model: widget.model)
+              orElse: () => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: GetLoginSignUpWidget(model: widget.model, didLoginSuccess: () {  },),
+              )
           );
         },
       ),

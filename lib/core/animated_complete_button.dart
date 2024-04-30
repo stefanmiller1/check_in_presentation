@@ -1,7 +1,7 @@
 part of check_in_presentation;
 
 
-class AnimatedBorderButton extends StatelessWidget {
+class AnimatedBorderButton extends StatefulWidget {
 
   final String buttonText;
   final bool isActivated;
@@ -11,38 +11,47 @@ class AnimatedBorderButton extends StatelessWidget {
   const AnimatedBorderButton({super.key, required this.buttonText, required this.isActivated, required this.model, required this.didSelectButton});
 
   @override
+  State<AnimatedBorderButton> createState() => _AnimatedBorderButtonState();
+}
+
+class _AnimatedBorderButtonState extends State<AnimatedBorderButton> {
+
+  @override
   Widget build(BuildContext context) {
+    if (!mounted) {
+      return Container();
+    }
     return IgnorePointer(
-      ignoring: !isActivated,
+      ignoring: !widget.isActivated,
       child: InkWell(
         onTap: () {
-          didSelectButton();
+          widget.didSelectButton();
         },
         child: AnimatedGradientBorder(
-          borderSize: (isActivated) ? 5 : 0,
-          glowSize: (isActivated) ? 2 : 0,
+          borderSize: (widget.isActivated) ? 5 : 0,
+          glowSize: (widget.isActivated) ? 2 : 0.1,
           gradientColors: const [
             // Color.fromRGBO(0, 0, 0, 1.0),
             Color.fromRGBO(202, 137, 255, 1.0),
             Color.fromRGBO(255, 61, 106, 1.0),
             Color.fromRGBO(60, 11, 206, 1.0),
           ],
-          borderRadius: BorderRadius.all(Radius.circular(999)),
+          borderRadius: BorderRadius.all(Radius.circular(50)),
           child: Container(
             // constraints: const BoxConstraints(maxWidth: 200),
             height: 45,
             // width: 150,
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(999)),
-                border: (isActivated) ? null : Border.all(color: model.disabledTextColor, width: 1),
-                color: (isActivated) ? model.paletteColor : model.webBackgroundColor
+                borderRadius: BorderRadius.all(Radius.circular(50)),
+                border: (widget.isActivated) ? null : Border.all(color: widget.model.disabledTextColor, width: 1),
+                color: (widget.isActivated) ? widget.model.paletteColor : widget.model.webBackgroundColor
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(buttonText, style: TextStyle(color: (isActivated) ? model.accentColor : model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+                  Text(widget.buttonText, style: TextStyle(color: (widget.isActivated) ? widget.model.accentColor : widget.model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize)),
                 ],
               ),
             ),
@@ -51,6 +60,4 @@ class AnimatedBorderButton extends StatelessWidget {
       ),
     );
   }
-
-
 }

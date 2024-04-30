@@ -30,7 +30,7 @@ Widget getInstructorAttendeeType(BuildContext context, DashboardModel model, {re
               },
             ),
             const SizedBox(height: 10),
-            if (attendee.classesInstructorProfile != null) instructorWidgetCard(attendee.classesInstructorProfile!, context, model),
+            // if (attendee.classesInstructorProfile != null) instructorWidgetCard(attendee.classesInstructorProfile!, context, model),
             const SizedBox(height: 10),
             Align(
               alignment: Alignment.bottomRight,
@@ -39,10 +39,10 @@ Widget getInstructorAttendeeType(BuildContext context, DashboardModel model, {re
                   borderRadius: BorderRadius.circular(40),
                   color: model.accentColor
                 ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Text(attendee.contactStatus == null ? 'Invited' : getContactStatusName(attendee.contactStatus!), style: TextStyle(color: model.disabledTextColor)),
-                  )
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Text(attendee.contactStatus == null ? 'Invited' : getContactStatusName(attendee.contactStatus!), style: TextStyle(color: model.disabledTextColor)),
+                )
               ),
             )
           ]
@@ -99,12 +99,8 @@ Widget getVendorAttendeeType(BuildContext context, DashboardModel model, {requir
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height
             ),
-            if (attendee.eventMerchantVendorProfile != null) Container(
-              height: 320,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.network(attendee.eventMerchantVendorProfile!.uriImage, fit: BoxFit.cover,)
-              ),
+            if (attendee.eventMerchantVendorProfile != null) CircleAvatar(
+              radius: 40
             ),
 
             if (attendee.eventMerchantVendorProfile == null) Positioned(
@@ -168,3 +164,5 @@ Widget getVendorAttendeeType(BuildContext context, DashboardModel model, {requir
     ),
   );
 }
+
+

@@ -11,7 +11,7 @@ Widget getPaymentProcessingWidget(BuildContext context, DashboardModel model, Pa
             requiresMoreAction: (e) => Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Lottie.asset(
+                lottie.Lottie.asset(
                     height: 200,
                     'assets/lottie_animations/animation_lkjyr3j5.zip'),
                 const SizedBox(height: 15),
@@ -50,7 +50,7 @@ Widget getPaymentProcessingWidget(BuildContext context, DashboardModel model, Pa
 Widget successResult(BuildContext context, DashboardModel model, bool showFinishButton,{required Function() didPressFinished}) {
   return Column(
     children: [
-      Lottie.asset('assets/lottie_animations/uo8RQ4Hhlc.json'),
+      lottie.Lottie.asset('assets/lottie_animations/uo8RQ4Hhlc.json'),
       const SizedBox(height: 20),
       Text('You\'re All Set', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
       const SizedBox(height: 20),
@@ -85,7 +85,7 @@ Widget errorResult(String errorMessage, DashboardModel model,) {
   child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Lottie.asset('assets/lottie_animations/animation_lkk5o86r.json'),
+        lottie.Lottie.asset('assets/lottie_animations/animation_lkk5o86r.json'),
         const SizedBox(height: 20),
         Text(errorMessage, style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
       ]

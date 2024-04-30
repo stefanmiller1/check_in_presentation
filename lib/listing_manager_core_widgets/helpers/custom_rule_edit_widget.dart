@@ -138,9 +138,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                             stringItem: e
                           );
                           List<StringBoolItem> selectionOptions = [option1, option2, option3, option4, option5, option6];
-                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged(SelectionLabelOption(
+                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged([SelectionLabelOption(
                               selectionLabelOptions: selectionOptions,
-                              isMultiSelection: true)));
+                              isMultiSelection: true)]));
                         });
                       }),
                 ),
@@ -156,9 +156,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                               stringItem: e
                           );
                           List<StringBoolItem> selectionOptions = [option1, option2, option3, option4, option5, option6];
-                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged(SelectionLabelOption(
+                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged([SelectionLabelOption(
                               selectionLabelOptions: selectionOptions,
-                              isMultiSelection: true)));
+                              isMultiSelection: true)]));
                         });
                       }),
                 ),
@@ -178,9 +178,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                               stringItem: e
                           );
                           List<StringBoolItem> selectionOptions = [option1, option2, option3, option4, option5, option6];
-                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged(SelectionLabelOption(
+                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged([SelectionLabelOption(
                               selectionLabelOptions: selectionOptions,
-                              isMultiSelection: true)));
+                              isMultiSelection: true)]));
                         });
                       }),
                 ),
@@ -196,9 +196,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                               stringItem: e
                           );
                           List<StringBoolItem> selectionOptions = [option1, option2, option3, option4, option5, option6];
-                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged(SelectionLabelOption(
+                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged([SelectionLabelOption(
                               selectionLabelOptions: selectionOptions,
-                              isMultiSelection: true)));
+                              isMultiSelection: true)]));
                         });
                       }),
                 ),
@@ -218,9 +218,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                               stringItem: e
                           );
                           List<StringBoolItem> selectionOptions = [option1, option2, option3, option4, option5, option6];
-                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged(SelectionLabelOption(
+                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged([SelectionLabelOption(
                               selectionLabelOptions: selectionOptions,
-                              isMultiSelection: true)));
+                              isMultiSelection: true)]));
                         });
                       }),
                 ),
@@ -236,9 +236,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                               stringItem: e
                           );
                           List<StringBoolItem> selectionOptions = [option1, option2, option3, option4, option5, option6];
-                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged(SelectionLabelOption(
+                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged([SelectionLabelOption(
                               selectionLabelOptions: selectionOptions,
-                              isMultiSelection: true)));
+                              isMultiSelection: true)]));
 
                         });
                       }),
@@ -288,9 +288,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                               stringItem: e
                           );
                           List<StringBoolItem> selectionOptions = [option1, option2, option3, option4, option5, option6];
-                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged(SelectionLabelOption(
+                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged([SelectionLabelOption(
                               selectionLabelOptions: selectionOptions,
-                              isMultiSelection: true)));
+                              isMultiSelection: true)]));
                         });
                       }),
                 ),
@@ -306,9 +306,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                               stringItem: e
                           );
                           List<StringBoolItem> selectionOptions = [option1, option2, option3, option4, option5, option6];
-                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged(SelectionLabelOption(
+                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged([SelectionLabelOption(
                               selectionLabelOptions: selectionOptions,
-                              isMultiSelection: true)));
+                              isMultiSelection: true)]));
                         });
                       }),
                 ),
@@ -328,9 +328,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                               stringItem: e
                           );
                           List<StringBoolItem> selectionOptions = [option1, option2, option3, option4, option5, option6];
-                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged(SelectionLabelOption(
+                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged([SelectionLabelOption(
                               selectionLabelOptions: selectionOptions,
-                              isMultiSelection: true)));
+                              isMultiSelection: true)]));
                         });
                       }),
                 ),
@@ -346,9 +346,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                               stringItem: e
                           );
                           List<StringBoolItem> selectionOptions = [option1, option2, option3, option4, option5, option6];
-                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged(SelectionLabelOption(
+                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged([SelectionLabelOption(
                               selectionLabelOptions: selectionOptions,
-                              isMultiSelection: true)));
+                              isMultiSelection: true)]));
                         });
                       }),
                 ),
@@ -368,9 +368,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                               stringItem: e
                           );
                           List<StringBoolItem> selectionOptions = [option1, option2, option3, option4, option5, option6];
-                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged(SelectionLabelOption(
+                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged([SelectionLabelOption(
                               selectionLabelOptions: selectionOptions,
-                              isMultiSelection: true)));
+                              isMultiSelection: true)]));
                         });
                       }),
                 ),
@@ -386,9 +386,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                               stringItem: e
                           );
                           List<StringBoolItem> selectionOptions = [option1, option2, option3, option4, option5, option6];
-                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged(SelectionLabelOption(
+                          context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleSelectionRuleChanged([SelectionLabelOption(
                               selectionLabelOptions: selectionOptions,
-                              isMultiSelection: true)));
+                              isMultiSelection: true)]));
 
                         });
                       }),
@@ -572,15 +572,15 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
               didUpdateLabel: (e) {
               setState(() {
 
-                context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleCheckBoxRuleChanged(CheckBoxRuleOption(
-                    selectableLink: context.read<CustomRuleFormBloc>().state.customRuleOption.checkBoxRuleOption?.selectableLink,
-                    labelForRequirement: StringBoolItem(
-                        stringItem: e,
-                        boolItem: false
-                      )
-                    )
-                  )
-                );
+                // context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleCheckBoxRuleChanged(CheckBoxRuleOption(
+                //     selectableLink: context.read<CustomRuleFormBloc>().state.customRuleOption.checkBoxRuleOption?.selectableLink,
+                //     labelForRequirement: StringBoolItem(
+                //         stringItem: e,
+                //         boolItem: false
+                //       )
+                //     )
+                //   )
+                // );
 
               });
             }),
@@ -598,15 +598,15 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
                 didUpdateLabel: (e) {
               setState(() {
 
-                context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleCheckBoxRuleChanged(CheckBoxRuleOption(
-                      selectableLink: e,
-                      labelForRequirement: context.read<CustomRuleFormBloc>().state.customRuleOption.checkBoxRuleOption?.labelForRequirement ?? StringBoolItem(
-                          stringItem: context.read<CustomRuleFormBloc>().state.customRuleOption.checkBoxRuleOption?.labelForRequirement.stringItem ?? '',
-                          boolItem: false
-                      )
-                    )
-                  )
-                );
+                // context.read<CustomRuleFormBloc>()..add(CustomRuleFormEvent.customRuleCheckBoxRuleChanged(CheckBoxRuleOption(
+                //       selectableLink: e,
+                //       labelForRequirement: context.read<CustomRuleFormBloc>().state.customRuleOption.checkBoxRuleOption?.labelForRequirement ?? StringBoolItem(
+                //           stringItem: context.read<CustomRuleFormBloc>().state.customRuleOption.checkBoxRuleOption?.labelForRequirement.stringItem ?? '',
+                //           boolItem: false
+                //       )
+                //     )
+                //   )
+                // );
               });
             }),
 
@@ -625,9 +625,9 @@ class _CustomRuleEditFormState extends State<CustomRuleEditForm> {
       case CustomRuleObjectType.textFieldRule:
         return _firstTextEditingController.text != '';
       case CustomRuleObjectType.singleSelectionRule:
-        return _firstTextEditingController.text != '' && (ruleOption.selectionLabelOption?.selectionLabelOptions.where((element) => element.stringItem != '').isNotEmpty ?? false);
+        // return _firstTextEditingController.text != '' && (ruleOption.selectionLabelOption?.selectionLabelOptions.where((element) => element.stringItem != '').isNotEmpty ?? false);
       case CustomRuleObjectType.multiSelectionRule:
-        return _firstTextEditingController.text != '' && (ruleOption.selectionLabelOption?.selectionLabelOptions.where((element) => element.stringItem != '').isNotEmpty ?? false);
+        // return _firstTextEditingController.text != '' && (ruleOption.selectionLabelOption?.selectionLabelOptions.where((element) => element.stringItem != '').isNotEmpty ?? false);
       case CustomRuleObjectType.numberLimitRule:
         return _firstTextEditingController.text != '';
       case CustomRuleObjectType.checkBoxRule:

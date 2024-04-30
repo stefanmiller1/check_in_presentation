@@ -50,7 +50,7 @@ String headerString(CheckOutPaymentMarker marker) {
 Widget bottomNavWidget(BuildContext context, DashboardModel model, bool isNextValid, bool isBackValid, CheckOutPaymentMarker marker, {required Function() didSelectBack, required Function() didSelectNext}) {
   return ClipRRect(
     child: BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+      filter: UI.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
       child: Center(
         child: Container(
           color: Colors.grey.shade200.withOpacity(0.5),
