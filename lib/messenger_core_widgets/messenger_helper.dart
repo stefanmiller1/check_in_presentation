@@ -2,12 +2,12 @@ part of check_in_presentation;
 
 enum MessengerContainerMarker {messages, support, archive}
 
-Widget getRoomListTile(DashboardModel model, Room room, bool selected, bool hasNewMessage, bool isArchived, List<Message> messages, List<ReservationSlotItem> slots, {required Function(Room) didSelectRoom}) {
+Widget getRoomListTile(DashboardModel model, Room room, bool selected, bool hasNewMessage, bool isArchived, List<types.Message> messages, List<ReservationSlotItem> slots, {required Function(Room) didSelectRoom}) {
 
   final hasImage = room.imageUrl != null;
   final hasMessages = messages.isNotEmpty;
-  final Message? lastMessage = hasMessages ? messages.first : null;
-  final textMessage = (lastMessage != null) ? lastMessage as TextMessage : null;
+  final types.Message? lastMessage = hasMessages ? messages.first : null;
+  final textMessage = (lastMessage != null) ? lastMessage as types.TextMessage : null;
   late List<ReservationSlotItem> resSorted = slots..sort(((a,b) => a.selectedDate.compareTo(b.selectedDate)));
   final bool resHasStarted = (resSorted.isNotEmpty && resSorted.first.selectedSlots.isNotEmpty) ? resSorted.first.selectedSlots.first.slotRange.start.isBefore(DateTime.now()) : false;
 
@@ -197,7 +197,7 @@ Widget loadingRoomItem(BuildContext context) {
 }
 
 /// setup avatar for one member
-Widget retrieveSystemMessageBuilder(SystemMessage message, BuildContext context, DashboardModel model) {
+Widget retrieveSystemMessageBuilder(types.SystemMessage message, BuildContext context, DashboardModel model) {
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 8),
     child: Padding(

@@ -1,4 +1,5 @@
 import 'package:check_in_presentation/check_in_presentation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class NotificationProfile extends StatefulWidget {
@@ -41,6 +42,7 @@ class _NotificationProfileState extends State<NotificationProfile> with SingleTi
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        automaticallyImplyLeading: (kIsWeb == false),
         backgroundColor: Colors.transparent,
         titleTextStyle: TextStyle(color: widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
         elevation: 0,

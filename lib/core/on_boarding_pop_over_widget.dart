@@ -3,9 +3,11 @@ part of check_in_presentation;
 class OnBoardingPopOverWidget extends StatefulWidget {
 
   final DashboardModel model;
+  final double width;
+  final double height;
   final Widget popOverWidget;
 
-  const OnBoardingPopOverWidget({super.key, required this.popOverWidget, required this.model});
+  const OnBoardingPopOverWidget({super.key, required this.popOverWidget, required this.model, required this.width, required this.height});
 
   @override
   State<OnBoardingPopOverWidget> createState() => _OnBoardingPopOverWidgetState();
@@ -43,8 +45,8 @@ class _OnBoardingPopOverWidgetState extends State<OnBoardingPopOverWidget> {
           ),
         ),
         AnimatedContainer(
-          width: isOpen ? 600 : 0,
-          height: isOpen ? 750 : 0,
+          width: isOpen ? widget.width : 0,
+          height: isOpen ? widget.height : 0,
           constraints: BoxConstraints(maxWidth: 600),
           duration: Duration(milliseconds: 200),
           curve: Curves.easeIn,
@@ -65,8 +67,8 @@ class _OnBoardingPopOverWidgetState extends State<OnBoardingPopOverWidget> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Container(
-              height: 750,
-              constraints: BoxConstraints(maxWidth: 600),
+              height: widget.height,
+              constraints: BoxConstraints(maxWidth: widget.width),
               child: ClipRRect(
                   borderRadius: BorderRadius.circular(18),
                   child: widget.popOverWidget

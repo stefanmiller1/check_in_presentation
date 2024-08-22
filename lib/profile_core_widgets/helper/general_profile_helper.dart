@@ -5,9 +5,118 @@ List<String> predefinedGenderOptions() {
   return ['Female','Male','Non-Binary','Prefer Not To Say'];
 }
 
+class ProfileGeneralHelper {
+
+  static late PagingController<int, ReservationPreviewer>? pagingController = null;
+  static const _pageSize = 15;
+
+  static Future<void> fetchAllReservations(BuildContext context, String userId, int pageKey) async {
+    try {
+
+      List<ReservationPreviewer> activityItems = [];
+      if (facade.ReservationFacade.instance.lastDoc != null) {
+        final newItems = await facade.ReservationFacade.instance.getAllReservations(
+            statusType: [ReservationSlotState.completed],
+            hoursTimeAhead: null,
+            hoursTimeBefore: null,
+            isActivity: true,
+            isLookingForVendor: null,
+            userId: userId,
+            limit: _pageSize,
+            startAfterDoc: facade.ReservationFacade.instance.lastDoc
+        );
+        facade.ReservationFacade.instance.lastDoc = newItems.$2;
+        activityItems = await getReservationPreviewData(newItems.$1);
+      } else {
+        final newItems = await facade.ReservationFacade.instance.getAllReservations(
+            statusType: [ReservationSlotState.completed],
+            hoursTimeAhead: null,
+            hoursTimeBefore: null,
+            isActivity: true,
+            isLookingForVendor: null,
+            userId: userId,
+            limit: _pageSize,
+            startAfterDoc: null
+        );
+        facade.ReservationFacade.instance.lastDoc = newItems.$2;
+        activityItems = await getReservationPreviewData(newItems.$1);
+      }
+
+      if (activityItems.isNotEmpty && (pagingController?.itemList?.map((e) => e.reservation?.reservationId).contains(activityItems.first.reservation?.reservationId) ?? false)) {
+        pagingController?.appendLastPage([]);
+        return;
+      } else {
+        final nextPageKey = pageKey + activityItems.length;
+        pagingController?.appendPage(activityItems, nextPageKey);
+      }
+
+
+    } catch (error) {
+      print(error);
+      pagingController?.error = error;
+    }
+  }
+
+  static Future<List<ReservationPreviewer>> getReservationPreviewData(List<ReservationItem> reservations) async {
+    late List<ReservationPreviewer> resToPreview = [];
+
+    for (ReservationItem reservationItem in reservations) {
+
+      ReservationPreviewer resPreview = ReservationPreviewer(
+        reservation: reservationItem,
+        previewWeight: 0,
+      );
+
+      try {
+        final reservationOwnerProfile = await facade.UserProfileFacade.instance.getCurrentUserProfile(userId: reservationItem.reservationOwnerId.getOrCrash());
+        resPreview = resPreview.copyWith(
+            reservationOwnerProfile: reservationOwnerProfile
+        );
+
+      } catch (e) {
+        Future.error(e);
+      }
+
+      try {
+
+        final listingManagerForm = await facade.ListingFacade.instance.getListingManagerItem(listingId: reservationItem.instanceId.getOrCrash());
+        resPreview = resPreview.copyWith(
+            listing: listingManagerForm
+        );
+
+      } catch (e) {
+        Future.error(e);
+      }
+
+
+      try {
+        final activityManagerForm = await facade.ActivitySettingsFacade.instance
+            .getActivitySettings(
+            reservationId: reservationItem.reservationId.getOrCrash()
+        );
+        resPreview = resPreview.copyWith(
+            activityManagerForm: activityManagerForm
+        );
+
+      } catch (e) {
+        Future.error(e);
+      }
+
+
+      resToPreview.add(resPreview);
+    }
+
+    /// order from highest weight to smallest
+    return resToPreview.sorted((a, b) => retrieveTimeStampForFirstTimeSlot(b.reservation?.reservationSlotItem ?? []).compareTo(retrieveTimeStampForFirstTimeSlot(a.reservation?.reservationSlotItem ?? [])));
+  }
+
+}
+
 Widget retrieveUserProfile(String profileId, DashboardModel model, Color? backgroundColor, Color? textColor, double? textSize, {required UserProfileType profileType, required Widget? trailingWidget, required Function(UserProfileModel) selectedButton, }) {
+
   return BlocProvider(create: (context) => getIt<UserProfileWatcherBloc>()..add(UserProfileWatcherEvent.watchSelectedUserProfileStarted(profileId)),
     child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
+        buildWhen: (p,c) => p != c,
         builder: (context, state) {
           return state.maybeMap(
               loadInProgress: (_) => (profileType != UserProfileType.firstLetterNameOnlyProfile) ? progressOverlay(model) : Container(),

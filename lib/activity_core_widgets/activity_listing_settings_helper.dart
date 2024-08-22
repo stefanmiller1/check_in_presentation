@@ -4,10 +4,10 @@ part of check_in_presentation;
 List<SettingsSectionItemModel> activitySettingsHeader(BuildContext context) {
   return [
     SettingsSectionItemModel(settingTitle: 'Activity Profile', sectionMarker: SettingSectionMarker.profile),
-    SettingsSectionItemModel(settingTitle: 'Activity Type', sectionMarker: SettingSectionMarker.type),
+    // SettingsSectionItemModel(settingTitle: 'Activity Type', sectionMarker: SettingSectionMarker.type),
     SettingsSectionItemModel(settingTitle: 'Your Requirements', sectionMarker: SettingSectionMarker.requirements),
     SettingsSectionItemModel(settingTitle: 'Your Rules', sectionMarker: SettingSectionMarker.rules),
-    SettingsSectionItemModel(settingTitle: 'Attendees', sectionMarker: SettingSectionMarker.attendees),
+    // SettingsSectionItemModel(settingTitle: 'Attendees', sectionMarker: SettingSectionMarker.attendees),
   ];
 }
 
@@ -17,8 +17,10 @@ List<SettingsItemModel> subActivitySettingItems(ActivityManagerForm? activityFor
   return [
     /// activity basics
     /// background info
+    SettingsItemModel(settingIcon: Icons.insert_chart_outlined_rounded, sectionNavItem: SettingSectionMarker.profile, navItem: SettingNavMarker.reports, settingsTitle: 'Overview & Stats', settingSubTitle: '', resSlotItem: null),
     SettingsItemModel(settingIcon: Icons.info_outlined, sectionNavItem: SettingSectionMarker.profile, navItem: SettingNavMarker.backgroundInfo, settingsTitle: 'About the Activity', settingSubTitle: '', resSlotItem: null),
     SettingsItemModel(settingIcon: Icons.calendar_month_outlined, sectionNavItem: SettingSectionMarker.profile, navItem: SettingNavMarker.reservations, settingsTitle: 'Reservations', settingSubTitle: '', resSlotItem: null),
+
 
     /// reservation slots [breakdown res and activity] ... can you change reservation activity? cancel?, refund? update requests? - can also update date info.
     /// if res items contain an activity type show corresponding activity option///
@@ -31,10 +33,13 @@ List<SettingsItemModel> subActivitySettingItems(ActivityManagerForm? activityFor
 
     /// rules settings
     SettingsItemModel(settingIcon: Icons.visibility_outlined ,sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.accessAndVisibility, settingsTitle: 'Access & Visibility', settingSubTitle: '', resSlotItem: null),
-    SettingsItemModel(settingIcon: Icons.create_outlined ,sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.customFields, settingsTitle: 'Custom Rules', settingSubTitle: '', resSlotItem: null),
-    SettingsItemModel(settingIcon: Icons.sticky_note_2_outlined ,sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.checkIns, settingsTitle: 'Check-Ins', settingSubTitle: '', resSlotItem: null),
-    SettingsItemModel(settingIcon: Icons.rule_rounded ,sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.activityRules, settingsTitle: 'Activity Rules', settingSubTitle: '', resSlotItem: null),
+    // SettingsItemModel(settingIcon: Icons.create_outlined ,sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.customFields, settingsTitle: 'Custom Rules', settingSubTitle: '', resSlotItem: null),
+    // SettingsItemModel(settingIcon: Icons.sticky_note_2_outlined ,sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.checkIns, settingsTitle: 'Check-Ins', settingSubTitle: '', resSlotItem: null),
+    // SettingsItemModel(settingIcon: Icons.rule_rounded ,sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.activityRules, settingsTitle: 'Activity Rules', settingSubTitle: '', resSlotItem: null),
     SettingsItemModel(settingIcon: Icons.note_alt_outlined, sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.vendorForm, settingsTitle: 'Vendor Forms', settingSubTitle: 'create forms for vendors', resSlotItem: null),
+    SettingsItemModel(settingIcon: Icons.book_outlined, sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.guides, settingsTitle: 'Guides', settingSubTitle: 'create how-to\'s and guides for attendees', resSlotItem: null),
+    SettingsItemModel(settingIcon: Icons.upload_outlined, sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.uploads, settingsTitle: 'Uploads', settingSubTitle: '', resSlotItem: null),
+
 
     if ((activityForm?.activityAttendance.isTicketBased ?? false) || (activityForm?.activityAttendance.isPassBased ?? false)) SettingsItemModel(settingIcon: Icons.cancel_outlined ,sectionNavItem: SettingSectionMarker.rules, navItem: SettingNavMarker.cancellations, settingsTitle: 'Cancellations', settingSubTitle: '', resSlotItem: null),
 

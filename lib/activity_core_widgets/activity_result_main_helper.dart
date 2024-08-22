@@ -133,9 +133,7 @@ Widget bottomFooterDetails(BuildContext context, DashboardModel model, Reservati
                     Colors.grey.shade200,
                     Colors.grey.shade200.withOpacity(0.75),
                     Colors.black,
-                    null,
-                    res.activityManagerForm ?? ActivityManagerForm.empty(),
-                    res.reservation ?? ReservationItem.empty(),
+                    res,
                     false,
                     didSelectItem: () {
                       didSelectItem();
@@ -146,7 +144,7 @@ Widget bottomFooterDetails(BuildContext context, DashboardModel model, Reservati
                 ),
 
                 const SizedBox(height: 4),
-                if (res.attendeesCount != null && res.attendeesCount != 0 || res.activityManagerForm?.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantInviteOnly == true) Theme(
+                if (res.attendeesCount != null && res.attendeesCount != 0 || res.activityManagerForm?.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true) Theme(
                   data: Theme.of(context).copyWith(canvasColor: Colors.transparent),
                   child: Container(
                     height: 30,
@@ -165,7 +163,7 @@ Widget bottomFooterDetails(BuildContext context, DashboardModel model, Reservati
                               label: Text(res.attendeesCount == 1 ? '${res.attendeesCount} Person Joined' : '${res.attendeesCount} People Joined', style: TextStyle(color: Colors.grey.shade200))
                           ),
                           const SizedBox(width: 4),
-                          if (res.activityManagerForm?.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantInviteOnly == true) Chip(
+                          if (res.activityManagerForm?.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true) Chip(
                               backgroundColor: model.accentColor.withOpacity(0.18),
                               side: BorderSide.none,
                               padding: EdgeInsets.zero,

@@ -1,9 +1,9 @@
 import 'package:check_in_domain/check_in_domain.dart';
 import 'package:check_in_presentation/check_in_presentation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'payments_widget/payment_history_widget.dart';
-import 'payments_widget/payment_methods_widget.dart';
 import 'payments_widget/payout_history_widget.dart';
 import 'payments_widget/payout_payment_methods_widget.dart';
 
@@ -26,7 +26,9 @@ class _PaymentsPayoutsProfileState extends State<PaymentsPayoutsProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
+      backgroundColor: widget.model.mobileBackgroundColor,
+      appBar: (kIsWeb) ? null : AppBar(
+        automaticallyImplyLeading: (kIsWeb == false),
         backgroundColor: Colors.transparent,
         titleTextStyle: TextStyle(color: widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
         elevation: 0,
@@ -54,22 +56,111 @@ class _PaymentsPayoutsProfileState extends State<PaymentsPayoutsProfile> {
                     didSelectItem: (f) {
                       switch (f) {
                         case ProfilePaymentMarker.paymentMethods:
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) {
-                              return PaymentMethodsWidget(
-                                  profile: widget.profile,
-                                  model: widget.model
-                              );
-                            })
-                          );
+                          if (kIsWeb) {
+                            showGeneralDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              barrierLabel: 'Payment Methods',
+                              transitionDuration: Duration(milliseconds: 350),
+                              pageBuilder: (BuildContext contexts, anim1, anim2) {
+                                return  Align(
+                                    alignment: Alignment.center,
+                                    child: ClipRRect(
+                                        borderRadius: BorderRadius.all(Radius.circular(25)),
+                                        child: Container(
+                                            decoration: BoxDecoration(
+                                                color: widget.model.accentColor,
+                                                borderRadius: BorderRadius.all(Radius.circular(17.5))
+                                            ),
+                                            width: 550,
+                                            height: 750,
+                                            child: PaymentMethodsWidget(
+                                              model: widget.model,
+                                              isPushedView: true,
+                                              didSelectPaymentMethod: (card) {
+
+
+                                              }, didSaveSuccess: () {
+
+                                          },
+                                      )
+                                    )
+                                  )
+                                );
+                              },
+                              transitionBuilder: (context, anim1, anim2, child) {
+                                return Transform.scale(
+                                    scale: anim1.value,
+                                    child: Opacity(
+                                        opacity: anim1.value,
+                                        child: child
+                                    )
+                                );
+                              },
+                            );
+                          } else {
+                            Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) {
+                                  return PaymentMethodsWidget(
+                                    model: widget.model,
+                                    isPushedView: true,
+                                    didSelectPaymentMethod: (card) {
+
+                                    },
+                                    didSaveSuccess: () {
+
+                                    },
+                                  );
+                                })
+                            );
+                          }
                           break;
                         case ProfilePaymentMarker.pastPayments:
-                          Navigator.of(context).push(MaterialPageRoute(builder: (_) {
-                            return PaymentHistoryWidget(
-                              model: widget.model,
-                              profile: widget.profile,
+                          if (kIsWeb) {
+                            showGeneralDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              barrierLabel: 'Payment Methods',
+                              transitionDuration: Duration(milliseconds: 350),
+                              pageBuilder: (BuildContext contexts, anim1, anim2) {
+                                return  Align(
+                                    alignment: Alignment.center,
+                                    child: ClipRRect(
+                                        borderRadius: BorderRadius.all(Radius.circular(25)),
+                                        child: Container(
+                                            decoration: BoxDecoration(
+                                                color: widget.model.accentColor,
+                                                borderRadius: BorderRadius.all(Radius.circular(17.5))
+                                            ),
+                                            width: 550,
+                                            height: 750,
+                                            child: PaymentHistoryWidget(
+                                              model: widget.model,
+                                              profile: widget.profile,
+                                            )
+                                        )
+                                    )
+                                );
+                              },
+                              transitionBuilder: (context, anim1, anim2, child) {
+                                return Transform.scale(
+                                    scale: anim1.value,
+                                    child: Opacity(
+                                        opacity: anim1.value,
+                                        child: child
+                                    )
+                                );
+                              },
                             );
-                          }));
+                          } else {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) {
+                                  return PaymentHistoryWidget(
+                                    model: widget.model,
+                                    profile: widget.profile,
+                                  );
+                                }));
+                          }
                           break;
                         default:
                     }
@@ -96,24 +187,66 @@ class _PaymentsPayoutsProfileState extends State<PaymentsPayoutsProfile> {
                               didSelectItem: (f) {
                                 switch (f) {
                                   case ProfilePaymentMarker.payouts:
-                                    Navigator.of(context).push(MaterialPageRoute(builder: (_) {
-                                      return PayoutPaymentMethod(
-                                        model: widget.model,
-                                        profile: widget.profile,
+                                    if (kIsWeb) {
+                                      showGeneralDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        barrierLabel: 'Payment Methods',
+                                        transitionDuration: Duration(milliseconds: 350),
+                                        pageBuilder: (BuildContext contexts, anim1, anim2) {
+                                          return  Align(
+                                              alignment: Alignment.center,
+                                              child: ClipRRect(
+                                                  borderRadius: BorderRadius.all(Radius.circular(25)),
+                                                  child: Container(
+                                                      decoration: BoxDecoration(
+                                                          color: widget.model.accentColor,
+                                                          borderRadius: BorderRadius.all(Radius.circular(17.5))
+                                                      ),
+                                                      width: 550,
+                                                      height: 750,
+                                                      child: PayoutAccountLink(
+                                                      model: widget.model,
+                                                )
+                                              )
+                                            )
+                                          );
+                                        },
+                                        transitionBuilder: (context, anim1, anim2, child) {
+                                          return Transform.scale(
+                                              scale: anim1.value,
+                                              child: Opacity(
+                                                  opacity: anim1.value,
+                                                  child: child
+                                              )
+                                          );
+                                        },
                                       );
-                                    })
-                                    );
+                                    } else {
+                                      Navigator.of(context).push(
+                                          MaterialPageRoute(builder: (_) {
+                                            return PayoutAccountLink(
+                                              model: widget.model,
+                                            );
+                                          })
+                                      );
+                                    }
                                     break;
                                   case ProfilePaymentMarker.taxes:
                                   // TODO: Handle this case.
                                     break;
                                   case ProfilePaymentMarker.transactionHistory:
-                                    Navigator.of(context).push(MaterialPageRoute(builder: (_) {
-                                      return PayoutHistoryWidget(
-                                        model: widget.model,
-                                        profile: widget.profile,
-                                      );
-                                    }));
+                                    if (kIsWeb) {
+
+                                    } else {
+                                      Navigator.of(context).push(
+                                          MaterialPageRoute(builder: (_) {
+                                            return PayoutHistoryWidget(
+                                              model: widget.model,
+                                              profile: widget.profile,
+                                            );
+                                          }));
+                                    }
                                     break;
                                   default:
                                 }

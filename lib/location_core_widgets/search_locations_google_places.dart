@@ -113,25 +113,29 @@ class _LocationSearchControllerWidgetState extends State<AddressSearchController
             color: Colors.white,
             elevation: 4.0,
             borderRadius: BorderRadius.circular(8),
-            child: ImplicitlyAnimatedList<facade.LocationSearchModel>(
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              physics: const NeverScrollableScrollPhysics(),
-              items: model.suggestions.toList(),
-              areItemsTheSame: (a, b) => a == b,
-              itemBuilder: (context, animation, place, i) {
-                return SizeFadeTransition(
-                  animation: animation,
-                  child: buildItem(context, place, model),
-                );
-              },
-              updateItemBuilder: (context, animation, place) {
+              child: Column(
+                  children: model.suggestions.map((e) => buildItem(context, e, model)).toList()
 
-                return FadeTransition(
-                  opacity: animation,
-                  child: buildItem(context, place, model),
-                );
-              },
+            // child: ImplicitlyAnimatedList<facade.LocationSearchModel>(
+            //   shrinkWrap: true,
+            //   padding: EdgeInsets.zero,
+            //   physics: const NeverScrollableScrollPhysics(),
+            //   items: model.suggestions.toList(),
+            //   areItemsTheSame: (a, b) => a == b,
+            //   itemBuilder: (context, animation, place, i) {
+            //     return SizeFadeTransition(
+            //       animation: animation,
+            //       child: buildItem(context, place, model),
+            //     );
+            //   },
+            //   updateItemBuilder: (context, animation, place) {
+            //
+            //     return FadeTransition(
+            //       opacity: animation,
+            //       child: buildItem(context, place, model),
+            //     );
+            //   },
+            // ),
             ),
           ),
         );
@@ -246,13 +250,13 @@ class _LocationSearchControllerWidgetState extends State<AddressSearchController
                       children: [
                         Text(
                           location.description,
-                          style: textTheme.subtitle1,
+                          // style: textTheme.subtitle1,
                         ),
                         const SizedBox(height: 2),
                         Expanded(
                           child: Text(
                             location.secondary,
-                            style: textTheme.bodyText2?.copyWith(color: Colors.grey.shade600),
+                            // style: textTheme.bodyText2?.copyWith(color: Colors.grey.shade600),
                           )
                         ),
                       ],

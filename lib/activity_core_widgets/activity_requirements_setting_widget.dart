@@ -24,7 +24,7 @@ Widget mainContainerForSectionOneRowOneReq({required BuildContext context, requi
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(AppLocalizations.of(context)!.activityRequirementAgeSeventeenUnder, style: TextStyle(fontSize: model.secondaryQuestionTitleFontSize, color: model.paletteColor,)),
-                  Text('otherwise any partner can request to collaborate with you', style: TextStyle(color: model.disabledTextColor))
+                  Text('otherwise anyone - above or below the age of 18 should be able to participate', style: TextStyle(color: model.disabledTextColor))
                 ],
               )
               ),
@@ -94,7 +94,7 @@ Widget mainContainerForSectionOneRowOneReq({required BuildContext context, requi
 
         /// games and class based req.
         Visibility(
-          // visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity == ProfileActivityTypeOption.classesLessons,
+          visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.classesLessons,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,6 +175,7 @@ Widget mainContainerForSectionOneRowOneReq({required BuildContext context, requi
         ),
 
         Visibility(
+          visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.classesLessons,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +272,7 @@ Widget mainContainerForSectionOneRowOneReq({required BuildContext context, requi
   );
 }
 
-Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, required DashboardModel model, required UpdateActivityFormState state, required ActivityManagerForm activityManagerForm, required Function() isAlcoholForSale, required Function() isFoodForSale, required Function() isVendorMerchInviteOnly, required Widget getVendorAttendees, required Function() didSelectCreateVendor, required Function(String) didChangeMerchVenFee, required Function(String) didChangeMerchVenLimit}) {
+Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, required DashboardModel model, required UpdateActivityFormState state, required ActivityManagerForm activityManagerForm, required Function() isAlcoholForSale, required Function() isFoodForSale}) {
 
   bool activityAgeSetting = state.activitySettingsForm.profileService.activityRequirements.minimumAgeRequirement >= 18 && !state.activitySettingsForm.profileService.activityRequirements.isSeventeenAndUnder;
 
@@ -285,7 +286,7 @@ Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, requi
 
       /// what is sold - specifically for events.
       Visibility(
-        // visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity != ProfileActivityOption.toRent || context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity == ProfileActivityOption.tournament,
+        visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity != ProfileActivityOption.toRent || context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity == ProfileActivityOption.tournament,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,221 +371,221 @@ Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, requi
       ),
 
 
-      const SizedBox(height: 25),
-      getVendorAttendees,
+      // const SizedBox(height: 25),
+      // getVendorAttendees,
 
-      const SizedBox(height: 30),
-      Container(
-        width: 675,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Vendor or Merchant can request to Join?', style: TextStyle(fontSize: model.secondaryQuestionTitleFontSize, color: model.paletteColor,)),
-                  Text('Attendees can request to join as a Vendor or Merchant based on a fee set by you.', style: TextStyle(color: model.disabledTextColor))
-                ],
-              )
-            ),
-            FlutterSwitch(
-              width: 60,
-              inactiveColor: model.accentColor,
-              activeColor: model.paletteColor,
-              value: state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantInviteOnly ?? false,
-              onToggle: (value) {
-                isVendorMerchInviteOnly();
-              },
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 15),
+      // const SizedBox(height: 30),
+      // Container(
+      //   width: 675,
+      //   child: Row(
+      //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      //     children: [
+      //       Expanded(child: Column(
+      //         mainAxisAlignment: MainAxisAlignment.start,
+      //         crossAxisAlignment: CrossAxisAlignment.start,
+      //           children: [
+      //             Text('Vendor or Merchant can request to Join?', style: TextStyle(fontSize: model.secondaryQuestionTitleFontSize, color: model.paletteColor,)),
+      //             Text('Attendees can request to join as a Vendor or Merchant based on a fee set by you.', style: TextStyle(color: model.disabledTextColor))
+      //           ],
+      //         )
+      //       ),
+      //       FlutterSwitch(
+      //         width: 60,
+      //         inactiveColor: model.accentColor,
+      //         activeColor: model.paletteColor,
+      //         value: state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantInviteOnly ?? false,
+      //         onToggle: (value) {
+      //           isVendorMerchInviteOnly();
+      //         },
+      //       ),
+      //     ],
+      //   ),
+      // ),
+      // const SizedBox(height: 15),
       /// merchant limit
-      Visibility(
-        // visible: state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantInviteOnly == true,
-        child: Container(
-          width: 675,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              Container(
-                width: 675,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('How Many Vendors or Merchants?', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
-                    ),
-                    Text('if you leave this blank you will not have a limit to the number of vendors that can join.', style: TextStyle(color: model.disabledTextColor))
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 10),
-              Row(
-                  children: [
-                    Icon(Icons.people_alt_outlined, color: model.paletteColor),
-                    const SizedBox(width: 5),
-                    Container(
-                      width: 160,
-                      child: TextFormField(
-                        style: TextStyle(color: model.paletteColor),
-                        initialValue: (activityManagerForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantLimit != null) ? activityManagerForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantLimit.toString() : null,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: InputDecoration(
-                          hintStyle: TextStyle(color: model.disabledTextColor),
-                          hintText: 'No Limit',
-                          errorStyle: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: model.paletteColor,
-                          ),
-                          prefixIcon: Icon(Icons.home_outlined, color: model.disabledTextColor),
-                          filled: true,
-                          fillColor: model.accentColor,
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25.0),
-                            borderSide: BorderSide(
-                              width: 2,
-                              color: model.paletteColor,
-                            ),
-                          ),
-                          focusedBorder:  OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25.0),
-                            borderSide: BorderSide(
-                              color: model.paletteColor,
-                            ),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25.0),
-                            borderSide: const BorderSide(
-                              width: 0,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25.0),
-                            borderSide: BorderSide(
-                              color: model.disabledTextColor,
-                              width: 0,
-                            ),
-                          ),
-                        ),
-                        autocorrect: false,
-                        onChanged: (value) => didChangeMerchVenLimit(value),
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Expanded(child: Text('Vendors', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                  ]
-              ),
-
-            ],
-          ),
-        ),
-      ),
-
-      Container(
-        width: 675,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text('How Much Will it Cost to be a Vendor or Merchant?', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 10),
-      Row(
-        children: [
-          Text(NumberFormat.simpleCurrency(locale: state.activitySettingsForm.rulesService.currency).currencySymbol, style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize)),
-          SizedBox(width: 16),
-          Container(
-            width: 160,
-            child: TextFormField(
-              style: TextStyle(color: model.paletteColor),
-              initialValue: (activityManagerForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantFee != null) ? activityManagerForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantFee.toString() : null,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-              ],
-              decoration: InputDecoration(
-                hintStyle: TextStyle(color: model.disabledTextColor),
-                hintText: 'Free',
-                errorStyle: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: model.paletteColor,
-                ),
-                prefixIcon: Icon(Icons.home_outlined, color: model.disabledTextColor),
-                filled: true,
-                fillColor: model.accentColor,
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
-                  borderSide: BorderSide(
-                    width: 2,
-                    color: model.paletteColor,
-                  ),
-                ),
-                focusedBorder:  OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
-                  borderSide: BorderSide(
-                    color: model.paletteColor,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
-                  borderSide: const BorderSide(
-                    width: 0,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
-                  borderSide: BorderSide(
-                    color: model.disabledTextColor,
-                    width: 0,
-                  ),
-                ),
-              ),
-              autocorrect: false,
-              onChanged: (value) => didChangeMerchVenFee(value),
-            ),
-          ),
-          const SizedBox(width: 5),
-          Expanded(child: Text(NumberFormat.simpleCurrency(locale: state.activitySettingsForm.rulesService.currency).currencyName ?? '', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize), maxLines: 1, overflow: TextOverflow.ellipsis)),
-        ],
-      ),
-
-      /// merchant fee
-      const SizedBox(height: 25),
-
-
-      /// add or invite merchants or vendors
-      InkWell(
-        onTap: () {
-          didSelectCreateVendor();
-        },
-        child: Container(
-          width: 675,
-          height: 60,
-          decoration: BoxDecoration(
-            color: model.webBackgroundColor,
-            borderRadius: const BorderRadius.all(Radius.circular(15)),
-          ),
-          child: Align(
-            child: Text('Invite New Vendor or Merchant', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
-          ),
-        ),
-      ),
+      // Visibility(
+      //   // visible: state.activitySettingsForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantInviteOnly == true,
+      //   child: Container(
+      //     width: 675,
+      //     child: Column(
+      //       mainAxisAlignment: MainAxisAlignment.start,
+      //       crossAxisAlignment: CrossAxisAlignment.start,
+      //       children: [
+      //         const SizedBox(height: 20),
+      //         Container(
+      //           width: 675,
+      //           child: Column(
+      //             mainAxisAlignment: MainAxisAlignment.start,
+      //             crossAxisAlignment: CrossAxisAlignment.start,
+      //             children: [
+      //               Padding(
+      //                 padding: const EdgeInsets.all(8.0),
+      //                 child: Text('How Many Vendors or Merchants?', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
+      //               ),
+      //               Text('if you leave this blank you will not have a limit to the number of vendors that can join.', style: TextStyle(color: model.disabledTextColor))
+      //             ],
+      //           ),
+      //         ),
+      //
+      //         const SizedBox(height: 10),
+      //         Row(
+      //             children: [
+      //               Icon(Icons.people_alt_outlined, color: model.paletteColor),
+      //               const SizedBox(width: 5),
+      //               Container(
+      //                 width: 160,
+      //                 child: TextFormField(
+      //                   style: TextStyle(color: model.paletteColor),
+      //                   initialValue: (activityManagerForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantLimit != null) ? activityManagerForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantLimit.toString() : null,
+      //                   inputFormatters: [
+      //                     FilteringTextInputFormatter.digitsOnly,
+      //                   ],
+      //                   decoration: InputDecoration(
+      //                     hintStyle: TextStyle(color: model.disabledTextColor),
+      //                     hintText: 'No Limit',
+      //                     errorStyle: TextStyle(
+      //                       fontWeight: FontWeight.bold,
+      //                       fontSize: 14,
+      //                       color: model.paletteColor,
+      //                     ),
+      //                     prefixIcon: Icon(Icons.home_outlined, color: model.disabledTextColor),
+      //                     filled: true,
+      //                     fillColor: model.accentColor,
+      //                     focusedErrorBorder: OutlineInputBorder(
+      //                       borderRadius: BorderRadius.circular(25.0),
+      //                       borderSide: BorderSide(
+      //                         width: 2,
+      //                         color: model.paletteColor,
+      //                       ),
+      //                     ),
+      //                     focusedBorder:  OutlineInputBorder(
+      //                       borderRadius: BorderRadius.circular(25.0),
+      //                       borderSide: BorderSide(
+      //                         color: model.paletteColor,
+      //                       ),
+      //                     ),
+      //                     errorBorder: OutlineInputBorder(
+      //                       borderRadius: BorderRadius.circular(25.0),
+      //                       borderSide: const BorderSide(
+      //                         width: 0,
+      //                       ),
+      //                     ),
+      //                     enabledBorder: OutlineInputBorder(
+      //                       borderRadius: BorderRadius.circular(25.0),
+      //                       borderSide: BorderSide(
+      //                         color: model.disabledTextColor,
+      //                         width: 0,
+      //                       ),
+      //                     ),
+      //                   ),
+      //                   autocorrect: false,
+      //                   onChanged: (value) => didChangeMerchVenLimit(value),
+      //                 ),
+      //               ),
+      //               const SizedBox(width: 5),
+      //               Expanded(child: Text('Vendors', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize), maxLines: 1, overflow: TextOverflow.ellipsis)),
+      //             ]
+      //         ),
+      //
+      //       ],
+      //     ),
+      //   ),
+      // ),
+      //
+      // Container(
+      //   width: 675,
+      //   child: Column(
+      //     mainAxisAlignment: MainAxisAlignment.start,
+      //     crossAxisAlignment: CrossAxisAlignment.start,
+      //     children: [
+      //       Padding(
+      //         padding: const EdgeInsets.all(8.0),
+      //         child: Text('How Much Will it Cost to be a Vendor or Merchant?', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
+      //       ),
+      //     ],
+      //   ),
+      // ),
+      // const SizedBox(height: 10),
+      // Row(
+      //   children: [
+      //     Text(NumberFormat.simpleCurrency(locale: state.activitySettingsForm.rulesService.currency).currencySymbol, style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize)),
+      //     SizedBox(width: 16),
+      //     Container(
+      //       width: 160,
+      //       child: TextFormField(
+      //         style: TextStyle(color: model.paletteColor),
+      //         initialValue: (activityManagerForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantFee != null) ? activityManagerForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantFee.toString() : null,
+      //         inputFormatters: [
+      //           FilteringTextInputFormatter.digitsOnly,
+      //         ],
+      //         decoration: InputDecoration(
+      //           hintStyle: TextStyle(color: model.disabledTextColor),
+      //           hintText: 'Free',
+      //           errorStyle: TextStyle(
+      //             fontWeight: FontWeight.bold,
+      //             fontSize: 14,
+      //             color: model.paletteColor,
+      //           ),
+      //           prefixIcon: Icon(Icons.home_outlined, color: model.disabledTextColor),
+      //           filled: true,
+      //           fillColor: model.accentColor,
+      //           focusedErrorBorder: OutlineInputBorder(
+      //             borderRadius: BorderRadius.circular(25.0),
+      //             borderSide: BorderSide(
+      //               width: 2,
+      //               color: model.paletteColor,
+      //             ),
+      //           ),
+      //           focusedBorder:  OutlineInputBorder(
+      //             borderRadius: BorderRadius.circular(25.0),
+      //             borderSide: BorderSide(
+      //               color: model.paletteColor,
+      //             ),
+      //           ),
+      //           errorBorder: OutlineInputBorder(
+      //             borderRadius: BorderRadius.circular(25.0),
+      //             borderSide: const BorderSide(
+      //               width: 0,
+      //             ),
+      //           ),
+      //           enabledBorder: OutlineInputBorder(
+      //             borderRadius: BorderRadius.circular(25.0),
+      //             borderSide: BorderSide(
+      //               color: model.disabledTextColor,
+      //               width: 0,
+      //             ),
+      //           ),
+      //         ),
+      //         autocorrect: false,
+      //         onChanged: (value) => didChangeMerchVenFee(value),
+      //       ),
+      //     ),
+      //     const SizedBox(width: 5),
+      //     Expanded(child: Text(NumberFormat.simpleCurrency(locale: state.activitySettingsForm.rulesService.currency).currencyName ?? '', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize), maxLines: 1, overflow: TextOverflow.ellipsis)),
+      //   ],
+      // ),
+      //
+      // /// merchant fee
+      // const SizedBox(height: 25),
+      //
+      //
+      // /// add or invite merchants or vendors
+      // InkWell(
+      //   onTap: () {
+      //     didSelectCreateVendor();
+      //   },
+      //   child: Container(
+      //     width: 675,
+      //     height: 60,
+      //     decoration: BoxDecoration(
+      //       color: model.webBackgroundColor,
+      //       borderRadius: const BorderRadius.all(Radius.circular(15)),
+      //     ),
+      //     child: Align(
+      //       child: Text('Invite New Vendor or Merchant', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+      //     ),
+      //   ),
+      // ),
       const SizedBox(height: 35),
 
     ],
@@ -605,7 +606,7 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
       children: [
         /// what will be provided for non event activities (i.e classes, games, experiences)
         Visibility(
-          // visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity != ProfileActivityOption.events,
+          visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType != ProfileActivityTypeOption.experiences,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -672,7 +673,7 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                     ),
                     const SizedBox(width: 16),
                     Visibility(
-                      // visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.gameMatches,
+                      visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.gameMatches,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -697,7 +698,7 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                     ),
                     const SizedBox(width: 16),
                     Visibility(
-                      // visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.gameMatches,
+                      visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.gameMatches,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -733,7 +734,7 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
         /// what will be provided specifically for events
         /// TODO: WILL DEPEND ON FACILITY RULES
         Visibility(
-          // visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity == ProfileActivityOption.events,
+          visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.experiences,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,

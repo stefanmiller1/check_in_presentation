@@ -51,7 +51,32 @@ class _LoginEmailWidgetState extends State<LoginEmailWidget> {
     return BlocProvider(
         create: (context) => getIt<CreateAuthUserAccountBloc>(),
         child: BlocConsumer<CreateAuthUserAccountBloc, CreateAuthUserAccountState>(
+            listenWhen: (p, c) => p.authEmailFailOrSuccessOption != c.authEmailFailOrSuccessOption || p.authFailureOrSuccessOption != c.authFailureOrSuccessOption,
             listener: (context, state) {
+
+              state.authEmailFailOrSuccessOption.fold(
+                      () {},
+                      (either) => either.fold(
+                          (failure) {
+                        final snackBar = SnackBar(
+                            backgroundColor: widget.model.webBackgroundColor,
+                            content: failure.maybeMap(
+                              serverError: (_) => Text(AppLocalizations.of(context)!.serverError, style: TextStyle(color: widget.model.disabledTextColor),),
+                              emailAlreadyInUse: (_) => Text(AppLocalizations.of(context)!.loginEmailUseError, style: TextStyle(color: widget.model.disabledTextColor),),
+                              invalidEmailAndPasswordCombination: (_) => Text(AppLocalizations.of(context)!.loginInvalidComboError, style: TextStyle(color: widget.model.disabledTextColor),),
+                              orElse: () =>  Text(AppLocalizations.of(context)!.loginFailuresCancelled, style: TextStyle(color: widget.model.disabledTextColor),),
+                            )
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      }, (_) {
+                    setState(() {
+
+                      widget.didCompleteSuccessfully();
+                    });
+                  }
+                )
+              );
+
               state.authFailureOrSuccessOption.fold(
                       () {},
                       (either) => either.fold(
@@ -63,12 +88,16 @@ class _LoginEmailWidgetState extends State<LoginEmailWidget> {
                               serverError: (_) => Text(AppLocalizations.of(context)!.serverError, style: TextStyle(color: widget.model.disabledTextColor),),
                               emailAlreadyInUse: (_) => Text(AppLocalizations.of(context)!.loginEmailUseError, style: TextStyle(color: widget.model.disabledTextColor),),
                               invalidEmailAndPasswordCombination: (_) => Text(AppLocalizations.of(context)!.loginInvalidComboError, style: TextStyle(color: widget.model.disabledTextColor),),
+                              exceptionError: (e) => Text(e.error, style: TextStyle(color: widget.model.disabledTextColor),),
                               orElse: () =>  Text(AppLocalizations.of(context)!.loginFailuresCancelled, style: TextStyle(color: widget.model.disabledTextColor),),
                             )
                         );
                         ScaffoldMessenger.of(context).showSnackBar(snackBar);
                       }, (_) {
-                    widget.didCompleteSuccessfully();
+                        setState(() {
+
+                          widget.didCompleteSuccessfully();
+                      });
                   }
                 )
               );
@@ -78,17 +107,22 @@ class _LoginEmailWidgetState extends State<LoginEmailWidget> {
                 autovalidateMode: state.showErrorMessages,
                 child: SingleChildScrollView(
                   child: Container(
-                    width: MediaQuery.of(context).size.width,
+                    width: 600,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const SizedBox(height: 35),
-                        Container(
-                          child: Text(AppLocalizations.of(context)!.loginDashboardTitle, style: TextStyle(fontWeight: FontWeight.bold,
-                            fontSize: 28,
-                            color: widget.model.accentColor.withOpacity(0.8),
+                        Text('a Circle Login',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: widget.model.questionTitleFontSize,
+                            color: widget.model.paletteColor,
                           ),
-                            textAlign: TextAlign.center,
+                          textAlign: TextAlign.center,
+                        ),
+                        Text('admin logins only', style: TextStyle(
+                          fontSize: widget.model.secondaryQuestionTitleFontSize,
+                          color: widget.model.disabledTextColor,
                           ),
                         ),
                         const SizedBox(height: 25),
@@ -175,7 +209,7 @@ class _LoginEmailWidgetState extends State<LoginEmailWidget> {
                                                       orElse: () => null),
                                                   orElse: () => null,
                                                 ),
-                                                    (_) => null
+                                              (_) => null
                                             ),
                                           ),
                                         ),
@@ -265,23 +299,23 @@ class _LoginEmailWidgetState extends State<LoginEmailWidget> {
                               ),
 
 
-                              ListTile(
-                                contentPadding: EdgeInsets.only(left: 15, right: 15, bottom: 0, top: 10),
-                                dense: true,
-                                hoverColor: Colors.red,
-                                focusColor: Colors.red,
-                                selectedTileColor: Colors.red,
-                                onTap: () {
-                                  setState(() {
-                                    selectedContentWidget = LoginWidgetMarker.signUp;
-                                  });
-                                },
-                                title: Text("${AppLocalizations.of(context)!.loginDashboardCreateFacility} >",
-                                  style: TextStyle(color: widget.model.disabledTextColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13.5), textAlign: TextAlign.left,
-                                ),
-                              ),
+                              // ListTile(
+                              //   contentPadding: EdgeInsets.only(left: 15, right: 15, bottom: 0, top: 10),
+                              //   dense: true,
+                              //   hoverColor: Colors.red,
+                              //   focusColor: Colors.red,
+                              //   selectedTileColor: Colors.red,
+                              //   onTap: () {
+                              //     setState(() {
+                              //       selectedContentWidget = LoginWidgetMarker.signUp;
+                              //     });
+                              //   },
+                              //   title: Text("${AppLocalizations.of(context)!.loginDashboardCreateFacility} >",
+                              //     style: TextStyle(color: widget.model.disabledTextColor,
+                              //         fontWeight: FontWeight.bold,
+                              //         fontSize: 13.5), textAlign: TextAlign.left,
+                              //   ),
+                              // ),
                               ListTile(
                                 contentPadding: EdgeInsets.only(left: 15, right: 15, bottom: 0, top: 0),
                                 dense: true,
@@ -298,7 +332,7 @@ class _LoginEmailWidgetState extends State<LoginEmailWidget> {
                                 ),
                               ),
                               SizedBox(height: 10),
-                              Center(
+                              if (!(state.isSubmitting)) Center(
                                 child: Container(
                                   width: 300,
                                   height: 65,
@@ -318,12 +352,8 @@ class _LoginEmailWidgetState extends State<LoginEmailWidget> {
                                         ),
                                       ),
                                       onPressed: () {
-                                        print('PRESSING');
                                         if (state.isSubmitting == false) {
-                                          context
-                                              .read<CreateAuthUserAccountBloc>()
-                                              .add(const CreateAuthUserAccountEvent
-                                              .signInPressed(),
+                                          context.read<CreateAuthUserAccountBloc>().add(const CreateAuthUserAccountEvent.signInPressed(),
                                           );
                                         }
                                       },
@@ -343,22 +373,16 @@ class _LoginEmailWidgetState extends State<LoginEmailWidget> {
                                 ),
                               ),
                               SizedBox(height: 25),
-                              if (state.isSubmitting) ...[
-                                const SizedBox(height: 8),
-                                LinearProgressIndicator(
-                                  valueColor:AlwaysStoppedAnimation<Color>(widget.model.accentColor),
-                                  backgroundColor: widget.model.paletteColor,
-                                ),
-                              ],
-                            ],
-                          ),
+                              if (state.isSubmitting) JumpingDots(color: widget.model.paletteColor, numberOfDots: 3),
+                            ]
+                          )
                         ),
                         SizedBox(height: 15),
                         TextButton(
                           onPressed: () {
                             widget.goBack();
                           },
-                          child: Text(AppLocalizations.of(context)!.backButton, style: TextStyle(color: widget.model.webBackgroundColor, fontWeight: FontWeight.bold)),
+                          child: Text(AppLocalizations.of(context)!.backButton, style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold)),
                         ),
                         const SizedBox(height: 25),
                       ],

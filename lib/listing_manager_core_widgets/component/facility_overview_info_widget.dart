@@ -32,6 +32,7 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
 
   final PageController _pageController = PageController(initialPage: 0);
   late bool didAddAvailableSearchSlots = false;
+  late bool isOwner = widget.newFacilityBooking.reservationOwnerId.getOrCrash() == facade.FirebaseChatCore.instance.firebaseUser?.uid;
 
   @override
   Widget build(BuildContext context) {
@@ -311,7 +312,7 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Column(
-                            children: getSpacesFromSelectedReservationSlot(context, widget.listing, widget.newFacilityBooking).map(
+                            children: getSpacesFromSelectedReservationSlot(context, widget.listing, widget.newFacilityBooking.reservationSlotItem).map(
                                     (e) => Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                                   child: getSelectedSpaces(context, e, widget.model),
@@ -321,61 +322,70 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
                       ),
                     ),
 
-                    const SizedBox(height: 5),
-                    Divider(color: widget.model.paletteColor),
-                    const SizedBox(height: 5),
-                    ListTile(
-                      leading: Icon(Icons.calendar_today_outlined, color: widget.model.paletteColor),
-                      title: Text('Dates Booked', style: TextStyle(color: widget.model.paletteColor)),
-                      trailing: (widget.newFacilityBooking.reservationState == ReservationSlotState.completed) ? Container(
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50),
-                              color: widget.model.paletteColor
+                    Visibility(
+                      visible: isOwner,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 5),
+                          Divider(color: widget.model.paletteColor),
+                          const SizedBox(height: 5),
+                          ListTile(
+                            leading: Icon(Icons.calendar_today_outlined, color: widget.model.paletteColor),
+                            title: Text('Dates Booked', style: TextStyle(color: widget.model.paletteColor)),
+                            trailing: (widget.newFacilityBooking.reservationState == ReservationSlotState.completed) ? Container(
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(50),
+                                    color: widget.model.paletteColor
+                                ),
+                                child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Text('Completed', style: TextStyle(color: widget.model.accentColor, fontSize: 14, fontWeight: FontWeight.bold,))
+                                )
+                            ) : Container(
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(50),
+                                    color: widget.model.accentColor
+                                ),
+                                child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: (getNumberOfSlotsToGo(widget.newFacilityBooking) == 1) ? Text('${getNumberOfSlotsToGo(widget.newFacilityBooking)} Slot Remaining', style: TextStyle(color: widget.model.disabledTextColor, fontSize: 14, fontWeight: FontWeight.bold,)) : Text('${getNumberOfSlotsToGo(widget.newFacilityBooking)} Slots Remaining', style: TextStyle(color: widget.model.paletteColor, fontSize: 14, fontWeight: FontWeight.bold,))
+                              )
+                            ),
                           ),
-                          child: Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: Text('Completed', style: TextStyle(color: widget.model.accentColor, fontSize: 14, fontWeight: FontWeight.bold,))
-                          )
-                      ) : Container(
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50),
-                              color: widget.model.accentColor
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Container(
+                                  constraints: BoxConstraints(
+                                      maxWidth: 470
+                                  ),
+                                  child: viewListOfSelectedSlots(
+                                      context,
+                                      widget.model,
+                                      [],
+                                      widget.newFacilityBooking.reservationSlotItem,
+                                      widget.newFacilityBooking.cancelledSlotItem ?? [],
+                                      false,
+                                      AppLocalizations.of(context)!.profileFacilitySlotTime,
+                                      AppLocalizations.of(context)!.profileFacilitySlotBookingLocation,
+                                      AppLocalizations.of(context)!.profileFacilitySlotBookingDate,
+                                      widget.listing,
+                                      didSelectReservation: (e) {
+                                      },
+                                      didSelectCancelResSlot: (e, f) {
+                                      },
+                                      didSelectRemoveResSlot: (e, f) {
+                                      }
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          child: Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: (getNumberOfSlotsToGo(widget.newFacilityBooking) == 1) ? Text('${getNumberOfSlotsToGo(widget.newFacilityBooking)} Slot Remaining', style: TextStyle(color: widget.model.disabledTextColor, fontSize: 14, fontWeight: FontWeight.bold,)) : Text('${getNumberOfSlotsToGo(widget.newFacilityBooking)} Slots Remaining', style: TextStyle(color: widget.model.paletteColor, fontSize: 14, fontWeight: FontWeight.bold,))
-                        )
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Container(
-                            constraints: BoxConstraints(
-                                maxWidth: 470
-                            ),
-                            child: viewListOfSelectedSlots(
-                                context,
-                                widget.model,
-                                [],
-                                widget.newFacilityBooking.reservationSlotItem,
-                                widget.newFacilityBooking.cancelledSlotItem ?? [],
-                                false,
-                                AppLocalizations.of(context)!.profileFacilitySlotTime,
-                                AppLocalizations.of(context)!.profileFacilitySlotBookingLocation,
-                                AppLocalizations.of(context)!.profileFacilitySlotBookingDate,
-                                widget.listing,
-                                didSelectReservation: (e) {
-                                },
-                                didSelectCancelResSlot: (e, f) {
-                                },
-                                didSelectRemoveResSlot: (e, f) {
-                                }
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 )
@@ -462,6 +472,7 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
                         widget.model,
                         Icons.calendar_today_outlined,
                         '-- Open Slots This Week',
+                        true,
                         true,
                         didSelectItem: () {
                           widget.didSelectItem();
@@ -554,29 +565,38 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
 
               /// ---------------------------------------------------- ///
               /// cancellation policy
-              const SizedBox(height: 5),
-              Divider(color: widget.model.paletteColor),
-              const SizedBox(height: 5),
+              Visibility(
+                visible: isOwner,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 5),
+                    Divider(color: widget.model.paletteColor),
+                    const SizedBox(height: 5),
 
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Cancellations', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.questionTitleFontSize)),
-                  const SizedBox(height: 4),
-                  if (widget.listing.listingReservationService.cancellationSetting.isNotAllowedCancellation ?? false)
-                    getPricingCancellationForNoCancellations(context, widget.model),
-                  if (!(widget.listing.listingReservationService.cancellationSetting.isNotAllowedCancellation ?? false))
-                    getPricingCancellationWithChangesCancellation(context, widget.model, widget.listing.listingReservationService.cancellationSetting.isAllowedChangeNotEarlyEnd ?? false,
-                        widget.listing.listingReservationService.cancellationSetting.isAllowedEarlyEndAndChanges ?? false),
-                  if ((widget.listing.listingReservationService.cancellationSetting.isAllowedFeeBasedChanges ?? false) &&
-                      (widget.listing.listingReservationService.cancellationSetting.feeBasedCancellationOptions?.isNotEmpty ?? false))
-                    getPricingWithFeeCancellation(context, widget.model, widget.newFacilityBooking.reservationSlotItem.map((e) => e.selectedDate).toList(),
-                        widget.listing.listingReservationService.cancellationSetting.feeBasedCancellationOptions ?? []),
-                  if ((widget.listing.listingReservationService.cancellationSetting.isAllowedTimeBasedChanges ?? false) &&
-                      (widget.listing.listingReservationService.cancellationSetting.timeBasedCancellationOptions?.isNotEmpty ?? false))
-                    getPricingWithTimeCancellation(context, widget.model, widget.newFacilityBooking.reservationSlotItem.map((e) => e.selectedDate).toList(), widget.listing.listingReservationService.cancellationSetting.timeBasedCancellationOptions ?? [])
-                ],
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Cancellations', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.questionTitleFontSize)),
+                        const SizedBox(height: 4),
+                        if (widget.listing.listingReservationService.cancellationSetting.isNotAllowedCancellation ?? false)
+                          getPricingCancellationForNoCancellations(context, widget.model),
+                        if (!(widget.listing.listingReservationService.cancellationSetting.isNotAllowedCancellation ?? false))
+                          getPricingCancellationWithChangesCancellation(context, widget.model, widget.listing.listingReservationService.cancellationSetting.isAllowedChangeNotEarlyEnd ?? false,
+                              widget.listing.listingReservationService.cancellationSetting.isAllowedEarlyEndAndChanges ?? false),
+                        if ((widget.listing.listingReservationService.cancellationSetting.isAllowedFeeBasedChanges ?? false) &&
+                            (widget.listing.listingReservationService.cancellationSetting.feeBasedCancellationOptions?.isNotEmpty ?? false))
+                          getPricingWithFeeCancellation(context, widget.model, widget.newFacilityBooking.reservationSlotItem.map((e) => e.selectedDate).toList(),
+                              widget.listing.listingReservationService.cancellationSetting.feeBasedCancellationOptions ?? []),
+                        if ((widget.listing.listingReservationService.cancellationSetting.isAllowedTimeBasedChanges ?? false) &&
+                            (widget.listing.listingReservationService.cancellationSetting.timeBasedCancellationOptions?.isNotEmpty ?? false))
+                          getPricingWithTimeCancellation(context, widget.model, widget.newFacilityBooking.reservationSlotItem.map((e) => e.selectedDate).toList(), widget.listing.listingReservationService.cancellationSetting.timeBasedCancellationOptions ?? [])
+                      ],
+                    ),
+                  ],
+                ),
               ),
 
               /// ---------------------------------------------------- ///
@@ -660,7 +680,7 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
                           const SizedBox(width: 15),
                           Expanded(
                             child: Text(completeTotalPriceWithCurrency((getListingTotalPriceDouble(widget.newFacilityBooking.reservationSlotItem, widget.newFacilityBooking.cancelledSlotItem ?? []) +
-                                getListingTotalPriceDouble(widget.newFacilityBooking.reservationSlotItem, widget.newFacilityBooking.cancelledSlotItem ?? [])*CICOReservationPercentageFee +
+                                getListingTotalPriceDouble(widget.newFacilityBooking.reservationSlotItem, widget.newFacilityBooking.cancelledSlotItem ?? [])*CICOBuyerPercentageFee +
                                 getListingTotalPriceDouble(widget.newFacilityBooking.reservationSlotItem, widget.newFacilityBooking.cancelledSlotItem ?? [])*CICOTaxesFee), widget.listing.listingProfileService.backgroundInfoServices.currency), style: TextStyle(color: widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
                           ),
                         ],
@@ -870,6 +890,7 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
                           Icons.verified_user,
                           'Contact CICO Support',
                           false,
+                          true,
                           didSelectItem: () {
 
                           }

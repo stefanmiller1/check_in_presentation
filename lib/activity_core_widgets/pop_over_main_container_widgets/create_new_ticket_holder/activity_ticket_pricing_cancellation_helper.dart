@@ -26,7 +26,7 @@ Widget getTicketPricingDetails(DashboardModel model, List<TicketItem> allSlots, 
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(child: Text('Service Fee', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,))),
-              Text(completeTotalPriceWithCurrency((getTicketTotalPriceDouble(allSlots)*CICOReservationPercentageFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+              Text(completeTotalPriceWithCurrency((getTicketTotalPriceDouble(allSlots)*CICOBuyerPercentageFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -50,7 +50,7 @@ Widget getTicketPricingDetails(DashboardModel model, List<TicketItem> allSlots, 
             Text('Total', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,)),
             SizedBox(width: 15),
             Text(completeTotalPriceWithCurrency((getTicketTotalPriceDouble(allSlots) +
-                getTicketTotalPriceDouble(allSlots)*CICOReservationPercentageFee +
+                getTicketTotalPriceDouble(allSlots)*CICOBuyerPercentageFee +
                 getTicketTotalPriceDouble(allSlots)*CICOTaxesFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
         ],
       )
@@ -106,7 +106,7 @@ Widget getFooterTotalTicketPricing(DashboardModel model, List<TicketItem> allSlo
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(completeTotalPriceWithCurrency((getTicketTotalPriceDouble(allSlots) +
-          getTicketTotalPriceDouble(allSlots)*CICOReservationPercentageFee +
+          getTicketTotalPriceDouble(allSlots)*CICOBuyerPercentageFee +
           getTicketTotalPriceDouble(allSlots)*CICOTaxesFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
       const SizedBox(height: 5),
       Row(

@@ -35,7 +35,7 @@ class MapHelper {
   static late double lng = -79.3832;
   static late double lat = 43.6532;
 
-  static void initMarkers(BuildContext context, DashboardModel model, List<ListingManagerForm> listings) async {
+  static void initMarkers(BuildContext context, bool mounted, DashboardModel model, List<ListingManagerForm> listings) async {
 
     markerSet.clear();
     _markers.clear();
@@ -65,9 +65,10 @@ class MapHelper {
                   forms.listingProfileService.listingLocationSetting.locationPosition?.longitude ?? 0
               ),
               markerImageUrl: listingImage,
-              markerTitle: completeTotalPriceWithOutCurrency((forms.listingRulesService.defaultPricingRuleSettings.defaultPricingRate ?? 0).toDouble(), forms.listingProfileService.backgroundInfoServices.currency),
+              markerTitle: forms.listingProfileService.backgroundInfoServices.listingName.value.fold((l) => 'Vacant Space', (r) => r),
+              // markerTitle: forms. completeTotalPriceWithOutCurrency((forms.listingRulesService.defaultPricingRuleSettings.defaultPricingRate ?? 0).toDouble(), forms.listingProfileService.backgroundInfoServices.currency),
               icon: BitmapDescriptor.defaultMarker
-          )
+        )
       );
     }
 
@@ -81,12 +82,18 @@ class MapHelper {
 
 
     Future.delayed(const Duration(seconds: 1), () async {
-      await _updateMarkers(context, model, currentZoom, _clusterManager, _markers);
-        context.read<ListingsSearchRequirementsBloc>().add(const ListingsSearchRequirementsEvent.isMarkersLoading(false));
-      });
-      } catch (e) {
-    }
+          try {
+            await _updateMarkers(context, model, currentZoom, _clusterManager, mounted, _markers);
+            context.read<ListingsSearchRequirementsBloc>().add(const ListingsSearchRequirementsEvent.isMarkersLoading(false));
+          } catch (e) {
 
+          }
+      });
+
+
+    } catch (e) {
+
+    }
   }
 
 
@@ -95,7 +102,9 @@ class MapHelper {
       DashboardModel model, double?
       updatedZoom,
       Fluster<MapMarker>? manager,
+      bool mounted,
       HashMap<String, MapMarker> markers) async {
+    if (!(mounted)) return;
     if (manager == null) return;
 
     if (updatedZoom != null) {
@@ -119,6 +128,7 @@ class MapHelper {
             Future.delayed(const Duration(milliseconds: 350), () async {
               context.read<ListingsSearchRequirementsBloc>().add(const ListingsSearchRequirementsEvent.isMarkersLoading(false));
               context.read<ListingsSearchRequirementsBloc>().add(ListingsSearchRequirementsEvent.selectedListingIdChanged(UniqueId.fromUniqueString(cluster.childMarkerId ?? cluster.markerId)));
+
             });
 
 
@@ -147,12 +157,13 @@ class MapHelper {
             }
 
             // markers[cluster.markerId]?.isSelected = !(markers[cluster.markerId]!.isSelected)!;
-            await _updateMarkers(context, model, updatedZoom, manager, markers);
+            await _updateMarkers(context, model, updatedZoom, manager, mounted, markers);
 
         });
 
     markerSet..clear()
       ..addAll(updatedMarkers);
+
 
     context.read<ListingsSearchRequirementsBloc>().add(ListingsSearchRequirementsEvent.markersDidChange(markerSet));
 
@@ -171,7 +182,6 @@ class MapHelper {
       Color textColor,
       ) async {
     final double size = (kIsWeb) ? 65 : 150;
-
 
 
     final UI.PictureRecorder pictureRecorder = UI.PictureRecorder();
@@ -217,10 +227,10 @@ class MapHelper {
 
     if (numberOfClusters != null) textPainterNOC.layout();
     if (numberOfClusters != null) {
-      textPainterNOC.paint(
-      canvas,
-      Offset((size / 2) - (padding / 2), 120 + (padding / 2)),
-    );
+        textPainterNOC.paint(
+        canvas,
+        Offset((size / 2) - (padding / 2), 120 + (padding / 2)),
+      );
     }
 
     final centerOffset = ((textPainterClusterFee.width + padding) - size)/2;
@@ -380,11 +390,8 @@ class MapHelper {
 
       if (mapMarker.isCluster!) {
 
-        print(clusterManager.points(mapMarker.clusterId?.toInt() ?? 1).length);
-
-
         mapMarker.icon = await _getClusterMarker(
-            clusterManager.points(mapMarker.clusterId?.toInt() ?? 0).length != 0 ? '+ ${clusterManager.points(mapMarker.clusterId?.toInt() ?? 1).length}' : null,
+            clusterManager.points(mapMarker.clusterId?.toInt() ?? 0).isNotEmpty ? '+ ${clusterManager.points(mapMarker.clusterId?.toInt() ?? 1).length}' : null,
             clusterMarker?.markerTitle ?? '',
             clusterMarker?.markerImageUrl,
             (mapMarker.isSelected ?? false) ? clusterTextColor : clusterColor,

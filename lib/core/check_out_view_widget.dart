@@ -24,7 +24,7 @@ Widget getPricingBreakDown(DashboardModel model, double price, double numberOfSl
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(child: Text('Service Fee', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,))),
-            Text(completeTotalPriceWithCurrency(price*CICOReservationPercentageFee, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+            Text(completeTotalPriceWithCurrency(price*CICOBuyerPercentageFee, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -49,7 +49,7 @@ Widget getPricingBreakDown(DashboardModel model, double price, double numberOfSl
           SizedBox(width: 15),
           Text(completeTotalPriceWithCurrency(
                 price +
-                price*CICOReservationPercentageFee +
+                price*CICOBuyerPercentageFee +
                 price*CICOTaxesFee, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
         ],
       )

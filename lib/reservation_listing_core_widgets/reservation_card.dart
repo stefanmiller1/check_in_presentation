@@ -562,16 +562,33 @@ Widget getReservationMediaFrameFlexible(
   );
 }
 
-Widget getSearchFooterWidget(BuildContext context, DashboardModel model, UniqueId? currentUserId, Color textColor, Color secondaryTextColor, Color backgroundColor, ListingManagerForm? listing, ActivityManagerForm? activity, ReservationItem reservationItem, bool isLoading, {required Function() didSelectItem, required Function() didSelectInterested}) {
-  final String? listingTitle = listing?.listingProfileService.backgroundInfoServices.listingName.getOrCrash();
-  final String activityTitle = getTitleForActivityOption(context, reservationItem.reservationSlotItem.first.selectedActivityType) ?? 'rent';
+bool hasReservationToday(List<ReservationSlotItem> reservationSlots) {
+  // Get current date without time
+  DateTime now = DateTime.now();
+  DateTime today = DateTime(now.year, now.month, now.day);
+
+  // Check if any reservation slot is for today
+  return reservationSlots.any((slot) {
+    DateTime slotDate = DateTime(slot.selectedDate.year, slot.selectedDate.month, slot.selectedDate.day);
+    return slotDate == today;
+  });
+}
+
+Widget getSearchFooterWidget(BuildContext context, DashboardModel model, UniqueId? currentUserId, Color textColor, Color secondaryTextColor, Color backgroundColor, ReservationPreviewer resPreviewer, bool isLoading, {required Function() didSelectItem, required Function() didSelectInterested}) {
 
 
   final List<ReservationSlotItem> reservationSlots = [];
-  reservationSlots.addAll(reservationItem.reservationSlotItem);
+  reservationSlots.addAll(resPreviewer.reservation?.reservationSlotItem ?? []);
   late List<ReservationSlotItem> resSorted = reservationSlots..sort(((a,b) => a.selectedDate.compareTo(b.selectedDate)));
 
-  final bool isEnded = resSorted.last.selectedDate.isBefore(DateTime.now());
+  final bool isEnded = resPreviewer.reservation?.reservationState == ReservationSlotState.completed;
+
+  if (resPreviewer.reservation == null) {
+    return Container();
+  }
+
+  final String? listingTitle = resPreviewer.listing?.listingProfileService.backgroundInfoServices.listingName.getOrCrash();
+  final String activityTitle = getTitleForActivityOption(context, resPreviewer.reservation!.reservationSlotItem.first.selectedActivityType) ?? 'rent';
 
   return Column(
     mainAxisAlignment: MainAxisAlignment.start,
@@ -600,18 +617,18 @@ Widget getSearchFooterWidget(BuildContext context, DashboardModel model, UniqueI
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(1.25),
-                        child: retrieveUserProfile(
-                          reservationItem.reservationOwnerId.getOrCrash(),
-                          model,
-                          null,
-                          model.paletteColor,
-                          model.secondaryQuestionTitleFontSize,
-                          profileType: UserProfileType.firstLetterOnlyProfile,
-                          trailingWidget: null,
-                          selectedButton: (e) {
-
-                          },
+                        child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration:  BoxDecoration(
+                            color: backgroundColor,
+                            border: Border.all(color: textColor),
+                            borderRadius: BorderRadius.all(Radius.circular(30))
                         ),
+                        child: (resPreviewer.reservationOwnerProfile?.profileImage != null && resPreviewer.reservationOwnerProfile?.profileImage?.image != null) ? CircleAvatar(
+                          backgroundImage: resPreviewer.reservationOwnerProfile?.profileImage?.image ?? Image.asset('assets/profile-avatar.png').image,
+                          ) : Center(child: Text((resPreviewer.reservationOwnerProfile?.legalName.isValid() == true) ? resPreviewer.reservationOwnerProfile!.legalName.value.fold((l) => resPreviewer.reservationOwnerProfile?.emailAddress.value.fold((l) => '..', (r) => r)[0] ?? '..', (r) => r)[0] : resPreviewer.reservationOwnerProfile?.emailAddress.value.fold((l) => '..', (r) => r)[0] ?? '..', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15))),
+                        )
                       ),
                     ),
                     const SizedBox(
@@ -624,8 +641,8 @@ Widget getSearchFooterWidget(BuildContext context, DashboardModel model, UniqueI
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(activity?.profileService.activityBackground.activityTitle.value.fold((l) => (listing != null) ? '$activityTitle at $listingTitle' : '$activityTitle Activity', (r) => r) ?? 'Reservation', style: TextStyle(color: textColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis), maxLines: 1),
-                            Text(activity?.profileService.activityBackground.activityDescription1.value.fold((l) => '', (r) => r) ?? '', style: TextStyle(color: secondaryTextColor), maxLines: 1, overflow: TextOverflow.ellipsis)
+                            Text(resPreviewer.activityManagerForm?.profileService.activityBackground.activityTitle.value.fold((l) => (resPreviewer.listing != null) ? '$activityTitle at $listingTitle' : '$activityTitle Activity', (r) => r) ?? '$activityTitle at $listingTitle', style: TextStyle(color: textColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis), maxLines: 1),
+                            Text(resPreviewer.activityManagerForm?.profileService.activityBackground.activityDescription1.value.fold((l) => 'Get Activity Started', (r) => r) ?? 'Get Activity Started', style: TextStyle(color: secondaryTextColor), maxLines: 1, overflow: TextOverflow.ellipsis)
                             // if (!isEnded) Text('Starts: ${DateFormat.yMMMd().format(resSorted.first.selectedDate)}', style: TextStyle(color: secondaryTextColor), maxLines: 1, overflow: TextOverflow.ellipsis),
                           ],
                         ),
@@ -640,33 +657,33 @@ Widget getSearchFooterWidget(BuildContext context, DashboardModel model, UniqueI
           const SizedBox(width: 8),
           Row(
             children: [
-               Container(
-                 height: 40,
-                 width: 40,
-                 decoration: BoxDecoration(
-                   borderRadius: BorderRadius.circular(30),
-                   color: textColor.withOpacity(0.07),
-                 ),
-                 child: IconButton(
-                   padding: EdgeInsets.zero,
-                   onPressed: () {
-
-                     for (ReservationSlotItem slotItem in reservationSlots) {
-                        for (ReservationTimeFeeSlotItem slot in groupConsecutiveSlots(slotItem.selectedSlots)) {
-
-
-                       }
-                     }
-                   },
-                   icon: Icon(Icons.calendar_today, size: 21, color: textColor),
-                   tooltip: 'Add to Calendar',
-                   ),
-                 ),
-                const SizedBox(width: 8),
+               // Container(
+               //   height: 40,
+               //   width: 40,
+               //   decoration: BoxDecoration(
+               //     borderRadius: BorderRadius.circular(30),
+               //     color: textColor.withOpacity(0.07),
+               //   ),
+               //   child: IconButton(
+               //     padding: EdgeInsets.zero,
+               //     onPressed: () {
+               //
+               //       for (ReservationSlotItem slotItem in reservationSlots) {
+               //          for (ReservationTimeFeeSlotItem slot in groupConsecutiveSlots(slotItem.selectedSlots)) {
+               //
+               //
+               //         }
+               //       }
+               //     },
+               //     icon: Icon(Icons.calendar_today, size: 21, color: textColor),
+               //     tooltip: 'Add to Calendar',
+               //     ),
+               //   ),
+               //  const SizedBox(width: 8),
                 watchCurrentAttendeeForInterestedState(
                     textColor,
                     backgroundColor,
-                    reservationItem.reservationId,
+                    resPreviewer.reservation!.reservationId,
                     currentUserId,
                     isLoading,
                     didSelectInterested: didSelectInterested
@@ -679,64 +696,101 @@ Widget getSearchFooterWidget(BuildContext context, DashboardModel model, UniqueI
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           const SizedBox(height: 5),
-          if (reservationItem.reservationState == ReservationSlotState.current) Chip(
+          if (resPreviewer.reservation!.reservationState == ReservationSlotState.confirmed && !hasReservationToday(reservationSlots)) Chip(
+            padding: EdgeInsets.all(3),
+            side: BorderSide.none,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            backgroundColor: model.paletteColor,
+            label: Row(
+                children: [
+                  Text(DateFormat.d().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.accentColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                  const SizedBox(width: 8),
+                  Text(DateFormat.MMM().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)
+              ]
+            ),
+            avatar: Icon(CupertinoIcons.calendar, size: 30, color: model.accentColor),
+          ),
+          if (resPreviewer.reservation!.reservationState == ReservationSlotState.confirmed && hasReservationToday(reservationSlots)) Chip(
+            padding: EdgeInsets.all(10),
+            side: BorderSide.none,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            backgroundColor: model.paletteColor,
+            label: Text('Starting Soon', style: TextStyle(
+                color: model.accentColor,
+                fontSize: model.secondaryQuestionTitleFontSize,
+                fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            avatar: Icon(CupertinoIcons.calendar, size: 30, color: model.accentColor),
+          ),
+          if (resPreviewer.reservation!.reservationState == ReservationSlotState.current && hasReservationToday(reservationSlots)) Chip(
+            padding: EdgeInsets.all(10),
+            side: BorderSide.none,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            backgroundColor: Colors.red,
+            label: Text('Today', style: TextStyle(
+                color: model.accentColor,
+                fontSize: model.secondaryQuestionTitleFontSize,
+                fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            avatar: Icon(CupertinoIcons.dot_radiowaves_left_right, color: model.accentColor),
+          ),
+          if (resPreviewer.reservation?.reservationState == ReservationSlotState.current && hasReservationToday(reservationSlots) == false) Chip(
             padding: EdgeInsets.all(5),
             side: BorderSide.none,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             backgroundColor: Colors.red,
-            label: Column(
-              children: [
-                Text('Today', style: TextStyle(
-                    color: model.accentColor,
-                    fontSize: model.secondaryQuestionTitleFontSize,
-                    fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+            label: Row(
+                children: [
+                  Text(DateFormat.d().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.accentColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                  const SizedBox(width: 8),
+                  Text(DateFormat.MMM().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)
+                ]
             ),
-            avatar: Icon(CupertinoIcons.dot_radiowaves_left_right, color: textColor),
+            avatar: Icon(CupertinoIcons.calendar_today, size: 30, color: model.accentColor),
           ),
-          if (reservationItem.reservationState != ReservationSlotState.current) Chip(
+          if (isEnded) Chip(
             padding: EdgeInsets.all(3),
             side: BorderSide.none,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             backgroundColor: backgroundColor,
             label: Row(
               children: [
-                Text(DateFormat.d().format(upcomingDateOrFinished(reservationItem) ?? DateTime.now()), style: TextStyle(color: textColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                Text(DateFormat.d().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.disabledTextColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
                 const SizedBox(width: 8),
-                Text(DateFormat.MMM().format(upcomingDateOrFinished(reservationItem) ?? DateTime.now()), style: TextStyle(color: textColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)
+                Text(DateFormat.MMM().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)
                 ]
               ),
-            avatar: Icon(CupertinoIcons.calendar_today, size: 30, color: textColor),
+            avatar: Icon(CupertinoIcons.calendar, size: 30, color: model.disabledTextColor),
           ),
 
           const SizedBox(width: 8),
-          Visibility(
-            visible: isEnded == false || reservationItem.reservationState == ReservationSlotState.current,
-            child: Visibility(
-                visible: activity?.activityAttendance.isLimitedAttendance == true || activity?.activityAttendance.isTicketBased == null || activity?.activityAttendance.isPassBased == null || activity?.activityAttendance.isLimitedAttendance == null,
-                child: InkWell(
-                  onTap: didSelectItem,
-                  child: Container(
-                    width: 100,
-                    decoration: BoxDecoration(
-                      color: textColor,
-                      borderRadius: const BorderRadius.all(Radius.circular(40)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Center(child: Text('Join', style: TextStyle(color: backgroundColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
-                  ),
-                                ),
-                )
-            ),
-          ),
+          // Visibility(
+          //   visible: isEnded == false || resPreviewer.reservation!.reservationState == ReservationSlotState.current,
+          //   child: Visibility(
+          //       visible: resPreviewer.activityManagerForm?.activityAttendance.isLimitedAttendance == true || resPreviewer.activityManagerForm?.activityAttendance.isTicketBased == null || resPreviewer.activityManagerForm?.activityAttendance.isPassBased == null || resPreviewer.activityManagerForm?.activityAttendance.isLimitedAttendance == null,
+          //       child: InkWell(
+          //         onTap: didSelectItem,
+          //         child: Container(
+          //           width: 100,
+          //           decoration: BoxDecoration(
+          //             color: textColor,
+          //             borderRadius: const BorderRadius.all(Radius.circular(40)),
+          //           ),
+          //           child: Padding(
+          //             padding: const EdgeInsets.all(8.0),
+          //             child: Center(child: Text('Join', style: TextStyle(color: backgroundColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
+          //         ),
+          //       ),
+          //     )
+          //   ),
+          // ),
           ///  tickets
           Visibility(
-            visible: isEnded == false || reservationItem.reservationState == ReservationSlotState.current,
+            visible: isEnded == false || resPreviewer.reservation!.reservationState == ReservationSlotState.current,
             child: Visibility(
-              visible: activity?.activityAttendance.isTicketBased == true,
+              visible: resPreviewer.activityManagerForm?.activityAttendance.isTicketBased == true,
               child: InkWell(
                 onTap: didSelectItem,
                 child: Container(
@@ -905,22 +959,22 @@ return BlocProvider(create: (context) =>  getIt<AttendeeManagerWatcherBloc>()..a
   );
 }
 
-Widget baseSearchItemContainer({required DashboardModel model, required Widget backgroundWidget, required Widget bottomWidget}) {
-  return SizedBox(
-    height: (kIsWeb) ? 400 : 500,
-    width: (kIsWeb) ? 350 : 400,
+Widget baseSearchItemContainer({required DashboardModel model, required bool? isSelected, required Widget backgroundWidget, required Widget bottomWidget, required double height, required double width}) {
+  return Container(
+    height: height,
+    width: width,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(30),
+      color: (isSelected == true) ? model.disabledTextColor.withOpacity(0.17) : Colors.transparent,
+    ),
     child: Column(
       children: [
         Flexible(
           child: Stack(
             children: [
-              SizedBox(
-                height: 400,
-                width: 400,
-                child: ClipRRect(
-                    borderRadius: BorderRadius.circular(15),
-                    child: backgroundWidget
-                ),
+              ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: backgroundWidget
               ),
               Positioned(
                 top: 15,
@@ -930,13 +984,9 @@ Widget baseSearchItemContainer({required DashboardModel model, required Widget b
           ),
         ),
 
-        SizedBox(
-            // height: 100,
-            width: 400,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: bottomWidget,
-            )
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: bottomWidget,
         )
       ],
     ),

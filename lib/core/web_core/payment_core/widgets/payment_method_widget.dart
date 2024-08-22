@@ -23,7 +23,7 @@ Widget getPaymentItemWidget(
                     color: model.accentColor,
                     border: Border.all(color: (selected) ? model.paletteColor : Colors.transparent),
                     borderRadius: BorderRadius.all(Radius.circular(12)
-                    )
+                  )
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(3.0),

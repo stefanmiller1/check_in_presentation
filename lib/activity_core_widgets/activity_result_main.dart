@@ -250,6 +250,18 @@ Future<List<ReservationPreviewer>> getActivitiesInOrderOfWeight(List<Reservation
     );
 
     try {
+      final reservationOwnerProfile = await facade.UserProfileFacade.instance.getCurrentUserProfile(userId: reservationItem.reservationOwnerId.getOrCrash());
+      resPreview = resPreview.copyWith(
+          reservationOwnerProfile: reservationOwnerProfile
+      );
+
+    } catch (e) {
+      Future.error(e);
+    }
+
+
+
+    try {
       final activityManagerForm = await facade.ActivitySettingsFacade.instance
           .getActivitySettings(
           reservationId: reservationItem.reservationId.getOrCrash()
@@ -261,6 +273,11 @@ Future<List<ReservationPreviewer>> getActivitiesInOrderOfWeight(List<Reservation
       if (activityManagerForm?.profileService.activityBackground.activityProfileImages?.isNotEmpty ?? false) {
         weight += 10;
       }
+
+      resPreview = resPreview.copyWith(
+          lookingForVendors: getHasPublishedVendorForms(activityManagerForm?.rulesService.vendorMerchantForms ?? [])
+      );
+
     } catch (e) {}
 
     try {
@@ -293,6 +310,8 @@ Future<List<ReservationPreviewer>> getActivitiesInOrderOfWeight(List<Reservation
     resPreview = resPreview.copyWith(
         previewWeight: weight
     );
+
+
 
     resToPreview.add(resPreview);
   }

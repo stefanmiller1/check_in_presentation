@@ -45,7 +45,7 @@ class _PaymentHistoryWidgetState extends State<PaymentHistoryWidget> {
             color: widget.model.paletteColor
         ),
       ),
-      body: BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations([ReservationSlotState.confirmed, ReservationSlotState.completed, ReservationSlotState.current], widget.profile, false)),
+      body: BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations([ReservationSlotState.confirmed, ReservationSlotState.completed, ReservationSlotState.current], widget.profile, false, null, null)),
           child: BlocBuilder<ReservationManagerWatcherBloc, ReservationManagerWatcherState>(
             builder: (context, state) {
               return state.maybeMap(
@@ -130,14 +130,14 @@ class _PaymentHistoryWidgetState extends State<PaymentHistoryWidget> {
                 const SizedBox(height: 10),
                 ...paymentHistory.map(
                         (p) {
-                        if (reservations.isNotEmpty && reservations.map((e) => e.reservationId.getOrCrash()).contains(p.reservationId)) {
-                          if (listing.isNotEmpty && listing.map((e) => e.listingServiceId.getOrCrash()).contains(p.listingId)) {
+                        if (reservations.isNotEmpty && reservations.map((e) => e.reservationId.getOrCrash()).contains(p.metaData?['reservationId'])) {
+                          if (listing.isNotEmpty && listing.map((e) => e.listingServiceId.getOrCrash()).contains(p.metaData?['listingId'])) {
                             return getPaymentHistoryItemWidget(
                               context,
                               widget.model,
                               p,
-                              listing.firstWhere((element) => element.listingServiceId.getOrCrash() == p.listingId),
-                              reservations.firstWhere((element) => element.reservationId.getOrCrash() == p.reservationId),
+                              listing.firstWhere((element) => element.listingServiceId.getOrCrash() == p.metaData?['listingId']),
+                              reservations.firstWhere((element) => element.reservationId.getOrCrash() == p.metaData?['reservationId']),
                               didSelectPayment: (payment) {
 
                                 if (payment.receipt_url != null) {

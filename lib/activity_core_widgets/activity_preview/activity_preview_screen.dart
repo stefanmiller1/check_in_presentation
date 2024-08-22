@@ -2,12 +2,13 @@ part of check_in_presentation;
 
 class ActivityPreviewScreen extends StatefulWidget {
 
-  final DashboardModel model;
+  final DashboardModel? model;
   final UniqueId currentListingId;
   final UniqueId currentReservationId;
   final ListingManagerForm? listing;
   final ReservationItem? reservation;
   final Function() didSelectBack;
+  // final Function(ReservationPreviewer) didSelectSimilar;
 
   const ActivityPreviewScreen({super.key, required this.model, required this.listing, required this.reservation, required this.currentListingId, required this.currentReservationId, required this.didSelectBack});
 
@@ -25,8 +26,11 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
   ActivityCreateNewMarker activityMarker = ActivityCreateNewMarker.activityDetails;
   ActivityPreviewTabs activityOverviewMarker = ActivityPreviewTabs.activity;
 
+  late DashboardModel dashboardModel;
+
   @override
   void initState() {
+    dashboardModel = DashboardModel.instance;
     _scrollController = ScrollController();
     _tabController = TabController(initialIndex: 0, length: ActivityPreviewTabs.values.length, vsync: this);
     super.initState();
@@ -35,6 +39,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
 
   Widget getMainContainerForActivityDetails(
       BuildContext context,
+      DashboardModel model,
       ActivityManagerForm activityForm,
       ListingManagerForm listing,
       ReservationItem reservation,
@@ -55,6 +60,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
               child: Container(
                 child: mainContainerPageView(
                     context,
+                    model,
                     reservation,
                     activityForm,
                     listing,
@@ -67,7 +73,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
           ],
         ),
 
-        Positioned(
+        if (activityForm.rulesService.accessVisibilitySetting.isPrivateOnly != true) Positioned(
           bottom: 0,
           child: ClipRRect(
             child: BackdropFilter(
@@ -75,10 +81,10 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
               child: Container(
                 height: 100,
                 width: MediaQuery.of(context).size.width,
-                color: widget.model.accentColor.withOpacity(0.35),
+                color: model.accentColor.withOpacity(0.35),
                 child: getReservationFooterWidget(
                     context,
-                    widget.model,
+                    model,
                     activityForm,
                     reservation,
                     currentAttendee,
@@ -90,7 +96,8 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                       setState(() {
                         presentNewAttendeeJoin(
                             context,
-                            widget.model,
+                            model,
+                            listing,
                             reservation,
                             activityForm,
                             activityOwner
@@ -99,13 +106,34 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                     },
                     didSelectManage: () {
                       setState(() {
-                        if (kIsWeb) {
-
-                        } else {
-                          if (isOwner) {
-
+                        if (isOwner) {
+                          if (kIsWeb) {
+                            Beamer.of(context).update(
+                                configuration: RouteInformation(
+                                    location: '/${DashboardMarker.resSettings.name.toString()}'
+                                ),
+                                rebuild: false
+                            );
+                            context.read<ListingsSearchRequirementsBloc>().add(const ListingsSearchRequirementsEvent.currentDashboardMarker(DashboardMarker.resSettings));
                           } else {
-                            presentALertDialogMobile(
+                            // Navigator.push(context, MaterialPageRoute(
+                            //     builder: (_) {
+                            //       /// if owner else show attendee manage options
+                            //       return ActivitySettingsScreenMobile(
+                            //         model: model,
+                            //         reservationItem: reservation,
+                            //         activityManagerForm: activityForm,
+                            //         listing: listing,
+                            //         currentUser: currentUser,
+                            //       );
+                            //     })
+                            // );
+                          }
+                        }
+
+                        switch (currentAttendee?.attendeeType) {
+                          case AttendeeType.free:
+                            return presentALertDialogMobile(
                                 context,
                                 'Leaving?',
                                 'Are you sure you want to leave this Activity?',
@@ -113,9 +141,40 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                                 didSelectDone: () {
                                   context.read<AttendeeFormBloc>().add(
                                       AttendeeFormEvent.didDeleteAttendee());
-                                }
+                              }
                             );
-                          }
+                          case AttendeeType.vendor:
+                            if (kIsWeb) {
+                              Beamer.of(context).update(
+                                  configuration: RouteInformation(
+                                      location: '/${DashboardMarker.resSettings.name.toString()}'
+                                  ),
+                                  rebuild: false
+                              );
+                              context.read<ListingsSearchRequirementsBloc>().add(const ListingsSearchRequirementsEvent.currentDashboardMarker(DashboardMarker.resSettings));
+                            } else {
+                              Navigator.of(context).push(MaterialPageRoute(builder: (_) {
+                                return ManageAttendeeSettingsSubContainer(
+                                    model: model,
+                                    currentSettingItem: null,
+                                    reservationItem: reservation,
+                                    currentUser: currentUser,
+                                    // currentActivityManagerForm: activityForm,
+                                    // currentAttendee: currentAttendee,
+                                    // currentActivityOwnerProfile: activityOwner,
+                                    didSelectNavItem: (nav) {
+
+                                      }
+                                    );
+                                  },
+                                )
+                              );
+                            }
+                            // TODO: Handle this case.
+                            break;
+                          case null:
+                            // TODO: Handle this case.
+                            break;
                         }
                       });
                     },
@@ -132,7 +191,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                       setState(() {
                         presentNewTicketAttendeeJoin(
                             context,
-                            widget.model,
+                            model,
                             reservation,
                             activityForm,
                             activityOwner
@@ -158,7 +217,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                       });
                     },
                     didSelectShare: () {
-
+                      presentActivityShareOptions(context, model, listing, reservation, activityForm);
                     },
                     didSelectMoreOptions: () {
                       if (kIsWeb) {
@@ -182,12 +241,12 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
 
 
 
-        if (kIsWeb) mainContainerHeaderTabWeb(),
+        if (kIsWeb) mainContainerHeaderTabWeb(model),
         if (!(kIsWeb)) SizedBox(
           height: 180,
           width: MediaQuery.of(context).size.width,
           child: AppBar(
-            backgroundColor: (widget.model.systemTheme.brightness != Brightness.dark) ? widget.model.paletteColor : widget.model.mobileBackgroundColor,
+            backgroundColor: (model.systemTheme.brightness != Brightness.dark) ? model.paletteColor : model.mobileBackgroundColor,
             elevation: 0,
             automaticallyImplyLeading: true,
             centerTitle: true,
@@ -195,10 +254,16 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
             leading: IconButton(onPressed: () {
               widget.didSelectBack();
               Navigator.of(context).pop();
-            }, icon: Icon(Icons.cancel, size: 30, color: widget.model.paletteColor), padding: EdgeInsets.zero),
+            }, icon: Icon(Icons.cancel, size: 30, color: (model.systemTheme.brightness != Brightness.dark) ? model.mobileBackgroundColor : model.paletteColor), padding: EdgeInsets.zero),
             title: Text(activityForm.profileService.activityBackground.activityTitle.value.fold((l) => '${activityOwner.legalName.getOrCrash()}\'s Activity', (r) => r)),
-            titleTextStyle: TextStyle(color: (widget.model.systemTheme.brightness != Brightness.dark) ? widget.model.accentColor : widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
+            titleTextStyle: TextStyle(color: (model.systemTheme.brightness != Brightness.dark) ? model.accentColor : model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
             actions: [
+              IconButton(
+                onPressed: () {
+                  presentActivityShareOptions(context, model, listing, reservation, activityForm);
+                },
+                icon: Icon(Icons.ios_share_rounded, color:  (model.systemTheme.brightness != Brightness.dark) ? model.mobileBackgroundColor : model.paletteColor),
+              ),
               // IconButton(onPressed: () => Navigator.of(context).pop(), icon: Icon(Icons.cancel, size: 40, color: widget.model.paletteColor), padding: EdgeInsets.zero),
               // const SizedBox(width: 10),
             ],
@@ -206,7 +271,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
               preferredSize: const Size.fromHeight(0),
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
-                child: mainContainerHeaderTabMobile(context),
+                child: mainContainerHeaderTabMobile(context, model),
               ),
             ),
           ),
@@ -215,7 +280,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
     );
   }
 
-  Widget mainContainerPageView(BuildContext context, ReservationItem reservation, ActivityManagerForm activityManagerForm, ListingManagerForm listing, UserProfileModel activityOwner, List<AttendeeItem> allAttendees, List<UniqueId> linkedCommunities) {
+  Widget mainContainerPageView(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityManagerForm, ListingManagerForm listing, UserProfileModel activityOwner, List<AttendeeItem> allAttendees, List<UniqueId> linkedCommunities) {
     return PageView.builder(
         controller: _pageController,
         itemCount: 2,
@@ -231,81 +296,129 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
 
           ActivityPreviewTabs pageIndex = ActivityPreviewTabs.values[index];
 
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: (kIsWeb) ? 25.0 : 0),
-              child: Row(
-                children: [
+          return Stack(
+            alignment: Alignment.topCenter,
+            children: [
+              Container(
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.height
+              ),
 
-                  if (pageIndex == ActivityPreviewTabs.activity) Flexible(
-                      child: Center(
-                        child: Container(
-                          constraints: const BoxConstraints(maxWidth: 700),
-                          child: ReservationActivityInfoWidget(
-                              model: widget.model,
-                              activityForm: activityManagerForm,
-                              activityOwner: activityOwner,
-                              reservation: reservation,
-                              allAttendees: allAttendees,
-                              showSuggestions: false,
-                              activitySetupComplete: true,
-                              linkedCommunities: linkedCommunities,
-                              didSelectActivityTicket: (ticket) {
-                                setState(() {
-                                  presentNewTicketAttendeeJoin(
-                                      context,
-                                      widget.model,
-                                      reservation,
-                                      activityManagerForm,
-                                      activityOwner
-                                  );
-                            });
-                          },
-                            isOwner: false,
+              SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: (kIsWeb) ? 25.0 : 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (pageIndex == ActivityPreviewTabs.activity) Flexible(
+                          child: Center(
+                            child: Container(
+                                  constraints: const BoxConstraints(maxWidth: 800),
+                                  child: ReservationActivityInfoWidget(
+                                      model: model,
+                                      listingForm: listing,
+                                      activityForm: activityManagerForm,
+                                      activityOwner: activityOwner,
+                                      reservation: reservation,
+                                      allAttendees: allAttendees,
+                                      showSuggestions: false,
+                                      activitySetupComplete: true,
+                                      linkedCommunities: linkedCommunities,
+                                      didSelectShowReservation: () {
+                                        setState(() {
+                                          _tabController?.animateTo(1, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+                                          _pageController.animateToPage(1, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+                                        });
+                                      },
+                                      didSelectActivityTicket: (ticket) {
+                                        setState(() {
+                                          presentNewTicketAttendeeJoin(
+                                              context,
+                                              model,
+                                              reservation,
+                                              activityManagerForm,
+                                              activityOwner
+                                          );
+                                        });
+                                      },
+                                      isOwner: false,
+                                      didSelectSeeMoreReservations: () {
+
+                                      },
+                                      didSelectSimilarRes: (res) {
+                                        if (kIsWeb) {
+                                          didSelectSimilarReservation(context, model, res);
+                                        } else {
+                                          Navigator.of(context).push(MaterialPageRoute(
+                                              builder: (_) {
+                                                return  ActivityPreviewScreen(
+                                                  model: widget.model,
+                                                  listing: res.listing,
+                                                  reservation: res.reservation,
+                                                  currentReservationId: res.reservation!.reservationId,
+                                                  currentListingId: res.reservation!.instanceId,
+                                                  didSelectBack: () {
+
+                                                  },
+                                                );
+                                              }));
+                                        }
+                              },
+                            ),
+                          ),
                         ),
                       ),
-                    )
-                  ),
 
-                  if (pageIndex == ActivityPreviewTabs.reservation) Flexible(
-                    child: Center(
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 700),
-                        child: FacilityOverviewInfoWidget(
-                          model: widget.model,
-                          overViewState: FacilityPreviewState.reservation,
-                          newFacilityBooking: reservation,
-                          reservations: [],
-                          /// THIS NEEDS TO BE THE LISTING OWNER!!!!!
-                          listingOwnerProfile: activityOwner,
-                          listing: listing,
-                          selectedReservationsSlots: [],
-                          selectedActivityType: null,
-                          currentListingActivityOption: null,
-                          currentSelectedSpace: null,
-                          currentSelectedSpaceOption: null,
-                          didSelectSpace: (space) {
-                          },
-                          didSelectSpaceOption: (spaceOption) {
-                          },
-                          updateBookingItemList: (slotItem, currency) {
-                          },
-                          didSelectItem: () {
-                          },
-                          isAttendee: allAttendees.map((e) => e.attendeeOwnerId.getOrCrash()).contains(facade.FirebaseChatCore.instance.firebaseUser?.uid),
-                      ),
-                    ),
+                      if (pageIndex == ActivityPreviewTabs.reservation) Flexible(
+                        child: Center(
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 800),
+                            child: FacilityOverviewInfoWidget(
+                              model: model,
+                              overViewState: FacilityPreviewState.reservation,
+                              newFacilityBooking: reservation,
+                              reservations: [],
+                              /// THIS NEEDS TO BE THE LISTING OWNER!!!!!
+                              listingOwnerProfile: activityOwner,
+                              listing: listing,
+                              selectedReservationsSlots: [],
+                              selectedActivityType: null,
+                              currentListingActivityOption: null,
+                              currentSelectedSpace: null,
+                              currentSelectedSpaceOption: null,
+                              didSelectSpace: (space) {
+                              },
+                              didSelectSpaceOption: (spaceOption) {
+                              },
+                              updateBookingItemList: (slotItem, currency) {
+                              },
+                              didSelectItem: () {
+                              },
+                              isAttendee: allAttendees.map((e) => e.attendeeOwnerId.getOrCrash()).contains(facade.FirebaseChatCore.instance.firebaseUser?.uid),
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
                   ),
-                )
-              ],
-            ),
-          ),
-        );
+                ),
+              ),
+
+              if (MediaQuery.of(context).size.width >= 1600) Padding(
+                padding: const EdgeInsets.only(left: 1170.0, top: 75),
+                child: SizedBox(
+                    width: 600,
+                    height: MediaQuery.of(context).size.height,
+                    child: BasicWebFooter(model: model)
+                ),
+              ),
+            ],
+          );
       }
     );
   }
 
-  Widget mainContainerHeaderTabMobile(BuildContext context) {
+  Widget mainContainerHeaderTabMobile(BuildContext context, DashboardModel model) {
     return Container(
       height: 40,
       width: MediaQuery.of(context).size.width,
@@ -318,10 +431,10 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
             _pageController.animateToPage(index, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
           });
         },
-        indicatorColor: (widget.model.systemTheme.brightness != Brightness.dark) ? widget.model.webBackgroundColor : widget.model.paletteColor,
+        indicatorColor: (model.systemTheme.brightness != Brightness.dark) ? model.webBackgroundColor : model.paletteColor,
         labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-        labelColor: (widget.model.systemTheme.brightness != Brightness.dark) ? widget.model.webBackgroundColor : widget.model.paletteColor,
-        unselectedLabelColor: widget.model.disabledTextColor,
+        labelColor: (model.systemTheme.brightness != Brightness.dark) ? model.webBackgroundColor : model.paletteColor,
+        unselectedLabelColor: model.disabledTextColor,
         tabs: ActivityPreviewTabs.values.map(
                 (e) => Tab(text: e.name.toUpperCase())
         ).toList()
@@ -329,13 +442,13 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
     );
   }
 
-  Widget mainContainerHeaderTabWeb() {
+  Widget mainContainerHeaderTabWeb(DashboardModel model) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
           Flexible(
             child: Container(
-                constraints: const BoxConstraints(maxWidth: 700),
+                constraints: const BoxConstraints(maxWidth: 800),
                 child: Padding(
                   padding: const EdgeInsets.only(top: 18.0),
                   child: ClipRRect(
@@ -345,7 +458,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                       child: Container(
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(25.0),
-                            color: widget.model.accentColor.withOpacity(0.35)
+                            color: model.accentColor.withOpacity(0.35)
                         ),
                         child: TabBar(
                           indicatorSize: TabBarIndicatorSize.tab,
@@ -353,16 +466,16 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                           onTap: (index) {
                             setState(() {
                               activityOverviewMarker = ActivityPreviewTabs.values[index];
-                              _pageController.animateToPage(index, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+                              _pageController.jumpToPage(index);
                             });
                           },
                           indicator: BoxDecoration(
                               borderRadius: BorderRadius.circular(25.0),
-                              color: widget.model.paletteColor
+                              color: model.paletteColor
                           ),
                           labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                          labelColor: widget.model.accentColor,
-                          unselectedLabelColor: widget.model.paletteColor,
+                          labelColor: model.accentColor,
+                          unselectedLabelColor: model.paletteColor,
                           tabs: ActivityPreviewTabs.values.map(
                                   (e) => ClipRRect(
                                 borderRadius: BorderRadius.circular(25),
@@ -382,28 +495,35 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
 
   @override
   Widget build(BuildContext context) {
+    dashboardModel.systemTheme = Theme.of(context);
+    dashboardModel.currentThemeData = dashboardModel.systemTheme.brightness != Brightness.dark
+        ? ThemeData.light() : ThemeData.dark();
+    dashboardModel.changeTheme(dashboardModel.currentThemeData!);
+
+    final DashboardModel model = (widget.model != null) ? widget.model! : dashboardModel;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(18),
       child: Scaffold(
-        backgroundColor: widget.model.mobileBackgroundColor,
+        backgroundColor: model.mobileBackgroundColor,
         body: MultiBlocProvider(
           providers: [
             BlocProvider(create: (_) => getIt<AuthBloc>()..add(const AuthEvent.mobileAuthCheckRequested())),
           ],
-          child: (widget.reservation != null && widget.listing != null) ? retrieveActivitySettings(widget.listing!, widget.reservation!) : getListingContainer(),
+          child: (widget.reservation != null && widget.listing != null) ? retrieveActivitySettings(model, widget.listing!, widget.reservation!) : getListingContainer(model),
       ),
       ),
     );
   }
 
-  Widget getListingContainer() {
+  Widget getListingContainer(DashboardModel model) {
     return BlocProvider(create: (context) => getIt<ListingManagerWatcherBloc>()..add(ListingManagerWatcherEvent.watchListingManagerItemStarted(widget.currentListingId.getOrCrash())),
       child: BlocBuilder<ListingManagerWatcherBloc, ListingManagerWatcherState>(
         builder: (context, state) {
           return state.maybeMap(
-              loadInProgress: (_) => JumpingDots(color: widget.model.paletteColor, numberOfDots: 3),
+              loadInProgress: (_) => JumpingDots(color: model.paletteColor, numberOfDots: 3),
               loadListingManagerItemSuccess: (item) {
-                return getReservationContainer(item.failure);
+                return getReservationContainer(model, item.failure);
               },
               orElse: () => Container()
           );
@@ -412,14 +532,14 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
     );
   }
 
-  Widget getReservationContainer(ListingManagerForm listing) {
+  Widget getReservationContainer(DashboardModel model, ListingManagerForm listing) {
     return BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchReservationItem(widget.currentReservationId.getOrCrash())),
         child: BlocBuilder<ReservationManagerWatcherBloc, ReservationManagerWatcherState>(
           builder: (context, state) {
             return state.maybeWhen(
-                resLoadInProgress: () => JumpingDots(color: widget.model.paletteColor, numberOfDots: 3),
+                resLoadInProgress: () => JumpingDots(color: model.paletteColor, numberOfDots: 3),
                 loadReservationItemSuccess: (res) {
-                  return retrieveActivitySettings(listing, res);
+                  return retrieveActivitySettings(model, listing, res);
                 },
                 orElse: () => Container()
             );
@@ -429,64 +549,66 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
   }
 
 
-  Widget retrieveActivitySettings(ListingManagerForm listing, ReservationItem reservation) {
+  Widget retrieveActivitySettings(DashboardModel model, ListingManagerForm listing, ReservationItem reservation) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => getIt<UserProfileWatcherBloc>()..add(UserProfileWatcherEvent.watchSelectedUserProfileStarted(reservation.reservationOwnerId.getOrCrash()))),
         BlocProvider(create: (context) =>  getIt<ActivityManagerWatcherBloc>()..add(ActivityManagerWatcherEvent.watchActivityManagerFormStarted(reservation.reservationId.getOrCrash()))),
       ],
       child: BlocBuilder<ActivityManagerWatcherBloc, ActivityManagerWatcherState>(
         builder: (context, state) {
           return state.maybeMap(
-              loadInProgress: (_) => JumpingDots(color: widget.model.paletteColor, numberOfDots: 3),
-              loadActivityManagerFormSuccess: (item) => retrieveActivityOwner(listing, reservation, item.item),
-              orElse: () => retrieveActivityOwner(listing, reservation, ActivityManagerForm.empty())
+              loadInProgress: (_) => JumpingDots(color: model.paletteColor, numberOfDots: 3),
+              loadActivityManagerFormSuccess: (item) => retrieveActivityOwner(model, listing, reservation, item.item),
+              orElse: () => retrieveActivityOwner(model, listing, reservation, ActivityManagerForm.empty())
           );
         },
       ),
     );
   }
 
-  Widget retrieveActivityOwner(ListingManagerForm listing, ReservationItem reservation, ActivityManagerForm activityForm) {
-    return BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
-        builder: (context, state) {
-          return state.maybeMap(
-              loadInProgress: (_) => JumpingDots(color: widget.model.paletteColor, numberOfDots: 3),
-              // loadSelectedProfileFailure: (_) => couldNotRetrieveListingProfile(),
-              loadSelectedProfileSuccess: (item) => retrieveAllAttendees(listing, reservation, activityForm, item.profile),
-              orElse: () => Container()
-        );
-      }
+  Widget retrieveActivityOwner(DashboardModel model, ListingManagerForm listing, ReservationItem reservation, ActivityManagerForm activityForm) {
+    return BlocProvider(create: (context) => getIt<UserProfileWatcherBloc>()..add(UserProfileWatcherEvent.watchSelectedUserProfileStarted(reservation.reservationOwnerId.getOrCrash())),
+      child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
+            builder: (context, state) {
+              return state.maybeMap(
+                  loadInProgress: (_) => JumpingDots(color: model.paletteColor, numberOfDots: 3),
+                  loadSelectedProfileFailure: (_) => Container(),
+                  loadSelectedProfileSuccess: (item) => retrieveAllAttendees(model, listing, reservation, activityForm, item.profile),
+                  orElse: () => Container()
+          );
+        }
+      ),
     );
   }
 
-  Widget retrieveAllAttendees(ListingManagerForm listing, ReservationItem reservation, ActivityManagerForm activityForm, UserProfileModel activityOwnerProfile) {
+  Widget retrieveAllAttendees(DashboardModel model, ListingManagerForm listing, ReservationItem reservation, ActivityManagerForm activityForm, UserProfileModel activityOwnerProfile) {
     return BlocProvider(create: (context) =>  getIt<AttendeeManagerWatcherBloc>()..add(AttendeeManagerWatcherEvent.watchAllAttendance(reservation.reservationId.getOrCrash())),
       child: BlocBuilder<AttendeeManagerWatcherBloc, AttendeeManagerWatcherState>(
         builder: (context, state) {
           return state.maybeMap(
-              loadAllAttendanceActivitySuccess: (item) => retrieveAllLinkedCommunityIds(listing, reservation, activityForm, activityOwnerProfile, item.item),
-              orElse: () => retrieveAllLinkedCommunityIds(listing, reservation, activityForm, activityOwnerProfile, [])
+              loadAllAttendanceActivitySuccess: (item) => retrieveAllLinkedCommunityIds(model, listing, reservation, activityForm, activityOwnerProfile, item.item),
+              orElse: () => retrieveAllLinkedCommunityIds(model, listing, reservation, activityForm, activityOwnerProfile, [])
           );
         },
       ),
     );
   }
 
-  Widget retrieveAllLinkedCommunityIds(ListingManagerForm listing, ReservationItem reservation, ActivityManagerForm activityForm, UserProfileModel activityOwnerProfile, List<AttendeeItem> allAttendees) {
+  Widget retrieveAllLinkedCommunityIds(DashboardModel model, ListingManagerForm listing, ReservationItem reservation, ActivityManagerForm activityForm, UserProfileModel activityOwnerProfile, List<AttendeeItem> allAttendees) {
     return BlocProvider(create: (_) => getIt<CommunityManagerWatcherBloc>()..add(CommunityManagerWatcherEvent.watchReservationLinkedCommunity(reservation.reservationId)),
         child: BlocBuilder<CommunityManagerWatcherBloc, CommunityManagerWatcherState>(
             builder: (context, authState) {
               return authState.maybeMap(
-                  loadReservationLinkedCommunitiesSuccess: (item) => retrieveMainContainerForAttendee(listing, reservation, activityForm, activityOwnerProfile, allAttendees, item.communityIds),
-                  orElse: () => retrieveMainContainerForAttendee(listing, reservation, activityForm, activityOwnerProfile, allAttendees, [])
+                  loadReservationLinkedCommunitiesSuccess: (item) => retrieveMainContainerForAttendee(model, listing, reservation, activityForm, activityOwnerProfile, allAttendees, item.communityIds),
+                  orElse: () => retrieveMainContainerForAttendee(model, listing, reservation, activityForm, activityOwnerProfile, allAttendees, [])
           );
         }
       )
     );
   }
 
-  Widget retrieveMainContainerForAttendee(ListingManagerForm listing, ReservationItem reservation, ActivityManagerForm activityForm, UserProfileModel activityOwnerProfile, List<AttendeeItem> allAttendees, List<UniqueId> linkedCommunities) {
+
+  Widget retrieveMainContainerForAttendee(DashboardModel model, ListingManagerForm listing, ReservationItem reservation, ActivityManagerForm activityForm, UserProfileModel activityOwnerProfile, List<AttendeeItem> allAttendees, List<UniqueId> linkedCommunities) {
     return BlocProvider(create: (_) => getIt<AttendeeFormBloc>()..add(AttendeeFormEvent.initializeAttendeeForm(dart.optionOf(AttendeeItem(
         attendeeId: AttendeeItem.empty().attendeeId,
         attendeeOwnerId: (facade.FirebaseChatCore.instance.firebaseUser != null) ? UniqueId.fromUniqueString(facade.FirebaseChatCore.instance.firebaseUser!.uid) : UniqueId(),
@@ -509,11 +631,11 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                   (either) => either.fold(
                       (failure) {
                     final snackBar = SnackBar(
-                        backgroundColor: widget.model.webBackgroundColor,
+                        backgroundColor: model.webBackgroundColor,
                         content: failure.maybeMap(
-                          couldNotRetrievePaymentMethod: (_) => Text('Could not retrieve payment details', style: TextStyle(color: widget.model.disabledTextColor)),
-                          paymentServerError: (e) => Text(e.failedValue ?? AppLocalizations.of(context)!.serverError, style: TextStyle(color: widget.model.disabledTextColor)),
-                          orElse: () => Text('A Problem Happened', style: TextStyle(color: widget.model.disabledTextColor)),
+                          couldNotRetrievePaymentMethod: (_) => Text('Could not retrieve payment details', style: TextStyle(color: model.disabledTextColor)),
+                          paymentServerError: (e) => Text(e.failedValue ?? AppLocalizations.of(context)!.serverError, style: TextStyle(color: model.disabledTextColor)),
+                          orElse: () => Text('A Problem Happened', style: TextStyle(color: model.disabledTextColor)),
                       )
                     );
                     ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -531,6 +653,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                 markerItem: ActivityCreateNewMarker.activityDetails,
                 childWidget: getMainContainerForActivityDetails(
                     context,
+                    model,
                     activityForm,
                     listing,
                     reservation,
@@ -539,7 +662,6 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                     linkedCommunities
               )
             ),
-
           ];
 
           return Stack(
@@ -548,9 +670,71 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
               Container(
                 height: MediaQuery.of(context).size.height,
                 width: MediaQuery.of(context).size.width,
-                color: widget.model.mobileBackgroundColor,
+                color: model.mobileBackgroundColor,
               ),
-              activityContainerModel.firstWhere((element) => element.markerItem == activityMarker).childWidget
+              Visibility(
+                  visible: activitySetupComplete(activityForm) == true,
+                  child: IgnorePointer(
+                    ignoring: activityForm.rulesService.accessVisibilitySetting.isPrivateOnly == true,
+                    child: activityContainerModel.firstWhere((element) => element.markerItem == activityMarker).childWidget)
+              ),
+
+              /// handle private activity
+              if (activityForm.rulesService.accessVisibilitySetting.isPrivateOnly == true) Container(
+                height: MediaQuery.of(context).size.height,
+                width: MediaQuery.of(context).size.width,
+                color: model.mobileBackgroundColor.withOpacity(0.8),
+              ),
+              /// handle non-activity reservation
+              if (activitySetupComplete(activityForm) == false) Positioned(
+                top: (MediaQuery.of(context).size.height / 2) - 200,
+                child: Container(
+                    width: 600,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25.0),
+                      color: model.accentColor,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(18.0),
+                      child: Column(
+                          children: [
+                            const SizedBox(height: 15),
+                            Icon(Icons.info, color: model.disabledTextColor, size: 60),
+                            const SizedBox(height: 15),
+                            Text('Activity Doesn\'t Exist', style: TextStyle(color: model.disabledTextColor, fontSize: model.questionTitleFontSize)),
+                            Text('This activity is no longer available. If you would like to gain access or would like to request an invite, please contact the organizer.', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
+                            const SizedBox(height: 15),
+                            BasicWebFooter(model: model),
+                            const SizedBox(height: 15),
+                      ]
+                    ),
+                  )
+                ),
+              ),
+              if (activityForm.rulesService.accessVisibilitySetting.isPrivateOnly == true) Positioned(
+                top: (MediaQuery.of(context).size.height / 2) - 200,
+                child: Container(
+                  width: 600,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25.0),
+                      color: model.accentColor,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(18.0),
+                        child: Column(
+                            children: [
+                                const SizedBox(height: 15),
+                                Icon(Icons.lock, color: model.disabledTextColor, size: 60),
+                                const SizedBox(height: 15),
+                                Text('Private Activity', style: TextStyle(color: model.disabledTextColor, fontSize: model.questionTitleFontSize)),
+                                Text('This activity has been set to private, and is no longer open. If you would like to gain access or would like to request an invite, please contact the organizer.', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
+                                const SizedBox(height: 15),
+                          ]
+                        ),
+                      )
+                  ),
+              ),
+
             ],
           );
         },

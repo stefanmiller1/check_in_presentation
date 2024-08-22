@@ -35,7 +35,7 @@ class _PersonalInformationProfileState extends State<PersonalInformationProfile>
   Widget build(BuildContext context) {
     return  BlocProvider(create: (context) => getIt<UpdateUserProfileAccountBloc>()..add(UpdateUserProfileAccountEvent.initializedUserProfile(dart.optionOf(widget.profile))),
         child: BlocConsumer<UpdateUserProfileAccountBloc, UpdateUserProfileAccountState>(
-            listenWhen: (p,c) => p.isSubmitting != c.isSubmitting || p.deleteAuthFailureOrSuccessOption != c.deleteAuthFailureOrSuccessOption,
+            listenWhen: (p,c) => p.isSubmitting != c.isSubmitting || p.authFailureOrSuccessOption != c.authFailureOrSuccessOption || p.deleteAuthFailureOrSuccessOption != c.deleteAuthFailureOrSuccessOption,
             listener: (context, state) {
 
               state.authFailureOrSuccessOption.fold(
@@ -59,8 +59,10 @@ class _PersonalInformationProfileState extends State<PersonalInformationProfile>
                         content: Text(AppLocalizations.of(context)!.saved, style: TextStyle(color: widget.model.webBackgroundColor))
                     );
                     ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                    Navigator.of(context).pop();
 
+                    if (!(kIsWeb)) {
+                      Navigator.of(context).pop();
+                    }
                   }
                 )
               );
@@ -79,10 +81,18 @@ class _PersonalInformationProfileState extends State<PersonalInformationProfile>
                                     )
                                 );
                                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                Navigator.of(context).pop();
+
                               },
                               (_) {
-                                Navigator.of(context).pop();
-                                widget.didDeleteAccount();
+
+                      setState(() {
+                        if (!(kIsWeb)) {
+                          Navigator.of(context).pop();
+                        }
+
+                        widget.didDeleteAccount();
+                      });
                   }
                 )
               );
@@ -92,6 +102,7 @@ class _PersonalInformationProfileState extends State<PersonalInformationProfile>
 
               return Scaffold(
                 resizeToAvoidBottomInset: true,
+                backgroundColor: widget.model.mobileBackgroundColor,
                 appBar: AppBar(
                   backgroundColor: Colors.transparent,
                   titleTextStyle: TextStyle(color: widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
@@ -100,6 +111,7 @@ class _PersonalInformationProfileState extends State<PersonalInformationProfile>
                   iconTheme: IconThemeData(
                       color: widget.model.paletteColor
                   ),
+                  automaticallyImplyLeading: kIsWeb == false,
                   actions: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(30),
@@ -176,426 +188,16 @@ class _PersonalInformationProfileState extends State<PersonalInformationProfile>
                     autovalidateMode: context.read<UpdateUserProfileAccountBloc>().state.showErrorMessages,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: (kIsWeb) ? Row(
                           children: [
-                            const SizedBox(height: 35),
-                            Text('First Name',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: widget.model.disabledTextColor,
-                              ),
-                              textAlign: TextAlign.left,
-                            ),
-                            const SizedBox(height: 10),
-
                             Container(
-                                width: MediaQuery.of(context).size.width,
-                                child: TextFormField(
-                                    style: TextStyle(color: widget.model.paletteColor),
-                                    initialValue:
-                                    widget.profile
-                                        .legalName
-                                        .value
-                                        .fold((l) => l.maybeMap(userProfile: (e) => e.f?.maybeMap(invalidLegalName: (i) => i.failedValue, orElse: () => '' ), orElse: () => ''), (r) => r),
-                                    decoration: InputDecoration(
-                                      hintText: AppLocalizations.of(context)!.signUpDashboardNameHint,
-                                      errorStyle: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        color: widget.model.paletteColor,
-                                      ),
-                                      prefixIcon: Icon(Icons.person, color: widget.model.disabledTextColor),
-                                      filled: true,
-                                      fillColor: widget.model.accentColor,
-                                      focusedErrorBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(25.0),
-                                        borderSide: BorderSide(
-                                          color: widget.model.paletteColor,
-                                        ),
-                                      ),
-                                      focusedBorder:  OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(25.0),
-                                        borderSide: BorderSide(
-                                          color: widget.model.disabledTextColor,
-                                        ),
-                                      ),
-                                      errorBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(25.0),
-                                        borderSide: const BorderSide(
-                                          width: 0,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(25.0),
-                                        borderSide: BorderSide(
-                                          color: widget.model.webBackgroundColor,
-                                          width: 0,
-                                        ),
-                                      ),
-                                    ),
-                                    autocorrect: false,
-                                    onChanged: (value) => context.read<UpdateUserProfileAccountBloc>().add(UpdateUserProfileAccountEvent.firstLastLegalNameChanged(value)),
-                                    validator: (_) => context
-                                        .read<UpdateUserProfileAccountBloc>()
-                                        .state
-                                        .profile
-                                        .profileUser
-                                        .legalName
-                                        .value
-                                        .fold(
-                                            (f) => f.maybeMap(
-                                          userProfile: (u) => u.f?.maybeMap(
-                                              empty: (_) => AppLocalizations.of(context)!.signUpDashboardError,
-                                              invalidLegalName: (_) => AppLocalizations.of(context)!.signUpDashboardPasswordConfirmError2,
-                                              orElse: () => null),
-                                          orElse: () => null,
-                                    ),
-                                  (_) => null
-                                )
-                              )
+                              width: Responsive.isDesktop(context) ? 600 : null,
+                              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 550),
+                              child: mainContainer(context, state)
                             ),
-
-                            const SizedBox(height: 20),
-                            Text('Last Name',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: widget.model.disabledTextColor,
-                              ),
-                              textAlign: TextAlign.left,
-                            ),
-                            const SizedBox(height: 10),
-
-                            Container(
-                                width: MediaQuery.of(context).size.width,
-                                child: TextFormField(
-                                    style: TextStyle(color: widget.model.paletteColor),
-                                    initialValue:
-                                    widget.profile
-                                        .legalSurname
-                                        .value
-                                        .fold((l) => l.maybeMap(userProfile: (e) => e.f?.maybeMap(invalidLegalName: (i) => i.failedValue, orElse: () => '' ), orElse: () => ''), (r) => r),
-                                    decoration: InputDecoration(
-                                      hintText: AppLocalizations.of(context)!.signUpDashboardNameHint,
-                                      errorStyle: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        color: widget.model.paletteColor,
-                                      ),
-                                      prefixIcon: Icon(Icons.person, color: widget.model.disabledTextColor),
-                                      filled: true,
-                                      fillColor: widget.model.accentColor,
-                                      focusedErrorBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(25.0),
-                                        borderSide: BorderSide(
-                                          color: widget.model.paletteColor,
-                                        ),
-                                      ),
-                                      focusedBorder:  OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(25.0),
-                                        borderSide: BorderSide(
-                                          color: widget.model.disabledTextColor,
-                                        ),
-                                      ),
-                                      errorBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(25.0),
-                                        borderSide: const BorderSide(
-                                          width: 0,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(25.0),
-                                        borderSide: BorderSide(
-                                          color: widget.model.webBackgroundColor,
-                                          width: 0,
-                                        ),
-                                      ),
-                                    ),
-                                    autocorrect: false,
-                                    onChanged: (value) => context.read<UpdateUserProfileAccountBloc>().add(UpdateUserProfileAccountEvent.lastNameLegalChanged(value)),
-                                    validator: (_) => context
-                                        .read<UpdateUserProfileAccountBloc>()
-                                        .state
-                                        .profile
-                                        .profileUser
-                                        .legalSurname
-                                        .value
-                                        .fold(
-                                            (f) => f.maybeMap(
-                                          userProfile: (u) => u.f?.maybeMap(
-                                              empty: (_) => AppLocalizations.of(context)!.signUpDashboardError,
-                                              invalidLegalName: (_) => AppLocalizations.of(context)!.signUpDashboardPasswordConfirmError2,
-                                              orElse: () => null),
-                                          orElse: () => null,
-                                        ),
-                                            (_) => null
-                                )
-                              )
-                            ),
-                            const SizedBox(height: 20),
-                            Divider(color: widget.model.disabledTextColor),
-                            const SizedBox(height: 20),
-
-                            Text(AppLocalizations.of(context)!.profileUserEmail,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: widget.model.disabledTextColor,
-                              ),
-                              textAlign: TextAlign.left,
-                            ),
-                            const SizedBox(height: 10),
-                            Container(
-                              height: 55,
-                              width: MediaQuery.of(context).size.width,
-                              decoration: BoxDecoration(
-                                  color: widget.model.accentColor,
-                                  borderRadius: const BorderRadius.all(Radius.circular(35))
-                              ),
-                              child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 10.0),
-                                    child: Text(maskEmail(widget.profile.emailAddress.getOrCrash()),
-                                        style: TextStyle(color: widget.model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: 16),
-                                        textAlign: TextAlign.start
-                                  ),
-                                )
-                              ),
-                            ),
-                            const SizedBox(height: 15),
-                            if (widget.profile.isEmailAuth) Row(
-                              children: [
-                                Icon(Icons.check_circle, color: widget.model.disabledTextColor),
-                                const SizedBox(width: 10),
-                                Text('Your Current Email is Verified', style: TextStyle(color: widget.model.disabledTextColor)),
-                              ],
-                            ),
-                            if (!widget.profile.isEmailAuth) Column(
-                              children: [
-                                Text('Select Verify Email and we will send you an Email Confirmation', style: TextStyle(color: widget.model.disabledTextColor)),
-                                InkWell(
-                                  onTap: () {
-
-                                  },
-                                  child: Container(
-                                      height: 55,
-                                      width: MediaQuery.of(context).size.width,
-                                      decoration: BoxDecoration(
-                                        color: widget.model.paletteColor,
-                                        borderRadius: BorderRadius.circular(25),
-                                      ),
-                                    child: Center(child: Text('Verify Email', style: TextStyle(color: widget.model.accentColor, fontWeight: FontWeight.bold))),
-                                  ),
-                                )
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Divider(color: widget.model.disabledTextColor),
-                            const SizedBox(height: 20),
-
-                            Text(AppLocalizations.of(context)!.profileAccountPhone,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: widget.model.disabledTextColor,
-                              ),
-                              textAlign: TextAlign.left,
-                            ),
-                            const SizedBox(height: 10),
-                            if (widget.profile.contactPhones != null) Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        height: 55,
-                                        width: MediaQuery.of(context).size.width,
-                                        decoration: BoxDecoration(
-                                            color: widget.model.accentColor,
-                                            borderRadius: const BorderRadius.all(Radius.circular(35))
-                                        ),
-                                        child: Align(
-                                            alignment: Alignment.centerLeft,
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(left: 10.0),
-                                              child: Text(maskPhone(widget.profile.contactPhones!.nsn),
-                                                  style: TextStyle(color: widget.model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: 16),
-                                                  textAlign: TextAlign.start
-                                            ),
-                                          )
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 15),
-                                    InkWell(
-                                      onTap: () {
-                                        setState(() {
-                                          isEditingPhone = !isEditingPhone;
-                                        });
-                                      },
-                                      child: Container(
-                                        height: 55,
-                                        decoration: BoxDecoration(
-                                          color: (isEditingPhone) ? widget.model.accentColor : widget.model.paletteColor,
-                                          borderRadius: BorderRadius.circular(25)
-                                        ),
-                                        child: Center(child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                                          child: Text('Edit', style: TextStyle(color: (isEditingPhone) ? widget.model.paletteColor : widget.model.accentColor),),
-                                        )),
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                if (!isEditingPhone && !widget.profile.isPhoneAuth) InkWell(
-                                  onTap: () {
-
-                                  },
-                                  child: Container(
-                                    height: 55,
-                                    width: MediaQuery.of(context).size.width,
-                                    decoration: BoxDecoration(
-                                      color: (widget.profile.contactPhones?.isValid() ?? false) ? widget.model.paletteColor : widget.model.accentColor,
-                                      borderRadius: BorderRadius.circular(25),
-                                    ),
-                                    child: Center(child: Text('Verify Phone Number', style: TextStyle(color: (widget.profile.contactPhones?.isValid() ?? false) ? widget.model.accentColor : widget.model.paletteColor, fontWeight: FontWeight.bold))),
-                                  ),
-                                ),
-                                  const SizedBox(height: 10),
-                                Text('Your Contact Number: this number will only be shared with Reservation Holders for when they need to get in touch.', style: TextStyle(color: widget.model.disabledTextColor)),
-                                const SizedBox(height: 10),
-                                if (isEditingPhone) AnimatedContainer(
-                                    duration: const Duration(milliseconds: 2800),
-                                    child: Padding(
-                                      padding: EdgeInsets.only(top: (isEditingPhone) ? 15 : 0),
-                                      child: editAndVerifyPhoneNumber(context)
-                                  )
-                                )
-                              ],
-                            ),
-                            if (widget.profile.contactPhones == null) editAndVerifyPhoneNumber(context),
-                            const SizedBox(height: 20),
-                            Divider(color: widget.model.disabledTextColor),
-                            const SizedBox(height: 20),
-                            Text('Government ID',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: widget.model.disabledTextColor,
-                              ),
-                              textAlign: TextAlign.left,
-                            ),
-                            const SizedBox(height: 10),
-                            getVerificationIDWidget(context, state.profile.profileUser.identificationState ?? PhotoIdentificationState.noRequest, state),
-
-                            const SizedBox(height: 20),
-                            Divider(color: widget.model.disabledTextColor),
-                            const SizedBox(height: 20),
-                            Container(
-                              width: MediaQuery.of(context).size.width,
-                              child: Text("${AppLocalizations.of(context)!.profileAccountContact}",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: widget.model.disabledTextColor,
-                                ),
-                                textAlign: TextAlign.left,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            PhoneFieldView(
-                              // inputKey: _phoneKey,
-                                hintText: AppLocalizations.of(context)!.profileAccountPhone,
-                                controller: _emergePhoneController!,
-                                selectorNavigator: const CountrySelectorNavigator.draggableBottomSheet(
-                                  flagSize: 28
-                                ),
-                                model: widget.model,
-                                validateMode: context.read<UpdateUserProfileAccountBloc>().state.showErrorMessages,
-                                onChangedPhoneNumber: (p) {
-                                  context.read<UpdateUserProfileAccountBloc>()..add(UpdateUserProfileAccountEvent.emergencyPhoneChanged(p));
-                                }
-                            ),
-                            const SizedBox(height: 55),
-                            Divider(color: widget.model.disabledTextColor),
-                            const SizedBox(height: 20),
-                            Container(
-                              width: MediaQuery.of(context).size.width,
-                              child: Text("Account Removal",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: widget.model.disabledTextColor,
-                                ),
-                                textAlign: TextAlign.left,
-                              ),
-                            ),
-                            if (_deleteSelected) Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 20),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(18),
-                                    color: Colors.red.withOpacity(0.1),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Delete My Account - What You Should Know', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize)),
-                                        Text('You\'re about to start the process of deleting your CIRCLE account. Your display name, email and any public information linked to your profile (included your profile images) will no longer be viewable by anyone on CIRCLE.', style: TextStyle(color: Colors.red,)),
-                                        Text('Once this is done - it cannot be undone.', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            InkWell(
-                              onTap: () {
-                                  setState(() {
-                                    if (!_deleteSelected) {
-                                      _deleteSelected = true;
-                                    } else {
-                                      presentALertDialogMobile(
-                                        context,
-                                        'Delete My Account',
-                                        'If you select \'Delete Now\' your account will be deleted from our servers - this cannot be undone. Since this is a security-sensitive task you will be asked to login one more time before your account is deleted permanently.',
-                                        'Delete Now',
-                                        didSelectDone: () {
-                                          context.read<UpdateUserProfileAccountBloc>().add(UpdateUserProfileAccountEvent.didSelectIsSubmitting(true));
-                                          context.read<UpdateUserProfileAccountBloc>()..add(UpdateUserProfileAccountEvent.deleteCurrentUserAccount());
-                                        }
-                                      );
-                                    }
-                                  });
-                                },
-                                child: Container(
-                                  height: 55,
-                                  width: MediaQuery.of(context).size.width,
-                                  decoration: BoxDecoration(
-                                    // color: widget.model.paletteColor,
-                                    border: Border.all(color: (_deleteSelected) ? Colors.red : widget.model.paletteColor),
-                                    borderRadius: BorderRadius.circular(25)
-                                  ),
-                                  child: Center(child: Text((_deleteSelected) ? 'Yes, Delete' : 'Delete My Account', style: TextStyle(color: (_deleteSelected) ? Colors.red : widget.model.paletteColor, fontWeight: FontWeight.bold))),
-                                ),
-                              ),
-
-                            const SizedBox(height: 55),
-                    ],
-                  ),
+                            if (Responsive.isDesktop(context)) Expanded(child: SizedBox(width: MediaQuery.of(context).size.width)),
+                        ],
+                      ) : mainContainer(context, state)
                 ),
               )
             )
@@ -605,6 +207,433 @@ class _PersonalInformationProfileState extends State<PersonalInformationProfile>
     );
   }
 
+  Widget mainContainer(BuildContext context, UpdateUserProfileAccountState state) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 35),
+        Text('First Name',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: widget.model.disabledTextColor,
+          ),
+          textAlign: TextAlign.left,
+        ),
+        const SizedBox(height: 10),
+
+        Container(
+            width: MediaQuery.of(context).size.width,
+            child: TextFormField(
+                style: TextStyle(color: widget.model.paletteColor),
+                initialValue:
+                widget.profile
+                    .legalName
+                    .value
+                    .fold((l) => l.maybeMap(userProfile: (e) => e.f?.maybeMap(invalidLegalName: (i) => i.failedValue, orElse: () => '' ), orElse: () => ''), (r) => r),
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context)!.signUpDashboardNameHint,
+                  errorStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: widget.model.paletteColor,
+                  ),
+                  prefixIcon: Icon(Icons.person, color: widget.model.disabledTextColor),
+                  filled: true,
+                  fillColor: widget.model.accentColor,
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.0),
+                    borderSide: BorderSide(
+                      color: widget.model.paletteColor,
+                    ),
+                  ),
+                  focusedBorder:  OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.0),
+                    borderSide: BorderSide(
+                      color: widget.model.disabledTextColor,
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.0),
+                    borderSide: const BorderSide(
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.0),
+                    borderSide: BorderSide(
+                      color: widget.model.webBackgroundColor,
+                      width: 0,
+                    ),
+                  ),
+                ),
+                autocorrect: false,
+                onChanged: (value) => context.read<UpdateUserProfileAccountBloc>().add(UpdateUserProfileAccountEvent.firstLastLegalNameChanged(value)),
+                validator: (_) => context
+                    .read<UpdateUserProfileAccountBloc>()
+                    .state
+                    .profile
+                    .profileUser
+                    .legalName
+                    .value
+                    .fold(
+                        (f) => f.maybeMap(
+                      userProfile: (u) => u.f?.maybeMap(
+                          empty: (_) => AppLocalizations.of(context)!.signUpDashboardError,
+                          invalidLegalName: (_) => AppLocalizations.of(context)!.signUpDashboardPasswordConfirmError2,
+                          orElse: () => null),
+                      orElse: () => null,
+                    ),
+                        (_) => null
+                )
+            )
+        ),
+
+        const SizedBox(height: 20),
+        Text('Last Name',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: widget.model.disabledTextColor,
+          ),
+          textAlign: TextAlign.left,
+        ),
+        const SizedBox(height: 10),
+
+        Container(
+            width: MediaQuery.of(context).size.width,
+            child: TextFormField(
+                style: TextStyle(color: widget.model.paletteColor),
+                initialValue:
+                widget.profile
+                    .legalSurname
+                    .value
+                    .fold((l) => l.maybeMap(userProfile: (e) => e.f?.maybeMap(invalidLegalName: (i) => i.failedValue, orElse: () => '' ), orElse: () => ''), (r) => r),
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context)!.signUpDashboardNameHint,
+                  errorStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: widget.model.paletteColor,
+                  ),
+                  prefixIcon: Icon(Icons.person, color: widget.model.disabledTextColor),
+                  filled: true,
+                  fillColor: widget.model.accentColor,
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.0),
+                    borderSide: BorderSide(
+                      color: widget.model.paletteColor,
+                    ),
+                  ),
+                  focusedBorder:  OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.0),
+                    borderSide: BorderSide(
+                      color: widget.model.disabledTextColor,
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.0),
+                    borderSide: const BorderSide(
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.0),
+                    borderSide: BorderSide(
+                      color: widget.model.webBackgroundColor,
+                      width: 0,
+                    ),
+                  ),
+                ),
+                autocorrect: false,
+                onChanged: (value) => context.read<UpdateUserProfileAccountBloc>().add(UpdateUserProfileAccountEvent.lastNameLegalChanged(value)),
+                validator: (_) => context
+                    .read<UpdateUserProfileAccountBloc>()
+                    .state
+                    .profile
+                    .profileUser
+                    .legalSurname
+                    .value
+                    .fold(
+                        (f) => f.maybeMap(
+                      userProfile: (u) => u.f?.maybeMap(
+                          empty: (_) => AppLocalizations.of(context)!.signUpDashboardError,
+                          invalidLegalName: (_) => AppLocalizations.of(context)!.signUpDashboardPasswordConfirmError2,
+                          orElse: () => null),
+                      orElse: () => null,
+                    ),
+                        (_) => null
+                )
+            )
+        ),
+        const SizedBox(height: 20),
+        Divider(color: widget.model.disabledTextColor),
+        const SizedBox(height: 20),
+
+        Text(AppLocalizations.of(context)!.profileUserEmail,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: widget.model.disabledTextColor,
+          ),
+          textAlign: TextAlign.left,
+        ),
+        const SizedBox(height: 10),
+        Container(
+          height: 55,
+          width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+              color: widget.model.accentColor,
+              borderRadius: const BorderRadius.all(Radius.circular(35))
+          ),
+          child: Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10.0),
+                child: Text(maskEmail(widget.profile.emailAddress.getOrCrash()),
+                    style: TextStyle(color: widget.model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: 16),
+                    textAlign: TextAlign.start
+                ),
+              )
+          ),
+        ),
+        const SizedBox(height: 15),
+        if (widget.profile.isEmailAuth) Row(
+          children: [
+            Icon(Icons.check_circle, color: widget.model.disabledTextColor),
+            const SizedBox(width: 10),
+            Text('Your Current Email is Verified', style: TextStyle(color: widget.model.disabledTextColor)),
+          ],
+        ),
+        if (!widget.profile.isEmailAuth) Column(
+          children: [
+            Text('Select Verify Email and we will send you an Email Confirmation', style: TextStyle(color: widget.model.disabledTextColor)),
+            InkWell(
+              onTap: () {
+
+              },
+              child: Container(
+                height: 55,
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  color: widget.model.paletteColor,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Center(child: Text('Verify Email', style: TextStyle(color: widget.model.accentColor, fontWeight: FontWeight.bold))),
+              ),
+            )
+          ],
+        ),
+        const SizedBox(height: 20),
+        Divider(color: widget.model.disabledTextColor),
+        const SizedBox(height: 20),
+
+        Text(AppLocalizations.of(context)!.profileAccountPhone,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: widget.model.disabledTextColor,
+          ),
+          textAlign: TextAlign.left,
+        ),
+        const SizedBox(height: 10),
+        if (widget.profile.contactPhones != null) Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 55,
+                    width: MediaQuery.of(context).size.width,
+                    decoration: BoxDecoration(
+                        color: widget.model.accentColor,
+                        borderRadius: const BorderRadius.all(Radius.circular(35))
+                    ),
+                    child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 10.0),
+                          child: Text(maskPhone(widget.profile.contactPhones!.nsn),
+                              style: TextStyle(color: widget.model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: 16),
+                              textAlign: TextAlign.start
+                          ),
+                        )
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 15),
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      isEditingPhone = !isEditingPhone;
+                    });
+                  },
+                  child: Container(
+                    height: 55,
+                    decoration: BoxDecoration(
+                        color: (isEditingPhone) ? widget.model.accentColor : widget.model.paletteColor,
+                        borderRadius: BorderRadius.circular(25)
+                    ),
+                    child: Center(child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                      child: Text('Edit', style: TextStyle(color: (isEditingPhone) ? widget.model.paletteColor : widget.model.accentColor),),
+                    )),
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (!isEditingPhone && !widget.profile.isPhoneAuth) InkWell(
+              onTap: () {
+
+              },
+              child: Container(
+                height: 55,
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  color: (widget.profile.contactPhones?.isValid() ?? false) ? widget.model.paletteColor : widget.model.accentColor,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Center(child: Text('Verify Phone Number', style: TextStyle(color: (widget.profile.contactPhones?.isValid() ?? false) ? widget.model.accentColor : widget.model.paletteColor, fontWeight: FontWeight.bold))),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text('Your Contact Number: this number will only be shared with Reservation Holders for when they need to get in touch.', style: TextStyle(color: widget.model.disabledTextColor)),
+            const SizedBox(height: 10),
+            if (isEditingPhone) AnimatedContainer(
+                duration: const Duration(milliseconds: 2800),
+                child: Padding(
+                    padding: EdgeInsets.only(top: (isEditingPhone) ? 15 : 0),
+                    child: editAndVerifyPhoneNumber(context)
+                )
+            )
+          ],
+        ),
+        if (widget.profile.contactPhones == null) editAndVerifyPhoneNumber(context),
+        const SizedBox(height: 20),
+        Divider(color: widget.model.disabledTextColor),
+        const SizedBox(height: 20),
+        Text('Government ID',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: widget.model.disabledTextColor,
+          ),
+          textAlign: TextAlign.left,
+        ),
+        const SizedBox(height: 10),
+        getVerificationIDWidget(context, state.profile.profileUser.identificationState ?? PhotoIdentificationState.noRequest, state),
+
+        const SizedBox(height: 20),
+        Divider(color: widget.model.disabledTextColor),
+        const SizedBox(height: 20),
+        Container(
+          width: MediaQuery.of(context).size.width,
+          child: Text("${AppLocalizations.of(context)!.profileAccountContact}",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: widget.model.disabledTextColor,
+            ),
+            textAlign: TextAlign.left,
+          ),
+        ),
+        const SizedBox(height: 10),
+        PhoneFieldView(
+          // inputKey: _phoneKey,
+            hintText: AppLocalizations.of(context)!.profileAccountPhone,
+            controller: _emergePhoneController!,
+            selectorNavigator: const CountrySelectorNavigator.draggableBottomSheet(
+                flagSize: 28
+            ),
+            model: widget.model,
+            validateMode: context.read<UpdateUserProfileAccountBloc>().state.showErrorMessages,
+            onChangedPhoneNumber: (p) {
+              context.read<UpdateUserProfileAccountBloc>()..add(UpdateUserProfileAccountEvent.emergencyPhoneChanged(p));
+            }
+        ),
+        const SizedBox(height: 55),
+        Divider(color: widget.model.disabledTextColor),
+        const SizedBox(height: 20),
+        Container(
+          width: MediaQuery.of(context).size.width,
+          child: Text("Account Removal",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: widget.model.disabledTextColor,
+            ),
+            textAlign: TextAlign.left,
+          ),
+        ),
+        if (_deleteSelected) Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                color: Colors.red.withOpacity(0.1),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Delete My Account - What You Should Know', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize)),
+                    Text('You\'re about to start the process of deleting your CIRCLE account. Your display name, email and any public information linked to your profile (included your profile images) will no longer be viewable by anyone on CIRCLE.', style: TextStyle(color: Colors.red,)),
+                    Text('Once this is done - it cannot be undone.', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        InkWell(
+          onTap: () {
+            setState(() {
+              if (!_deleteSelected) {
+                _deleteSelected = true;
+              } else {
+                presentALertDialogMobile(
+                    context,
+                    'Delete My Account',
+                    'If you select \'Delete Now\' your account will be deleted from our servers - this cannot be undone. Since this is a security-sensitive task you will be asked to login one more time before your account is deleted permanently.',
+                    'Delete Now',
+                  didSelectDone: () {
+                      setState(() {
+                        if (kIsWeb) {
+                          Navigator.of(context).pop();
+                        }
+                      });
+                      context.read<UpdateUserProfileAccountBloc>().add(UpdateUserProfileAccountEvent.didSelectIsSubmitting(true));
+                      context.read<UpdateUserProfileAccountBloc>()..add(UpdateUserProfileAccountEvent.deleteCurrentUserAccount());
+                  }
+                );
+              }
+            });
+          },
+          child: Container(
+            height: 55,
+            width: MediaQuery.of(context).size.width,
+            decoration: BoxDecoration(
+              // color: widget.model.paletteColor,
+                border: Border.all(color: (_deleteSelected) ? Colors.red : widget.model.paletteColor),
+                borderRadius: BorderRadius.circular(25)
+            ),
+            child: Center(child: Text((_deleteSelected) ? 'Yes, Delete' : 'Delete My Account', style: TextStyle(color: (_deleteSelected) ? Colors.red : widget.model.paletteColor, fontWeight: FontWeight.bold))),
+          ),
+        ),
+
+        const SizedBox(height: 55),
+      ],
+    );
+  }
 
 
   Widget editAndVerifyPhoneNumber(BuildContext context) {

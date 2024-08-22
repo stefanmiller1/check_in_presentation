@@ -192,7 +192,7 @@ class _ReservationCreateTicketAttendeeState extends State<ReservationCreateTicke
                             ownerUser: widget.resOwner,
                             reservation: widget.reservation,
                             amount: completeTotalPriceForCheckoutFormat(getTicketTotalPriceDouble(context.read<AttendeeFormBloc>().state.attendeeItem.ticketItems ?? []) +
-                                getTicketTotalPriceDouble(context.read<AttendeeFormBloc>().state.attendeeItem.ticketItems ?? [])*CICOReservationPercentageFee +
+                                getTicketTotalPriceDouble(context.read<AttendeeFormBloc>().state.attendeeItem.ticketItems ?? [])*CICOBuyerPercentageFee +
                                 getTicketTotalPriceDouble(context.read<AttendeeFormBloc>().state.attendeeItem.ticketItems ?? [])*CICOTaxesFee, widget.activityForm.rulesService.currency),
                             currency: widget.activityForm.rulesService.currency,
                             description: 'Ticket to be sold and to be made redeemable for a specific Reservation',
@@ -246,6 +246,7 @@ class _ReservationCreateTicketAttendeeState extends State<ReservationCreateTicke
             listener: (context, state) {
 
 
+
               state.authPaymentFailureOrSuccessOption.fold(() {},
                 (either) => either.fold(
                     (failure) {
@@ -287,7 +288,7 @@ class _ReservationCreateTicketAttendeeState extends State<ReservationCreateTicke
                       /// TODO: - hold attendee tickets
                       context.read<AttendeeFormBloc>().add(AttendeeFormEvent.isFinishedCreatingTicketAttendee(currentUser,
                           completeTotalPriceForCheckoutFormat(getTicketTotalPriceDouble(context.read<AttendeeFormBloc>().state.attendeeItem.ticketItems ?? []) +
-                              getTicketTotalPriceDouble(context.read<AttendeeFormBloc>().state.attendeeItem.ticketItems ?? [])*CICOReservationPercentageFee +
+                              getTicketTotalPriceDouble(context.read<AttendeeFormBloc>().state.attendeeItem.ticketItems ?? [])*CICOBuyerPercentageFee +
                               getTicketTotalPriceDouble(context.read<AttendeeFormBloc>().state.attendeeItem.ticketItems ?? [])*CICOTaxesFee, widget.activityForm.rulesService.currency),
                           widget.activityForm.rulesService.currency,
                           null));
@@ -505,7 +506,7 @@ class _ReservationCreateTicketAttendeeState extends State<ReservationCreateTicke
                       model: widget.model,
                       isLoading: isLoading,
                       isPreviewer: false,
-                      child: attendeeMainContainer(context, item.profile, state)
+                      child: attendeeMainContainer(context, item.profile, state).map((e) => e.childWidget).toList()
                     ),
 
                     ClipRRect(
@@ -520,6 +521,7 @@ class _ReservationCreateTicketAttendeeState extends State<ReservationCreateTicke
                               widget.model,
                               false,
                               currentMarkerItem,
+                              null,
                               null,
                               widget.activityForm,
                               state,
@@ -566,7 +568,7 @@ class _ReservationCreateTicketAttendeeState extends State<ReservationCreateTicke
                   ],
                 );
               },
-              orElse: () => GetLoginSignUpWidget(model: widget.model, didLoginSuccess: () {  },)
+              orElse: () => GetLoginSignUpWidget(showFullScreen: false, model: widget.model, didLoginSuccess: () {  },)
           );
         },
       ),

@@ -290,6 +290,7 @@ Widget boolOptionsForForm(BuildContext context, DashboardModel model, List<Check
   );
 }
 
+
 Widget createNewVendorPreviews({required BuildContext context, required DashboardModel model, required bool hasForms, required Function() createNewForm}) {
   return Column(
     children: [

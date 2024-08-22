@@ -1,7 +1,8 @@
 part of check_in_presentation;
 
-enum NewAttendeeStepsMarker {getStarted, addActivityRules, addActivityCustomRules, requestToJoinComplete, joinComplete}
-enum AttendeeVendorMarker {formMessage, welcomeMessage, availableTime, boothType, customDocuments, customLists, disclaimer, review, profileSelection}
+enum NewAttendeeStepsMarker {chooseAttendingType, getStarted, addActivityRules, addActivityCustomRules, requestToJoinComplete, joinComplete}
+enum AttendeeVendorMarker {formMessage, welcomeMessage, availableTime, boothType, customDocuments, customLists, disclaimer, review, selectPaymentMethod, profileSelection}
+
 
 class NewAttendeeContainerModel {
 
@@ -15,14 +16,14 @@ class NewAttendeeContainerModel {
 bool activityIsByRequest(ActivityManagerForm activity) => activity.rulesService.accessVisibilitySetting.isReviewRequired == true;
 bool activityHasRules(ActivityManagerForm activity) => activity.rulesService.ruleOption.isValid() && activity.rulesService.ruleOption.getOrCrash().isNotEmpty;
 bool activityHasCustomRules(ActivityManagerForm activity) => activity.rulesService.customFieldRuleSetting.isNotEmpty;
+bool activityHasOptions(ActivityManagerForm activity) => activity.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true;
 // bool attendeeVendorIsValid(AttendeeItem attendee) => (attendee.attendeeType == AttendeeType.vendor && attendee.eventMerchantVendorProfile != null);
-//
-//
-bool activityRequiresVendorFee(VendorMerchantForm? vendorForm) => vendorForm?.boothPaymentOptions?.any((booth) => booth.fee != null && booth.fee! > 0) ?? false;
 
 
 NewAttendeeStepsMarker getInitialContainerForNewAttendee(ActivityManagerForm activity) {
-  if (activityHasRules(activity)) {
+  if (activityHasOptions(activity)) {
+    return NewAttendeeStepsMarker.chooseAttendingType;
+  } else if (activityHasRules(activity)) {
     return NewAttendeeStepsMarker.addActivityRules;
   } else if (activityHasCustomRules(activity)) {
     return NewAttendeeStepsMarker.addActivityCustomRules;
@@ -188,6 +189,86 @@ Widget requestToJoinCompleted(BuildContext context, DashboardModel model, String
   );
 }
 
+
+Widget selectJoinTypeOptions(BuildContext context, DashboardModel model, ListingManagerForm listingForm, ReservationItem reservationItem, UserProfileModel activityOwnerProfile, ActivityManagerForm activityForm, {required Function(AttendeeType) didSelectOption}) {
+  return SingleChildScrollView(
+    child: Padding(
+      padding: const EdgeInsets.all(18.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+
+          const SizedBox(height: 15),
+          Container(
+              width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                color:  model.accentColor,
+                borderRadius: const BorderRadius.all(Radius.circular(15)),
+              ),
+              child: ListTile(
+                onTap: () {
+                  didSelectOption(AttendeeType.free);
+                },
+                leading: Icon(Icons.person_outlined, color: model.paletteColor),
+                title: Text('Join as a Attendee', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+                subtitle: Text('Give me updates on start/closing times & location'),
+              )
+          ),
+
+          if (activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true) Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              Row(
+                  // mainAxisAlignment: MainAxisAlignment.center,
+                  // crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(child: Divider(color: model.disabledTextColor)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text('or', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+                    ),
+                    Expanded(child: Divider(color: model.disabledTextColor)),
+                ]
+              ),
+
+              const SizedBox(height: 20),
+              Text('Join as a Vendor', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+              Text('Select an Application Below', style: TextStyle(color: model.disabledTextColor)),
+              const SizedBox(height: 4),
+              ...activityForm.rulesService.vendorMerchantForms?.where((element) => element.formStatus == FormStatus.published).toList().asMap().map(
+                    (i, e) =>  MapEntry(i, Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: vendorFormApplyButton(
+                        context,
+                        model,
+                        reservationItem,
+                        listingForm,
+                        activityForm,
+                        activityOwnerProfile,
+                        false,
+                        MediaQuery.of(context).size.width,
+                        false,
+                        e,
+                        e,
+                        i,
+                        didSelectNewVendor: () {
+                          didSelectOption(AttendeeType.vendor);
+                        }
+                    )
+                ),
+                ),
+              ).values.toList() ?? []
+            ],
+          ),
+        ]
+      ),
+    )
+  );
+}
+
 Widget newAttendeeJoinCompleted(BuildContext context, DashboardModel model, {required Function() didSelectComplete}) {
   /// suggest adding to discussion...show animation
   return SingleChildScrollView(
@@ -232,7 +313,7 @@ Widget newAttendeeJoinCompleted(BuildContext context, DashboardModel model, {req
                 )
               ),
             ),
-          const SizedBox(height: 80),
+          const SizedBox(height: 100),
         ],
       ),
     )
@@ -242,6 +323,8 @@ Widget newAttendeeJoinCompleted(BuildContext context, DashboardModel model, {req
 
 bool showBackButton(NewAttendeeStepsMarker marker) {
   switch (marker) {
+    case NewAttendeeStepsMarker.chooseAttendingType:
+      return true;
     case NewAttendeeStepsMarker.getStarted:
       return true;
     case NewAttendeeStepsMarker.addActivityRules:
@@ -281,8 +364,10 @@ bool antendeeDocumentFormsIsValid(List<DocumentFormOption> list1, List<DocumentF
   return keys1.difference(keys2).isEmpty && keys2.difference(keys1).isEmpty;
 }
 
-bool showNextButton(NewAttendeeStepsMarker marker, AttendeeVendorMarker? vendorAttendeeMarker, ActivityManagerForm activityForm, VendorMerchantForm? refVendor, AttendeeFormState state) {
+bool showNextButton(NewAttendeeStepsMarker marker, CardItem? cardItem, AttendeeVendorMarker? vendorAttendeeMarker, ActivityManagerForm activityForm, VendorMerchantForm? refVendor, AttendeeFormState state) {
   switch (marker) {
+    case NewAttendeeStepsMarker.chooseAttendingType:
+      return false;
     case NewAttendeeStepsMarker.getStarted:
       switch (state.attendeeItem.attendeeType) {
         case (AttendeeType.tickets):
@@ -307,7 +392,9 @@ bool showNextButton(NewAttendeeStepsMarker marker, AttendeeVendorMarker? vendorA
             case AttendeeVendorMarker.review:
               return true;
             case AttendeeVendorMarker.profileSelection:
-              break;
+              return state.attendeeItem.eventMerchantVendorProfile != null;
+            case AttendeeVendorMarker.selectPaymentMethod:
+              return cardItem != null;
           }
           return false;
         default:
@@ -328,6 +415,8 @@ bool showNextButton(NewAttendeeStepsMarker marker, AttendeeVendorMarker? vendorA
 
 String getTitleForNextButton(NewAttendeeStepsMarker marker) {
   switch (marker) {
+    case NewAttendeeStepsMarker.chooseAttendingType:
+      return 'Next';
     case NewAttendeeStepsMarker.getStarted:
       return 'Next';
     case NewAttendeeStepsMarker.addActivityRules:
@@ -342,7 +431,7 @@ String getTitleForNextButton(NewAttendeeStepsMarker marker) {
 }
 
 
-Widget footerWidgetForNewAttendee(BuildContext context, DashboardModel model, bool isPreview, NewAttendeeStepsMarker marker, AttendeeVendorMarker? vendorAttendeeMarker, ActivityManagerForm activityForm, AttendeeFormState state, VendorMerchantForm? refVendor,  bool isLast, {required Function() didSelectBack, required Function() didSelectNext}) {
+Widget footerWidgetForNewAttendee(BuildContext context, DashboardModel model, bool isPreview, NewAttendeeStepsMarker marker, CardItem? cardItem, AttendeeVendorMarker? vendorAttendeeMarker, ActivityManagerForm activityForm, AttendeeFormState state, VendorMerchantForm? refVendor,  bool isLast, {required Function() didSelectBack, required Function() didSelectNext}) {
     return Padding(
       padding: const EdgeInsets.all(18.0),
       child: Row(
@@ -368,16 +457,19 @@ Widget footerWidgetForNewAttendee(BuildContext context, DashboardModel model, bo
               ),
               Visibility(
                 visible: activityRequiresVendorFee(state.attendeeItem.vendorForm) && state.attendeeItem.attendeeType == AttendeeType.vendor,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text('Vendor Fee', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,), maxLines: 1,),
-                      Text(completeTotalPriceWithCurrency(
-                            (attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? [])).toDouble() +
-                            (attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? [])).toDouble()*CICOReservationPercentageFee +
-                            (attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? [])).toDouble()*CICOTaxesFee, activityForm.rulesService.currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
-                    ],
+                child: Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text('Vendor Fee', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,), maxLines: 1,),
+                        Expanded(
+                          child: Text(completeTotalPriceWithCurrency(
+                                (attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? [])).toDouble() +
+                                (attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? [])).toDouble()*CICOBuyerPercentageFee, activityForm.rulesService.currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis, fontWeight: FontWeight.bold), maxLines: 1),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               const SizedBox(width: 6),
@@ -386,7 +478,7 @@ Widget footerWidgetForNewAttendee(BuildContext context, DashboardModel model, bo
           ),
 
           Visibility(
-            visible: isPreview || showNextButton(marker, vendorAttendeeMarker, activityForm, refVendor, state),
+            visible: isPreview || showNextButton(marker, cardItem, vendorAttendeeMarker, activityForm, refVendor, state),
             child:  Visibility(
               visible: state.isSubmitting == false,
               child: InkWell(
@@ -406,7 +498,8 @@ Widget footerWidgetForNewAttendee(BuildContext context, DashboardModel model, bo
                   child: Center(child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: Text(isLast ? (activityRequiresVendorFee(state.attendeeItem.vendorForm) && state.attendeeItem.attendeeType == AttendeeType.vendor) ? 'Check Out & Apply' : 'Apply' : getTitleForNextButton(marker), style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis, maxLines: 1),
-                    )),
+                    )
+                  ),
                 ),
               ),
             ),

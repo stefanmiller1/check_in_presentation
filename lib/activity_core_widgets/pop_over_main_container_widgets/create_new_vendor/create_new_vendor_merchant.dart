@@ -6,12 +6,13 @@ class CreateNewVendorMerchant extends StatefulWidget {
   final ReservationItem reservation;
   final UserProfileModel resOwner;
   final ActivityManagerForm activityForm;
+  final ListingManagerForm listingForm;
   final VendorMerchantForm? vendorForm;
   final AttendeeVendorMarker? currentVendorMarkerItem;
   final bool isPreview;
   final bool isFromInvite;
 
-  const CreateNewVendorMerchant({Key? key, required this.model, required this.reservation, required this.activityForm, required this.resOwner, required this.isFromInvite, this.vendorForm, this.currentVendorMarkerItem, required this.isPreview}) : super(key: key);
+  const CreateNewVendorMerchant({Key? key, required this.model, required this.reservation, required this.activityForm, required this.resOwner, required this.isFromInvite, this.vendorForm, this.currentVendorMarkerItem, required this.isPreview, required this.listingForm}) : super(key: key);
 
   @override
   State<CreateNewVendorMerchant> createState() => _CreateNewVendorMerchantState();
@@ -25,10 +26,58 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
   late AttendeeVendorMarker? currentVendorMarkerItem = widget.currentVendorMarkerItem;
   late MCCustomAvailability? selectedBoothAvailability = null;
   late DocumentFormOption? selectedDocumentFormOption = null;
+  late CardItem? selectedCardItem = null;
+  late StripeTaxCalculation? taxCalculation = null;
   late bool isLoadingBoothOptions = false;
   late bool isLoadingDocumentOptions = false;
   late bool isLoading = false;
 
+
+  void _calculateTax(AttendeeFormState state) async {
+    final int amount = attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? []) * 100;
+    final serviceFee = (amount * CICOBuyerPercentageFee).toInt();
+
+    // if (taxCalculation == null || widget.listingForm.listingProfileService.listingLocationSetting.provinceState.getOrCrash() != 'ON') {
+    //   // final calculation = await facade.StripeInstanceFacade.instance.createTaxCalculation(
+    //   //     currency: widget.activityForm.rulesService.currency,
+    //   //     stripeSellerAddress: StripeBusinessAddress(
+    //   //       city: widget.listingForm.listingProfileService.listingLocationSetting.city.getOrCrash(),
+    //   //       country: 'CA',
+    //   //       line1:  widget.listingForm.listingProfileService.listingLocationSetting.street.getOrCrash(),
+    //   //       line2: null,
+    //   //       postal_code:  widget.listingForm.listingProfileService.listingLocationSetting.postalCode.getOrCrash(),
+    //   //       state: widget.listingForm.listingProfileService.listingLocationSetting.provinceState.getOrCrash(),
+    //   //     ),
+    //   //   amount: amount,
+    //   //   serviceFee: serviceFee
+    //   // );
+    //   // setState(() {
+    //   //   taxCalculation = calculation;
+    //   // });
+    // } else {
+      taxCalculation = StripeTaxCalculation(
+          id: UniqueId().getOrCrash(),
+          amountTotal: amount,
+          currency: widget.activityForm.rulesService.currency,
+          taxBreakdown: [
+            StripeTaxBreakdown(
+              amount: amount,
+              inclusive: true,
+              stripeTaxRateDetails: StripeTaxRateDetails(
+                  country: 'CA',
+                  percentageDecimal: '0.13',
+                  state: widget.listingForm.listingProfileService.listingLocationSetting.provinceState.getOrCrash(),
+                  taxType: 'HST'
+              ),
+              taxAbilityReason: '',
+              taxableAmount: 0,
+            ),
+          ],
+          taxAmountInclusive: 0,
+          taxAmountExclusive: 0
+      );
+    // }
+  }
 
   List<NewAttendeeContainerModel> attendeeMainContainer(BuildContext context, UserProfileModel? user, List<EventMerchantVendorProfile> profiles, AttendeeFormState state) => [
 
@@ -146,6 +195,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                             widget.model,
                             e,
                             i,
+                            true,
                             (state.attendeeItem.vendorForm?.availableTimeSlots ?? []).contains(e) == true,
                             didSelectTimeOption: (time) {
                               late VendorMerchantForm? newVForm = state.attendeeItem.vendorForm;
@@ -246,19 +296,19 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                                   j,
                                   didSelectTimeOption: (booth) {
 
-                                    late MVBoothPayments newBooth = booth;
-                                    newBooth = newBooth.copyWith(
-                                      availabilityId: selectedBoothAvailability?.uid
-                                    );
 
                                     late VendorMerchantForm? newVForm = state.attendeeItem.vendorForm;
                                     final List<MVBoothPayments> booths = [];
                                     booths.addAll(state.attendeeItem.vendorForm?.boothPaymentOptions ?? []);
 
-
                                     if (booths.where((element) => element.uid == f.uid && element.availabilityId == selectedBoothAvailability?.uid).isNotEmpty) {
-                                      booths.remove(newBooth);
+                                      booths.removeWhere((element) => element.uid == f.uid && element.availabilityId == selectedBoothAvailability?.uid);
                                     } else {
+                                      late MVBoothPayments newBooth = booth;
+                                      newBooth = newBooth.copyWith(
+                                          selectedId: UniqueId(),
+                                          availabilityId: selectedBoothAvailability?.uid
+                                      );
                                       booths.add(newBooth);
                                     }
 
@@ -295,23 +345,31 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                                   widget.model,
                                   e,
                                   widget.activityForm.rulesService.currency,
-                                  state.attendeeItem.vendorForm?.boothPaymentOptions?.where((element) => element.uid == e.uid)?.isNotEmpty == true,
+                                  state.attendeeItem.vendorForm?.boothPaymentOptions?.where((element) => element.uid == e.uid).isNotEmpty == true,
                                   i,
-                                  didSelectTimeOption: (newBooth) {
-                                     late VendorMerchantForm? newVForm = state.attendeeItem.vendorForm;
+                                  didSelectTimeOption: (booth) {
+                                   late VendorMerchantForm? newVForm = state.attendeeItem.vendorForm;
+
                                     final List<MVBoothPayments> booths = [];
                                     booths.addAll(state.attendeeItem.vendorForm?.boothPaymentOptions ?? []);
 
 
-                                    if (booths.where((element) => element.uid == newBooth.uid).isNotEmpty) {
-                                      booths.remove(newBooth);
+                                    if (booths.where((element) => element.uid == booth.uid).isNotEmpty) {
+                                      booths.removeWhere((element) => element.uid == booth.uid);
                                     } else {
+
+                                      late MVBoothPayments newBooth = booth;
+                                      newBooth = newBooth.copyWith(
+                                          selectedId: UniqueId(),
+                                          status: AvailabilityStatus.requested
+                                      );
                                       booths.add(newBooth);
                                     }
 
                                     newVForm = newVForm?.copyWith(
                                         boothPaymentOptions: booths
                                     );
+
 
                                     context.read<AttendeeFormBloc>().add(AttendeeFormEvent.updateVendorForm(newVForm));
 
@@ -598,9 +656,9 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                                   durationTime: 300 * i,
                                   offset: Offset(0, 0.25),
                                   transitionWidget: ListTile(
-                                    title: Text(e.customRuleOption!.customRuleTitleLabel, style: TextStyle(color: widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize)),
-                                    leading: Icon(getIconForCustomOptions(e.customRuleOption!.ruleId.getOrCrash()), color: widget.model.paletteColor),
-                                    subtitle: (e.customRuleOption!.labelTextRuleOption != null) ? Text(e.customRuleOption!.labelTextRuleOption!.titleLabel, style: TextStyle(color: widget.model.paletteColor)) : (e.customRuleOption?.checkBoxRuleOption?.isNotEmpty == true) ? Column(children: e.customRuleOption?.checkBoxRuleOption?.map((f) => Text(f.labelForRequirement.stringItem, style: TextStyle(color: widget.model.paletteColor))).toList() ?? []) : null,
+                                        title: Text(e.customRuleOption!.customRuleTitleLabel, style: TextStyle(color: widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize)),
+                                        leading: Icon(getIconForCustomOptions(e.customRuleOption!.ruleId.getOrCrash()), color: widget.model.paletteColor),
+                                        subtitle: (e.customRuleOption!.labelTextRuleOption != null) ? Text(e.customRuleOption!.labelTextRuleOption!.titleLabel, style: TextStyle(color: widget.model.paletteColor)) : (e.customRuleOption?.checkBoxRuleOption?.isNotEmpty == true) ? Column(children: e.customRuleOption?.checkBoxRuleOption?.map((f) => Text(f.labelForRequirement.stringItem, style: TextStyle(color: widget.model.paletteColor))).toList() ?? []) : null,
                                       ),
                                     ),
                                   );
@@ -616,7 +674,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                     /// press aggree
 
                     const SizedBox(height: 90)
-                  ]
+            ]
           ),
         )
       )
@@ -632,6 +690,14 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
             children: [
               /// if post clarify that once it's because you expect to be a vendor for this activity.
               /// planning to be a vendor?
+              const SizedBox(height: 18),
+              Icon(Icons.account_circle_outlined, size: 70, color: widget.model.paletteColor),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text('Your Profile', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.questionTitleFontSize), textAlign: TextAlign.center),
+              ),
+              const SizedBox(height: 18),
               ListTile(
                 title: Text('Select a Profile Below', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize)),
                 subtitle: Text('If you\'re expecting to be a vendor then please join using your vendor profile'),
@@ -652,7 +718,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                         child: Container(
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
-                              border: (state.attendeeItem.eventMerchantVendorProfile != null) ? Border.all(color: widget.model.paletteColor) : null
+                              border: (state.attendeeItem.eventMerchantVendorProfile != null && state.attendeeItem.eventMerchantVendorProfile == e.profileId) ? Border.all(color: widget.model.paletteColor) : null
                             ),
                           child: Padding(
                             padding: const EdgeInsets.all(12.0),
@@ -689,23 +755,10 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                   InkWell(
                     onTap: () {
                       if (user != null) {
-                      Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) {
-                            return Scaffold(
-                              resizeToAvoidBottomInset: false,
-                              appBar: AppBar(
-                                backgroundColor: widget.model.mobileBackgroundColor,
-                                elevation: 0,
-                                title: const Text('Profile'),
-                                titleTextStyle: TextStyle(color: widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
-                                centerTitle: true,
-                              ),
-                              body: ProfileMainContainer(
-                                model: widget.model,
-                                currentUserProfile: user,
-                              ),
-                            );
-                         })
+                        didSelectCreateNeVendorProfile(
+                            context,
+                            widget.model,
+                            user
                         );
                       }
                     },
@@ -731,23 +784,10 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
               if (profiles.isEmpty) InkWell(
                 onTap: () {
                   if (user != null) {
-                  Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) {
-                        return Scaffold(
-                          resizeToAvoidBottomInset: false,
-                          appBar: AppBar(
-                            backgroundColor: widget.model.mobileBackgroundColor,
-                            elevation: 0,
-                            title: const Text('Profile'),
-                            titleTextStyle: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold),
-                            centerTitle: true,
-                          ),
-                          body: ProfileMainContainer(
-                            model: widget.model,
-                            currentUserProfile: user,
-                          ),
-                        );
-                      })
+                    didSelectCreateNeVendorProfile(
+                      context,
+                      widget.model,
+                      user
                     );
                   }
                 },
@@ -772,14 +812,156 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
         )
       )
     ),
-
+    if (activityRequiresVendorFee(widget.vendorForm)) NewAttendeeContainerModel(
+        markerItem: NewAttendeeStepsMarker.getStarted,
+        subVendorMarkerItem: AttendeeVendorMarker.selectPaymentMethod,
+        childWidget: SingleChildScrollView(
+            child: Column(
+                children: [
+                  const SizedBox(height: 18),
+                  Icon(Icons.monetization_on_outlined, size: 70, color: widget.model.paletteColor),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text('Payment Method', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.questionTitleFontSize), textAlign: TextAlign.center),
+                  ),
+                  const SizedBox(height: 18),
+                  ListTile(
+                    title: Text('How Payments Work', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize)),
+                    subtitle: Text('Charges are ONLY made until AFTER your application has received a confirmation by the organizer.'),
+                  ),
+                  const SizedBox(height: 18),
+                  if (user != null) PaymentMethodsWidget(
+                    isPushedView: false,
+                    model: widget.model,
+                    didSelectPaymentMethod: (card) {
+                      setState(() {
+                        selectedCardItem = card;
+                      });
+                    },
+                    didSaveSuccess: () {
+                      setState(() {
+                        isLoading = true;
+                        Future.delayed(const Duration(milliseconds: 800), () {
+                          setState(() {
+                            isLoading = false;
+                          });
+                        });
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  Text('All Payment Info and Transactions are Handled by Stripe', style: TextStyle(color: widget.model.disabledTextColor)),
+                  const SizedBox(height: 110),
+                ]
+            )
+        )
+    ),
     NewAttendeeContainerModel(
       markerItem: NewAttendeeStepsMarker.getStarted,
       subVendorMarkerItem: AttendeeVendorMarker.review,
       childWidget: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: (state.isSubmitting == false) ? Column(
+            children: [
+              const SizedBox(height: 18),
+              Icon(Icons.check_circle_outline_rounded, size: 70, color: widget.model.paletteColor),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text('Review', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.questionTitleFontSize), textAlign: TextAlign.center),
+              ),
+              const SizedBox(height: 10),
+              /// if no selected date or booth (show overview of reservation)
 
+              /// the date you are participating
+              if (state.attendeeItem.vendorForm?.availableTimeSlots?.isEmpty == true) Column(
+                children: [
+                  Text(''),
+                  ListTile(
+                      leading: Icon(Icons.calendar_month_outlined, color: widget.model.paletteColor),
+                      title: Text('Covers All Dates', style: TextStyle(color: widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize)),
+                      subtitle: Text('selected dates', style: TextStyle(color: widget.model.disabledTextColor))
+                  ),
+                  ...state.attendeeItem.vendorForm?.boothPaymentOptions?.toList().asMap().map(
+                          (i, e) => MapEntry(i, ListTile(
+                              title: Text(e.boothTitle ?? 'Booth ${i + 1}', style: TextStyle(color: widget.model.paletteColor,)),
+                              subtitle: (e.fee != null) ? Text('Fee: ${completeTotalPriceWithCurrency(
+                                      e.fee!.toDouble() +
+                                      e.fee!.toDouble()*CICOBuyerPercentageFee +
+                                      e.fee!.toDouble()*CICOTaxesFee, widget.activityForm.rulesService.currency)}', style: TextStyle(color: widget.model.disabledTextColor)
+                              ) : null,
+                              leading: Icon(Icons.storefront, color: widget.model.paletteColor),
+                            ),
+                          )
+                  ).values.toList() ?? [],
+                ]
+              ),
+
+              if (state.attendeeItem.vendorForm?.availableTimeSlots?.isNotEmpty == true) Column(
+                children: [
+                  ...state.attendeeItem.vendorForm?.availableTimeSlots?.toList().asMap().map(
+                          (i, e) => MapEntry(i, Column(
+                              children: [
+                                getVendorAvailableTimeSlot(
+                                    context,
+                                    widget.model,
+                                    e,
+                                    i,
+                                    false,
+                                    false,
+                                    didSelectTimeOption: (e) {}
+                                ),
+                                ...state.attendeeItem.vendorForm?.boothPaymentOptions?.where((element) => element.availabilityId == e.uid).toList().asMap().map(
+                                        (f, g) => MapEntry(f, ListTile(
+                                          title: Text(g.boothTitle ?? 'Booth ${i + 1}', style: TextStyle(color: widget.model.paletteColor,)),
+                                          subtitle: (g.fee != null) ? Text('Fee: ${completeTotalPriceWithCurrency(
+                                                  g.fee!.toDouble() +
+                                                  g.fee!.toDouble()*CICOBuyerPercentageFee +
+                                                  g.fee!.toDouble()*CICOTaxesFee, widget.activityForm.rulesService.currency)}', style: TextStyle(color: widget.model.disabledTextColor)
+                                          ) : null,
+                                          leading: Icon(Icons.storefront, color: widget.model.paletteColor),
+                                        ),
+                                      )
+                                ).values.toList() ?? []
+                                                ],
+                                              ),
+                    )
+                  ).values.toList() ?? []
+                ],
+              ),
+
+              /// the booth you selected for that date
+
+              /// explain pricing if applicable
+              Visibility(
+                visible: activityRequiresVendorFee(state.attendeeItem.vendorForm),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+
+                    children: [
+                      Divider(color: widget.model.disabledTextColor),
+                      const SizedBox(height: 18),
+                      Icon(Icons.monetization_on_outlined, size: 70, color: Colors.green),
+                      const SizedBox(height: 18),
+                      Text('How we Handle Payments', style: TextStyle(color: widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+                      Text('We will need your payment info before applying - however, you wont be charged until a confirmation has been made by ${widget.activityForm.profileService.activityBackground.activityTitle.value.fold((l) => 'the Organizer', (r) => r)} - if a confirmation cannot be made you still won\'t be charged but you\'ll receive an update on your applications status and possible reason.',),
+                      const SizedBox(height: 24),
+                      /// pricing breakdown
+                      getPricingPreviewWidget(widget.model, 'Purchasing ${(state.attendeeItem.vendorForm?.boothPaymentOptions ?? []).length} Booth(s)', (attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? [])).toDouble(), retrieveDoubleTaxNumber((taxCalculation?.taxBreakdown.isNotEmpty == true) ? taxCalculation!.taxBreakdown[0].stripeTaxRateDetails.percentageDecimal ?? '0.13' : '0.13'), (taxCalculation?.taxBreakdown.isNotEmpty == true) ? taxCalculation!.taxBreakdown[0] : null, widget.listingForm.listingProfileService.listingLocationSetting.provinceState.getOrCrash(), widget.activityForm.rulesService.currency)
+                    ]
+                  ),
+                )
+              ),
+            const SizedBox(height: 90),
+            ],
+          ) : Container(),
+        ),
       )
     ),
+
 
 
     // if (activityHasRules(widget.activityForm)) NewAttendeeContainerModel(
@@ -807,6 +989,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
   ];
 
 
+
   @override
   void initState() {
     _scrollController = ScrollController();
@@ -823,63 +1006,6 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
   }
 
 
-  void _handleCreateCheckOutForWeb(BuildContext context, UserProfileModel currentUser) {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: AppLocalizations.of(context)!.facilityCreateFormNavLocation1,
-      transitionDuration: Duration(milliseconds: 350),
-      pageBuilder: (BuildContext contexts, anim1, anim2) {
-        return Scaffold(
-            backgroundColor: Colors.transparent,
-            body: Align(
-                alignment: Alignment.center,
-                child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(25)),
-                    child: Container(
-                        decoration: BoxDecoration(
-                            color: widget.model.accentColor,
-                            borderRadius: BorderRadius.all(Radius.circular(17.5))
-                        ),
-                        width: 600,
-                        height: 750,
-                        child: WebCheckOutPaymentWidget(
-                            model: widget.model,
-                            currentUser: currentUser,
-                            ownerUser: widget.resOwner,
-                            reservation: widget.reservation,
-                            amount: completeTotalPriceForCheckoutFormat(
-                                (widget.activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantFee ?? 0) +
-                                (widget.activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantFee ?? 0)*CICOReservationPercentageFee +
-                                (widget.activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantFee ?? 0)*CICOTaxesFee, widget.activityForm.rulesService.currency),
-                            currency: widget.activityForm.rulesService.currency,
-                            description: 'Fee to cover the cost for participating as a vendor.',
-                            didFinishPayment: (e) {
-
-                              context.read<AttendeeFormBloc>().add(AttendeeFormEvent.isFinishedCreatingTicketAttendeeWeb(e));
-                              // widget.didSelectBack();
-                            },
-                            didPressFinished: () {
-                              Navigator.of(context).pop();
-                            },
-                        )
-                    )
-                )
-            )
-        );
-      },
-      transitionBuilder: (context, anim1, anim2, child) {
-        return Transform.scale(
-            scale: anim1.value,
-            child: Opacity(
-                opacity: anim1.value,
-                child: child
-            )
-        );
-      },
-    );
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -892,9 +1018,13 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                   paymentStatus: PaymentStatusType.noStatus,
                   attendeeType: AttendeeType.vendor,
                   paymentIntentId: '',
-                  contactStatus: ContactStatus.joined,
+                  contactStatus: ContactStatus.requested,
                   dateCreated: DateTime.now(),
-                  vendorForm: VendorMerchantForm.empty()
+                  vendorForm: VendorMerchantForm(
+                      formId: widget.vendorForm?.formId ?? VendorMerchantForm.empty().formId,
+                      lastOpenedAt: DateTime.now().millisecondsSinceEpoch,
+                      formStatus: FormStatus.published
+                  )
                 )
               ),
               dart.optionOf(widget.reservation),
@@ -907,52 +1037,22 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
 
 
           if (activityRequiresVendorFee(widget.vendorForm)) {
-            state.authPaymentFailureOrSuccessOption.fold(() {},
-                    (either) => either.fold(
-                        (failure) {
-                      final snackBar = SnackBar(
-                          backgroundColor: widget.model.webBackgroundColor,
-                          content: failure.maybeMap(
-                            paymentServerError: (e) => Text(e.failedValue ?? AppLocalizations.of(context)!.serverError, style: TextStyle(color: widget.model.disabledTextColor)),
-                            orElse: () => Text('A Problem Happened', style: TextStyle(color: widget.model.disabledTextColor)),
-                          ));
+            state.authVendorPaymentFailureOrSuccessOption.fold(
+                () => {},
+                (either) => either.fold(
+                  (failure) {
+                    final snackBar = SnackBar(
+                        backgroundColor: Colors.red.shade100,
+                        content: failure.maybeMap(
+                          paymentServerError: (e) => Text(e.failedValue ?? AppLocalizations.of(context)!.serverError, style: TextStyle(color: Colors.red)),
+                          orElse: () => Text('A Problem Happened', style: TextStyle(color: Colors.red)),
+                        ));
                       ScaffoldMessenger.of(context).showSnackBar(snackBar);
                     },
-                        (_) => null
+                  (_) => null
                 )
-            );
-
-            state.authFailureOrSuccessPaymentOption.fold(() {},
-                    (either) => either.fold((failure) {
-                  final snackBar = SnackBar(
-                      backgroundColor: widget.model.webBackgroundColor,
-                      content: failure.maybeMap(
-                        ticketsNoLongerAvailable: (e) => Text('Sorry, the tickets you selected are no longer available'),
-                        ticketLimitReached: (e) => (e.failedTicket != null && e.failedTicket!.reservationTimeSlot != null) ? Text('Your ${e.failedTicket!.ticketTitle ?? 'Ticket'} for ${DateFormat.jm().format(e.failedTicket!.reservationTimeSlot!.slotRange.start)} - ${DateFormat.jm().format(e.failedTicket!.reservationTimeSlot!.slotRange.end)} only has ${e.ticketsRemaining ?? 0} remaining', style: TextStyle(color: widget.model.disabledTextColor))
-                            : Text('Sorry, There are not enough tickets left. Only ${e.ticketsRemaining ?? 0} Left', style: TextStyle(color: widget.model.disabledTextColor)),
-                        attendeeServerError: (e) => Text(e.failed ?? AppLocalizations.of(context)!.serverError, style: TextStyle(color: widget.model.disabledTextColor)),
-                        attendeePermissionDenied: (e) => Text('Sorry, you dont have permission to do that', style: TextStyle(color: widget.model.disabledTextColor)),
-                        orElse: () => Text('A Problem Happened', style: TextStyle(color: widget.model.disabledTextColor)),
-                      ));
-                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                }, (currentUser) {
-
-
-                  if (kIsWeb) {
-                    _handleCreateCheckOutForWeb(context, currentUser);
-                  } else {
-                    /// TODO: - hold attendee tickets
-                    context.read<AttendeeFormBloc>().add(AttendeeFormEvent.isFinishedCreatingTicketAttendee(currentUser, completeTotalPriceForCheckoutFormat(
-                            (widget.activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantFee ?? 0) +
-                            (widget.activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantFee ?? 0)*CICOReservationPercentageFee +
-                            (widget.activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantFee ?? 0)*CICOTaxesFee, widget.activityForm.rulesService.currency),
-                        widget.activityForm.rulesService.currency,
-                        null));
-                  }
-                }
-              )
-            );
-          }
+              );
+            }
 
           state.authFailureOrSuccessOption.fold(
                   () {},
@@ -960,8 +1060,9 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                 final snackBar = SnackBar(
                     backgroundColor: widget.model.webBackgroundColor,
                     content: failure.maybeMap(
+                      attendeeWaitingForPaymentConfirmation: (e) => Text('waiting for payment confirmation', style: TextStyle(color: widget.model.disabledTextColor)),
                       attendeeServerError: (e) => Text(e.failed ?? AppLocalizations.of(context)!.serverError, style: TextStyle(color: widget.model.disabledTextColor)),
-                      attendeePermissionDenied: (e) => Text('Sorry, you dont have permission to do that', style: TextStyle(color: widget.model.disabledTextColor)),
+                      attendeePermissionDenied: (e) => Text('Sorry, you don\'t have permission to do that', style: TextStyle(color: widget.model.disabledTextColor)),
                       orElse: () => Text('A Problem Happened', style: TextStyle(color: widget.model.disabledTextColor)),
                     ));
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -970,7 +1071,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                 final snackBar = SnackBar(
                     elevation: 4,
                     backgroundColor: widget.model.paletteColor,
-                    content: Text(AppLocalizations.of(context)!.saved, style: TextStyle(color: widget.model.webBackgroundColor))
+                    content: Text('Application Sent!', style: TextStyle(color: widget.model.webBackgroundColor))
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 if (widget.isFromInvite == false) {
@@ -983,6 +1084,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
         buildWhen: (p,c) => p.isSubmitting != c.isSubmitting || p.attendeeItem != c.attendeeItem,
         builder: (context, state) {
 
+
           return Scaffold(
               resizeToAvoidBottomInset: true,
               appBar: AppBar(
@@ -994,6 +1096,13 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                 centerTitle: true,
                 backgroundColor: widget.model.paletteColor,
                 leadingWidth: 70,
+                leading:  (currentMarkerItem != NewAttendeeStepsMarker.joinComplete || currentMarkerItem != NewAttendeeStepsMarker.requestToJoinComplete) ? (widget.isPreview == false && state.isSubmitting == false) ? IconButton(
+                  icon: Icon(Icons.cancel, color: widget.model.accentColor, size: 40,),
+                  tooltip: 'Cancel',
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ) : null : null,
                 bottom: PreferredSize(
                   preferredSize: const Size.fromHeight(15),
                   child: Container(
@@ -1006,7 +1115,6 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                               (i, e) {
                                 late bool vendorMarkerIsSelected = (e.subVendorMarkerItem != null && e.subVendorMarkerItem == currentVendorMarkerItem);
                                 late bool markerIsSelected = e.markerItem == currentMarkerItem;
-
 
                                 return MapEntry(i, Expanded(
                                     child: Padding(
@@ -1036,33 +1144,26 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                     ),
                   )
                 ),
-                leading: Center(
-                  child: retrieveUserProfile(
-                    widget.resOwner.userId.getOrCrash(),
-                    widget.model,
-                    widget.model.paletteColor,
-                    null,
-                    null,
-                    profileType: UserProfileType.nameAndEmail,
-                    trailingWidget: null,
-                    selectedButton: (e) {
-                    },
-                  ),
-                ),
+
                 actions: [
-                  if (currentMarkerItem != NewAttendeeStepsMarker.joinComplete || currentMarkerItem != NewAttendeeStepsMarker.requestToJoinComplete) Visibility(
-                    visible: state.isSubmitting == false,
-                    child: Visibility(
-                      visible: widget.isFromInvite == false,
-                        child: IconButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          icon: Icon(Icons.cancel_outlined, color: widget.model.accentColor),
-                        padding: EdgeInsets.only(right: 18),
-                      )
-                    ),
-                  )
+                  // Padding(
+                  //   padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  //   child: Container(
+                  //       height: 38,
+                  //       width: 70,
+                  //       child: retrieveUserProfile(
+                  //         widget.resOwner.userId.getOrCrash(),
+                  //         widget.model,
+                  //         widget.model.paletteColor,
+                  //         null,
+                  //         null,
+                  //         profileType: UserProfileType.nameAndEmail,
+                  //         trailingWidget: null,
+                  //         selectedButton: (e) {
+                  //         },
+                  //       ),
+                  //   ),
+                  // )
                 ],
               ),
             body: Stack(
@@ -1094,10 +1195,14 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
       child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
         builder: (context, authState) {
           return authState.maybeMap(
+              loadInProgress: (_) => JumpingDots(numberOfDots: 3, color: widget.model.paletteColor),
               loadUserProfileSuccess: (item) {
                 return getVendorProfileList(context, state, item.profile);
               },
-              orElse: () => GetLoginSignUpWidget(model: widget.model, didLoginSuccess: () {  },)
+              orElse: () => Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GetLoginSignUpWidget(showFullScreen: false, model: widget.model, didLoginSuccess: () {  },),
+              )
           );
         },
       ),
@@ -1138,7 +1243,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
           height: MediaQuery.of(context).size.height,
         ),
 
-        if (state.isSubmitting == false) IgnorePointer(
+        IgnorePointer(
           ignoring: widget.isPreview,
           child: CreateNewMain(
               isPreviewer: false,
@@ -1147,8 +1252,10 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
               pageController: pageController,
               onPageChanged: (index) {
                 setState(() {
+                      if (index != (attendeeMainContainer(context, currentUser, profiles, state).length - 1)) {
                     currentVendorMarkerItem = attendeeMainContainer(context, currentUser, profiles, state)[index].subVendorMarkerItem;
                     currentMarkerItem = attendeeMainContainer(context, currentUser, profiles, state)[index].markerItem;
+                    }
                 });
               },
               child: attendeeMainContainer(
@@ -1156,7 +1263,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                   currentUser,
                   profiles,
                   state
-            )
+            ).map((e) => e.childWidget).toList()
           ),
         ),
 
@@ -1172,6 +1279,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                     widget.model,
                     widget.isPreview,
                     currentMarkerItem,
+                    selectedCardItem,
                     currentVendorMarkerItem,
                     widget.activityForm,
                     state,
@@ -1218,34 +1326,47 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
 
                       setState(() {
                         // check current index in array
-                        isLoading = true;
-                        Future.delayed(const Duration(milliseconds: 800), () {
-                          setState(() {
-                            isLoading = false;
-                          });
-                        });
+
+
                         final currentIndex = attendeeMainContainer(context, currentUser, profiles, state).indexWhere((element) => element.markerItem == currentMarkerItem && element.subVendorMarkerItem == currentVendorMarkerItem);
-                        if (pageController?.positions.isNotEmpty == true) {
+                        bool isLastIndex = currentIndex == (attendeeMainContainer(context, currentUser, profiles, state).length - 1);
+                        bool isSecondLastIndex = currentIndex == (attendeeMainContainer(context, currentUser, profiles, state).length) - 2;
+
+                        if (pageController?.positions.isNotEmpty == true && !(isLastIndex)) {
+                          isLoading = true;
+                          Future.delayed(const Duration(milliseconds: 800), () {
+                            setState(() {
+                              isLoading = false;
+                            });
+                          });
                           pageController?.animateToPage(currentIndex + 1, duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
-                        }
-                        /// get item at index + 1
-
-                        if (currentIndex == (attendeeMainContainer(context, currentUser, profiles, state).length - 1)) {
-                          if (kIsWeb) {
-                            context.read<AttendeeFormBloc>().add(const AttendeeFormEvent.attendeeIsSaving(true));
-                          }
-                          context.read<AttendeeFormBloc>().add(AttendeeFormEvent.checkVendorLimits(currentUser));
-                        } else {
-
                           final previousVendorIndexItem = attendeeMainContainer(context, currentUser, profiles, state)[currentIndex + 1].subVendorMarkerItem;
                           final NewAttendeeStepsMarker nextIndexItem = attendeeMainContainer(context, currentUser, profiles, state)[currentIndex + 1].markerItem;
 
                           currentVendorMarkerItem = previousVendorIndexItem;
                           currentMarkerItem = nextIndexItem;
+                        }
+
+                        if (isSecondLastIndex) {
+                          _calculateTax(state);
+                        }
+
+                        /// get item at index + 1
+                        if (isLastIndex) {
+                          if (kIsWeb) {
+                            context.read<AttendeeFormBloc>().add(const AttendeeFormEvent.attendeeIsSaving(true));
                           }
+
+                          context.read<AttendeeFormBloc>().add(AttendeeFormEvent.isFinishedCreatingVendorAttendee(
+                            currentUser,
+                            widget.activityForm.rulesService.currency,
+                            selectedCardItem?.paymentId,
+                            (taxCalculation?.taxBreakdown.isNotEmpty == true) ? taxCalculation!.taxBreakdown[0].stripeTaxRateDetails : null,
+                            taxCalculation?.id
+                          ));
+
+                        }
                       });
-
-
                 },
               ),
             )

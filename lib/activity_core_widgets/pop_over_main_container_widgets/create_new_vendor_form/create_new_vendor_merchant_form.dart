@@ -6,12 +6,12 @@ class VendorFormEditorWidget extends StatefulWidget {
   final ReservationItem reservation;
   final ActivityManagerForm activityForm;
   final UserProfileModel resOwner;
-  final ListingManagerForm? listing;
+  final ListingManagerForm listing;
   final VendorMerchantForm? form;
   final Function(VendorMerchantForm) isSaving;
   final Function(VendorMerchantForm) isPublishing;
 
-  const VendorFormEditorWidget({super.key, required this.model, required this.reservation, this.form, this.listing, required this.activityForm, required this.resOwner, required this.isSaving, required this.isPublishing});
+  const VendorFormEditorWidget({super.key, required this.model, required this.reservation, this.form, required this.listing, required this.activityForm, required this.resOwner, required this.isSaving, required this.isPublishing});
 
 
   @override
@@ -80,6 +80,7 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
   }
 
   List<FormCreatorContainerModel> formOption(BuildContext context, double customOptionsHeight, double customDisclaimerHeight, VendorMerchantForm form, MCCustomAvailability? currentAvailability, MVBoothPayments? currentBoothPayment, AutovalidateMode validator) => [
+
     FormCreatorContainerModel(
         formHeaderIcon: Icons.favorite_border_rounded,
         formHeaderTitle: 'Welcome Message',
@@ -102,7 +103,7 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
             context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeWelcomeMessage(null));
           }
         },
-        isActivated: form.welcomeMessage != null,
+      isActivated: form.welcomeMessage != null,
     ),
     FormCreatorContainerModel(
       formHeaderIcon: Icons.timer_outlined,
@@ -432,6 +433,7 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
       formMainCreatorWidget: VendorFormBoothPaymentWidget(
         model: widget.model,
         reservation: widget.reservation,
+        currentUser: widget.resOwner,
         form: form,
         currentBoothPayment: currentBoothPayment,
         activityForm: widget.activityForm,
@@ -483,7 +485,6 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
         options.replaceRange(index, index + 1, [newOption]);
 
         context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeCustomOptions(options));
-
 
         },
       ),
@@ -548,9 +549,9 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
       didSelectActivate: (active) {
         setState(() {
           if (active) {
-            context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeFormStatus(FormStatus.closed));
+            context.read<VendorSettingsFormBloc>().add(const VendorSettingsFormEvent.didChangeFormStatus(FormStatus.closed));
           } else {
-            context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeFormStatus(FormStatus.inProgress));
+            context.read<VendorSettingsFormBloc>().add(const VendorSettingsFormEvent.didChangeFormStatus(FormStatus.inProgress));
           }
         });
       },
@@ -586,8 +587,6 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
         },
         buildWhen: (p,c) => p.showErrorMessages != c.showErrorMessages || p.vendorMerchantForm != c.vendorMerchantForm || p.isEditingForm != c.isEditingForm || p.isPublishing != c.isPublishing,
         builder: (context, state) {
-
-
 
           double customOptionHeight = 135;
           state.vendorMerchantForm.customOptions?.where((e) => e.isActive == true).forEach((option) {
@@ -743,9 +742,10 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
                     child: Center(
                       child: Container(
                         height: 950,
-                        width: ReservationHelperCore.previewerWidth - 15,
+                        width: ReservationHelperCore.previewerWidth - 65,
                         child: CreateNewVendorMerchant(
                             model: widget.model,
+                            listingForm: widget.listing,
                             reservation: widget.reservation,
                             resOwner: widget.resOwner,
                             activityForm: widget.activityForm,

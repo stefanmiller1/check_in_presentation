@@ -15,15 +15,11 @@ class GeneralProfileCreatorEditor extends StatefulWidget {
 
 class _GeneralProfileCreatorEditorState extends State<GeneralProfileCreatorEditor> {
 
-  final ImagePicker _imagePicker = ImagePicker();
-  Image? _currentNetworkSpaceImage;
-  Image? _selectedFileSpaceImage;
-
   @override
   void initState() {
-    if (widget.currentUser.profileImage != null) {
-      _currentNetworkSpaceImage  = Image(image: widget.currentUser.profileImage!.image, fit: BoxFit.cover);
-    }
+    // if (widget.currentUser.profileImage != null) {
+    //   _currentNetworkSpaceImage  = Image(image: widget.currentUser.profileImage!.image, fit: BoxFit.cover);
+    // }
     super.initState();
   }
 
@@ -31,7 +27,7 @@ class _GeneralProfileCreatorEditorState extends State<GeneralProfileCreatorEdito
   Widget build(BuildContext context) {
     return BlocProvider(create: (context) => getIt<UpdateUserProfileAccountBloc>()..add(UpdateUserProfileAccountEvent.initializedUserProfile(dart.optionOf(widget.currentUser))),
       child: BlocConsumer<UpdateUserProfileAccountBloc, UpdateUserProfileAccountState>(
-        listenWhen:(p,c) => p.isSubmitting != c.isSubmitting,
+        listenWhen:(p,c) => p.isSubmitting != c.isSubmitting || p.authFailureOrSuccessOption != c.authFailureOrSuccessOption,
         listener: (context, state) {
           state.authFailureOrSuccessOption.fold(
                   () {},
@@ -55,13 +51,13 @@ class _GeneralProfileCreatorEditorState extends State<GeneralProfileCreatorEdito
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 widget.didSaveSuccessfully();
+                didSelectRefresh();
               }
             )
           );
         },
         buildWhen: (p,c) => p.showErrorMessages != c.showErrorMessages || p.profile != c.profile || p.isEditingProfile != c.isEditingProfile || p.isSubmitting != c.isSubmitting,
         builder: (context, state) {
-          print(isProfileItemValid(state.profile));
 
           return Form(
             autovalidateMode: state.showErrorMessages,
@@ -70,41 +66,50 @@ class _GeneralProfileCreatorEditorState extends State<GeneralProfileCreatorEdito
              child: Column(
                children: [
 
-                 profileImageEditor(
-                   widget.model,
-                   'Update Profile Image',
-                   'Add Your Photo',
-                   _currentNetworkSpaceImage,
-                   _selectedFileSpaceImage,
-                   didSelectImage: () {
-                     presentSelectPictureOptions(
-                         context,
-                         widget.model,
-                         imageSource: (source) async {
-                           try {
-                             final image = await _imagePicker.pickImage(source: source);
-
-
-                             if (image != null) {
-                               final imageFile = await image.readAsBytes();
-
-                               _selectedFileSpaceImage = Image.file(File(image.path), height: MediaQuery.of(context).size.width/2, width: MediaQuery.of(context).size.height/2, fit: BoxFit.cover);
-                               context.read<UpdateUserProfileAccountBloc>().add(UpdateUserProfileAccountEvent.imageFilePathChanged(ImageUpload(
-                                   key: imageFile.toString(),
-                                   imageToUpload: imageFile)
-                               ));
-
-                             }
-                           } catch (e) {
-                             final snackBar = SnackBar(
-                                 backgroundColor: widget.model.webBackgroundColor,
-                                 content: Text(e.toString() ?? 'Sorry, Could not get image', style: TextStyle(color: widget.model.paletteColor))
-                             );
-                             ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                       }
-                     });
+                 ProfileImageUploadPreview(
+                     model: widget.model,
+                     title: 'Update or Edit Image',
+                     subTitle: 'Add Your Photo',
+                     currentNetworkImage: ImageUpload(key: widget.currentUser.photoUri ?? 'photoId', uriPath: widget.currentUser.photoUri),
+                     imageToUpLoad: (currentImage) {
+                       context.read<UpdateUserProfileAccountBloc>().add(UpdateUserProfileAccountEvent.imageFilePathChanged(currentImage));
                    }
                  ),
+                 // profileImageEditor(
+                 //   widget.model,
+                 //   'Update Profile Image',
+                 //   'Add Your Photo',
+                 //   _currentNetworkSpaceImage,
+                 //   _selectedFileSpaceImage,
+                 //   didSelectImage: () {
+                 //     presentSelectPictureOptions(
+                 //         context,
+                 //         widget.model,
+                 //         imageSource: (source) async {
+                 //           try {
+                 //             final image = await _imagePicker.pickImage(source: source);
+                 //
+                 //
+                 //             if (image != null) {
+                 //               final imageFile = await image.readAsBytes();
+                 //
+                 //               _selectedFileSpaceImage = Image.file(File(image.path), height: MediaQuery.of(context).size.width/2, width: MediaQuery.of(context).size.height/2, fit: BoxFit.cover);
+                 //               context.read<UpdateUserProfileAccountBloc>().add(UpdateUserProfileAccountEvent.imageFilePathChanged(ImageUpload(
+                 //                   key: imageFile.toString(),
+                 //                   imageToUpload: imageFile)
+                 //               ));
+                 //
+                 //             }
+                 //           } catch (e) {
+                 //             final snackBar = SnackBar(
+                 //                 backgroundColor: widget.model.webBackgroundColor,
+                 //                 content: Text(e.toString() ?? 'Sorry, Could not get image', style: TextStyle(color: widget.model.paletteColor))
+                 //             );
+                 //             ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                 //       }
+                 //     });
+                 //   }
+                 // ),
 
                  /// first name...
                  /// last name...
@@ -112,13 +117,14 @@ class _GeneralProfileCreatorEditorState extends State<GeneralProfileCreatorEdito
 
                  const SizedBox(height: 8),
                  saveCancelFooter(
+                     context,
                      widget.model,
                      state.isSubmitting,
                      widget.currentUser != state.profile.profileUser || state.isEditingProfile,
                      isProfileItemValid(state.profile),
                      false,
                      didSelectSave: () {
-                       context.read<UpdateUserProfileAccountBloc>()..add(UpdateUserProfileAccountEvent.finishedUpdatingUserProfile());
+                       context.read<UpdateUserProfileAccountBloc>()..add(const UpdateUserProfileAccountEvent.finishedUpdatingUserProfile());
                      },
                      didSelectCancel: () {
                         widget.didCancel();

@@ -3,12 +3,13 @@ part of check_in_presentation;
 class ReservationCreateNewAttendee extends StatefulWidget {
 
   final DashboardModel model;
+  final ListingManagerForm listingForm;
   final ReservationItem reservation;
   final UserProfileModel resOwner;
   final ActivityManagerForm activityForm;
   final bool isFromInvite;
 
-  const ReservationCreateNewAttendee({super.key, required this.model, required this.reservation, required this.resOwner, required this.activityForm, required this.isFromInvite});
+  const ReservationCreateNewAttendee({super.key, required this.model, required this.reservation, required this.resOwner, required this.activityForm, required this.isFromInvite, required this.listingForm});
 
   @override
   State<ReservationCreateNewAttendee> createState() => _ReservationCreateNewAttendeeState();
@@ -23,6 +24,50 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
 
   List<NewAttendeeContainerModel> attendeeMainContainer(BuildContext context, UserProfileModel? user, AttendeeFormState state) => [
 
+    if (activityHasOptions(widget.activityForm)) NewAttendeeContainerModel(
+        markerItem: NewAttendeeStepsMarker.chooseAttendingType,
+        childWidget: selectJoinTypeOptions(
+          context,
+          widget.model,
+          widget.listingForm,
+          widget.reservation,
+          widget.resOwner,
+          widget.activityForm,
+          didSelectOption: (e) {
+
+            setState(() {
+            switch (e) {
+              case AttendeeType.free:
+                context.read<AttendeeFormBloc>().add(const AttendeeFormEvent.attendeeIsSaving(true));
+                if (user != null) context.read<AttendeeFormBloc>().add(AttendeeFormEvent.isFinishedCreatingAttendee(user, '', '', ''));
+                break;
+              case AttendeeType.tickets:
+                // TODO: Handle this case.
+                break;
+              case AttendeeType.pass:
+                // TODO: Handle this case.
+                break;
+              case AttendeeType.instructor:
+                // TODO: Handle this case.
+                break;
+              case AttendeeType.vendor:
+                Navigator.of(context).pop();
+                break;
+              case AttendeeType.partner:
+                // TODO: Handle this case.
+                break;
+              case AttendeeType.organization:
+                // TODO: Handle this case.
+                break;
+              case AttendeeType.interested:
+                // TODO: Handle this case.
+                break;
+            }
+
+            });
+          }
+        )
+    ),
     if (activityHasRules(widget.activityForm)) NewAttendeeContainerModel(
         markerItem: NewAttendeeStepsMarker.addActivityRules,
         childWidget: rulesToAdd(
@@ -161,7 +206,7 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
-                          icon: Icon(Icons.cancel_outlined, color: widget.model.accentColor),
+                          icon: Icon(Icons.cancel, color: widget.model.accentColor, size: 40),
                           padding: EdgeInsets.only(right: 18),
                       ),
                     )
@@ -196,6 +241,7 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
                             widget.model,
                             false,
                             currentMarkerItem,
+                            null,
                             null,
                             widget.activityForm,
                             state,
@@ -239,8 +285,6 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
                       )
                     )
                   )
-
-
                 ]
               )
             )
@@ -255,17 +299,18 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
       child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
         builder: (context, authState) {
           return authState.maybeMap(
+              loadInProgress: (_) => JumpingDots(color: widget.model.paletteColor, numberOfDots: 3),
               loadUserProfileSuccess: (item) {
                 return CreateNewMain(
                     isLoading: isLoading,
                     model: widget.model,
                     isPreviewer: false,
-                    child: attendeeMainContainer(context, item.profile, state)
+                    child: attendeeMainContainer(context, item.profile, state).map((e) => e.childWidget).toList()
                 );
               },
               orElse: () => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: GetLoginSignUpWidget(model: widget.model, didLoginSuccess: () {  },),
+                child: GetLoginSignUpWidget(showFullScreen: false, model: widget.model, didLoginSuccess: () {  },),
               )
           );
         },

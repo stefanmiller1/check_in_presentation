@@ -122,7 +122,6 @@ Widget calendarListOfSelectableReservations(
       Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(20)),
-          // color: model.cardColor,
         ),
         width: 600,
         // height: 475,
@@ -175,31 +174,114 @@ Widget calendarListOfSelectableReservations(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text("$slotTimeString: ${DateFormat.jm().format(e.slotRange.start)} - ${DateFormat.jm().format(e.slotRange.start.add(Duration(minutes: durationType)))}",
-                                          style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor, fontSize: 16.5, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                                        Text("Price: ${e.fee}", style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor), overflow: TextOverflow.ellipsis)
+                                        Text(
+                                          "$slotTimeString: ${DateFormat.jm().format(e.slotRange.start)} - ${DateFormat.jm().format(e.slotRange.start.add(Duration(minutes: durationType)))}",
+                                          style: TextStyle(
+                                              color: highlightSelectedDates(
+                                                  listOfSelectedReservations.map((e) => e.slotRange.start).toList(),
+                                                  e.slotRange.start
+                                              )
+                                                  ? model.webBackgroundColor
+                                                  : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption)
+                                                  ? model.disabledTextColor
+                                                  : model.paletteColor,
+                                              fontSize: 16.5,
+                                              fontWeight: FontWeight.bold
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          "Price: \$0.00",
+                                          style: TextStyle(
+                                              color: highlightSelectedDates(
+                                                  listOfSelectedReservations.map((e) => e.slotRange.start).toList(),
+                                                  e.slotRange.start
+                                              )
+                                                  ? model.webBackgroundColor
+                                                  : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption)
+                                                  ? model.disabledTextColor
+                                                  : model.paletteColor
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ],
                                     ),
                                   ),
-
                                   Visibility(
-                                    visible: !(highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start)),
+                                    visible: !highlightSelectedDates(
+                                        listOfSelectedReservations.map((e) => e.slotRange.start).toList(),
+                                        e.slotRange.start
+                                    ),
                                     child: Container(
                                       decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                                          color: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.accentColor : Colors.transparent,
-                                          border: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? null : Border.all(width: 1, color: model.paletteColor)
+                                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                                        color: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption)
+                                            ? model.accentColor
+                                            : Colors.transparent,
+                                        border: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption)
+                                            ? null
+                                            : Border.all(width: 1, color: model.paletteColor),
                                       ),
                                       child: Padding(
                                         padding: const EdgeInsets.all(3.0),
-                                        child: Text(addLocationString, style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+                                        child: Text(
+                                          addLocationString,
+                                          style: TextStyle(
+                                              color: highlightSelectedDates(
+                                                  listOfSelectedReservations.map((e) => e.slotRange.start).toList(),
+                                                  e.slotRange.start
+                                              )
+                                                  ? model.webBackgroundColor
+                                                  : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption)
+                                                  ? model.disabledTextColor
+                                                  : model.paletteColor,
+                                              fontSize: model.secondaryQuestionTitleFontSize,
+                                              fontWeight: FontWeight.bold
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-
                                   Visibility(
-                                      visible: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start),
-                                      child: Icon(Icons.cancel, color: model.webBackgroundColor, size: 35)),
+                                    visible: highlightSelectedDates(
+                                        listOfSelectedReservations.map((e) => e.slotRange.start).toList(),
+                                        e.slotRange.start
+                                    ),
+                                    child: Icon(Icons.cancel, color: model.webBackgroundColor, size: 35),
+                                  ),
+                                  //
+                                  // Expanded(
+                                  //   child: Column(
+                                  //     mainAxisAlignment: MainAxisAlignment.center,
+                                  //     crossAxisAlignment: CrossAxisAlignment.start,
+                                  //     children: [
+                                  //       Text("$slotTimeString: ${DateFormat.jm().format(e.slotRange.start)} - ${DateFormat.jm().format(e.slotRange.start.add(Duration(minutes: durationType)))}",
+                                  //         style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor, fontSize: 16.5, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                                  //       /// TODO: show price only
+                                  //       // Text("Price: ${e.fee}", style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor), overflow: TextOverflow.ellipsis)
+                                  //       Text("Price: \$0.00", style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor), overflow: TextOverflow.ellipsis)
+                                  //     ],
+                                  //   ),
+                                  // ),
+                                  //
+                                  // Visibility(
+                                  //   visible: !(highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start)),
+                                  //   child: Container(
+                                  //     decoration: BoxDecoration(
+                                  //         borderRadius: BorderRadius.all(Radius.circular(8)),
+                                  //         color: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.accentColor : Colors.transparent,
+                                  //         border: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? null : Border.all(width: 1, color: model.paletteColor)
+                                  //     ),
+                                  //     child: Padding(
+                                  //       padding: const EdgeInsets.all(3.0),
+                                  //       child: Text(addLocationString, style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+                                  //     ),
+                                  //   ),
+                                  // ),
+                                  //
+                                  // Visibility(
+                                  //     visible: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start),
+                                  //     child: Icon(Icons.cancel, color: model.webBackgroundColor, size: 35)),
                           ],
                         ),
                       ),

@@ -390,8 +390,8 @@ class _SendInvitationRequestState extends State<SendInvitationRequest> {
                                   return querySearchItemsContainer(context, items.profile, currentAttendees);
                                 },
                                 orElse: () => querySearchItemsContainer(context, [], currentAttendees)
-                            );
-                          }
+                          );
+                        }
                       ),
                     ),
 
@@ -423,7 +423,7 @@ class _SendInvitationRequestState extends State<SendInvitationRequest> {
 
       List<ContactDetails> queryList = [];
       for (UserProfileModel user in users.where((element) => element.legalSurname.value.fold((l) => '', (r) => r).toLowerCase().contains(querySearch) || element.legalName.value.fold((l) => '', (r) => r).toLowerCase().contains(querySearch))) {
-        if (user.legalName.isValid() && user.userId != widget.currentUserId && widget.reservationItem.reservationOwnerId != user.userId) {
+        if (user.legalName.isValid() && user.userId.getOrCrash() != widget.currentUserId && widget.reservationItem.reservationOwnerId != user.userId) {
           queryList.add(
             ContactDetails(
                 contactId: user.userId,

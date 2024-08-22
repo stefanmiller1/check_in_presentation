@@ -2,6 +2,7 @@ import 'package:check_in_presentation/check_in_presentation.dart';
 import 'package:check_in_presentation/core/profile_creator_template/template_components/profile_editor_component.dart';
 import 'package:check_in_presentation/profile_core_widgets/profile_settings/profile_settings_screen.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:jumping_dot/jumping_dot.dart';
@@ -11,11 +12,15 @@ import 'profile_creator_template_helper.dart';
 class ProfileMainDashboardMain extends StatefulWidget {
 
   final DashboardModel model;
+  final bool isMobileOnly;
+  final ProfileTypeMarker? initialTab;
   final List<ProfileCreatorContainerModel> profileContainerItem;
 
   const ProfileMainDashboardMain({super.key,
     required this.model,
-    required this.profileContainerItem
+    this.initialTab,
+    required this.profileContainerItem,
+    required this.isMobileOnly
   });
 
 
@@ -26,20 +31,28 @@ class ProfileMainDashboardMain extends StatefulWidget {
 class _ProfileMainDashboardMainState extends State<ProfileMainDashboardMain> with TickerProviderStateMixin {
 
   final _controller = ScrollController();
+  final _controller2 = ScrollController();
   late TabController? _tabController;
   late PageController? _pageController;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  double scrollOffset = 0;
+
+  double startPositioned = 670;
+  double heightForRightContainer = 240;
+  double locationToHoldPosition = 290;
+
 
   @override
   void initState() {
-    _tabController = TabController(length: widget.profileContainerItem.length, vsync: this);
-    _pageController = PageController(initialPage: 0, keepPage: true);
+
+    _tabController = TabController(initialIndex: widget.profileContainerItem.indexWhere((e) => e.profileType == (widget.initialTab ?? ProfileTypeMarker.generalProfile)), length: widget.profileContainerItem.length, vsync: this);
+    _pageController = PageController(initialPage: widget.profileContainerItem.indexWhere((e) => e.profileType == (widget.initialTab ?? ProfileTypeMarker.generalProfile)), keepPage: true);
     super.initState();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _controller2.dispose();
     _tabController?.dispose();
     _pageController?.dispose();
     super.dispose();
@@ -47,145 +60,185 @@ class _ProfileMainDashboardMainState extends State<ProfileMainDashboardMain> wit
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 30),
-              Expanded(
-                child: Container(
+    final bool isMobile = widget.isMobileOnly == true || Responsive.isMobile(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            Container(
+              width: constraints.maxWidth,
+              height: constraints.maxHeight,
+            ),
+            Container(
+              height: constraints.maxHeight,
+              width: constraints.maxWidth,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: widget.model.mobileBackgroundColor
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(top: (isMobile == false) ? 70.0 : 6.0, left: 8, right: 8),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(25),
                   child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: widget.profileContainerItem.length,
-                      scrollDirection: Axis.horizontal,
-                      allowImplicitScrolling: true,
-                      onPageChanged: (index) {
-                        setState(() {
-                          _tabController?.animateTo(index, duration: Duration(milliseconds: 300), curve: Curves.easeInOut);
-                        });
-                      },
-                      itemBuilder: (_, index) {
-
-                        final ProfileCreatorContainerModel e = widget.profileContainerItem[index];
-
-                        return SingleChildScrollView(
-                          controller: _controller,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              if (e.isOwner == true && e.showAddIcon == true || e.isEditorVisible) Column(
-                                children: [
-                                  const SizedBox(height: 25),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(40),
-                                          color: widget.model.accentColor
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Padding(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                                child: Text(e.profileHeaderTitle, style: TextStyle(fontSize: widget.model.secondaryQuestionTitleFontSize, color: widget.model.disabledTextColor, overflow: TextOverflow.ellipsis), maxLines: 1),
-                                              ),
-                                            ),
-                                            InkWell(
-                                              onTap: e.didSelectNew,
-                                              child: Chip(
-                                                side: BorderSide.none,
-                                                backgroundColor: (e.isEditorVisible) ? widget.model.webBackgroundColor : widget.model.paletteColor,
-                                                padding: EdgeInsets.zero,
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                                                label: Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                                  child: Text(e.profileHeaderSubTitle, style: TextStyle(color: (e.isEditorVisible) ? widget.model.paletteColor : widget.model.accentColor, fontSize: widget.model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis), maxLines: 1),
-                                                ),
-                                                avatar: Icon(e.profileHeaderIcon, size: 25, color: (e.isEditorVisible) ? widget.model.paletteColor : widget.model.disabledTextColor,),
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-
-                              if (e.isReloading == true)
-                                Column(
-                                  children: [
-                                    const SizedBox(height: 8),
-                                    AnimatedOpacity(
-                                        opacity: (e.isReloading == true) ? 1 : 0,
-                                        duration: Duration(milliseconds: 500),
-                                        child: JumpingDots(color: widget.model.paletteColor, numberOfDots: 3)),
-                                  ],
-                                )
-                              else
-                                ProfileEditorComponent(model: widget.model, editorWidget: e.profileMainEditor, isVisible: e.isEditorVisible),
-
-                              SizedBox(height: (e.isEditorVisible) ? 21 : 0),
-                              AnimatedOpacity(
-                                opacity: (e.isEditorVisible) ? 1 : 0,
-                                duration: Duration(milliseconds: 500),
-                                child: Column(
-                                  children: [
-                                    Text('Edit Your Profile Above', style: TextStyle(color: widget.model.disabledTextColor)),
-                                    const SizedBox(height: 4),
-                                    Divider(thickness: 1, color: widget.model.disabledTextColor, height: 1,),
-                                  ],
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  FocusManager.instance.primaryFocus?.unfocus();
-                                },
-                                child: Container(
-                                    color: widget.model.webBackgroundColor,
-                                    child: e.profilesList
-                                ),
-                              ),
-                            ],
+                    controller: _pageController,
+                    itemCount: widget.profileContainerItem.length,
+                    scrollDirection: Axis.horizontal,
+                    allowImplicitScrolling: true,
+                    physics: isMobile == false ? const NeverScrollableScrollPhysics() : null,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _tabController?.animateTo(index, duration: Duration(milliseconds: 300), curve: Curves.easeInOut);
+                      });
+                    },
+                    itemBuilder: (_, index) {
+                      final ProfileCreatorContainerModel e = widget.profileContainerItem[index];
+                  
+                      if (index == 0) {
+                        if (isMobile == false) {
+                          return e.profilesList;
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10.0),
+                          child: SingleChildScrollView(
+                            controller: _controller,
+                            child: mainContainerForDashboard(e, constraints),
                           ),
                         );
                       }
+                  
+                      if (index == 1) {
+                        if (isMobile == false) {
+                          return e.profilesList;
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10.0),
+                          child: SingleChildScrollView(
+                            controller: _controller2,
+                            child: mainContainerForDashboard(e, constraints),
+                          ),
+                        );
+                      }
+                  
+                      return Container(); // Handle other indices if needed
+                    },
                   ),
                 ),
-              )
-            ],
-          ),
-
-          Positioned(
-            top: 0,
-            child: Container(
-              height: 40,
-              color: widget.model.mobileBackgroundColor,
-              child: getMainContainerAppbarBottomWidget(
-                  context,
-                  widget.model,
-                  _tabController,
-                  widget.profileContainerItem.map((e) => e.profileTabTitle).toList(),
-                  didSelectIndex: (index) {
-                    setState(() {
-                      _pageController?.animateToPage(index, duration: Duration(milliseconds: 400), curve: Curves.easeInOut);
-                    });
-                  }
               ),
             ),
+            getMainContainerAppbarBottomWidget(
+              context,
+              widget.model,
+              _tabController,
+              widget.profileContainerItem.map((e) => e.profileTabTitle).toList(),
+              didSelectIndex: (index) {
+                setState(() {
+                  if (kIsWeb) {
+                    _pageController?.jumpToPage(index);
+                    _tabController?.animateTo(index, duration: Duration(milliseconds: 300), curve: Curves.easeInOut);
+                  } else {
+                    _pageController?.animateToPage(index, duration: Duration(milliseconds: 400), curve: Curves.easeInOut);
+                  }
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  Widget mainContainerForDashboard(ProfileCreatorContainerModel e, BoxConstraints contstraint) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // if (e.isOwner == true && e.showAddIcon == true || e.isEditorVisible) if (!(kIsWeb)) Column(
+        //   children: [
+        //     const SizedBox(height: 20),
+        //     Padding(
+        //       padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        //       child: Container(
+        //         decoration: BoxDecoration(
+        //             borderRadius: BorderRadius.circular(40),
+        //             color: widget.model.accentColor
+        //         ),
+        //         child: Padding(
+        //           padding: const EdgeInsets.all(8.0),
+        //           child: Row(
+        //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        //             children: [
+        //               Expanded(
+        //                 child: Padding(
+        //                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        //                   child: Text(e.profileHeaderTitle, style: TextStyle(fontSize: widget.model.secondaryQuestionTitleFontSize, color: widget.model.disabledTextColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+        //                 ),
+        //               ),
+        //               InkWell(
+        //                 onTap: e.didSelectNew,
+        //                 child: Chip(
+        //                   side: BorderSide.none,
+        //                   backgroundColor: (e.isEditorVisible) ? widget.model.webBackgroundColor : widget.model.paletteColor,
+        //                   padding: EdgeInsets.zero,
+        //                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        //                   label: Padding(
+        //                     padding: const EdgeInsets.symmetric(vertical: 8.0),
+        //                     child: Text(e.profileHeaderSubTitle, style: TextStyle(color: (e.isEditorVisible) ? widget.model.paletteColor : widget.model.accentColor, fontSize: widget.model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis), maxLines: 1),
+        //                   ),
+        //                   avatar: Icon(e.profileHeaderIcon, size: 25, color: (e.isEditorVisible) ? widget.model.paletteColor : widget.model.disabledTextColor,),
+        //                 ),
+        //               )
+        //             ],
+        //           ),
+        //         ),
+        //       ),
+        //     ),
+        //   ],
+        // ),
+        // const SizedBox(height: 8),
+
+        if (e.isReloading == true)
+          Column(
+            children: [
+              const SizedBox(height: 8),
+              AnimatedOpacity(
+                  opacity: (e.isReloading == true) ? 1 : 0,
+                  duration: Duration(milliseconds: 500),
+                  child: JumpingDots(color: widget.model.paletteColor, numberOfDots: 3)),
+            ],
+          )
+        else
+          Padding(
+            padding: EdgeInsets.only(top: (e.isEditorVisible) ? 40.0 : 0.0),
+            child: ProfileEditorComponent(model: widget.model, editorWidget: e.profileMainEditor, isVisible: e.isEditorVisible),
           ),
+
+        const SizedBox(height: 21),
+        AnimatedOpacity(
+          opacity: (e.isEditorVisible) ? 1 : 0,
+          duration: Duration(milliseconds: 500),
+          child: Column(
+            children: [
+              Text('Edit Your Profile Above', style: TextStyle(color: widget.model.disabledTextColor)),
+              const SizedBox(height: 4),
+              Divider(thickness: 1, color: widget.model.disabledTextColor, height: 1,),
+            ],
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
+            FocusManager.instance.primaryFocus?.unfocus();
+          },
+          child: Container(
+              height: contstraint.maxHeight,
+              width: contstraint.maxWidth,
+              color: widget.model.webBackgroundColor,
+              child: e.profilesList
+          ),
+        ),
       ],
     );
   }

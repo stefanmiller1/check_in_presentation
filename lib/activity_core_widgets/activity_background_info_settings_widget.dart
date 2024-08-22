@@ -77,6 +77,9 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
               fontSize: model.secondaryQuestionTitleFontSize,
               )
             ),
+            Text('Some emoji\'s may not work - please double check when using', style: TextStyle(
+              color: model.disabledTextColor)
+            ),
             const SizedBox(height: 20),
             TextFormField(
             maxLength: state.activitySettingsForm.profileService.activityBackground.activityDescription1.maxLength,
@@ -282,7 +285,7 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
                   )
                 ),
                 Visibility(
-                visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity == ProfileActivityTypeOption.experiences,
+                visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.experiences,
                 child: Column(
                 children: [
                 const SizedBox(height: 25),
@@ -362,159 +365,161 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
 
 
 Widget mainContainerForSectionOneRowTwo({required BuildContext context, required DashboardModel model, required ActivityManagerForm activityForm, required UpdateActivityFormState state, required Function(bool) isPartnersInviteOnly, required Function(bool) isInstructorInviteOnly, required Widget getPartnerAttendees, required Function() didSelectCreateNewPartner, required Widget getInstructorAttendees, required Function() didSelectCreateInstructor}) {
-  return Column(
-    mainAxisAlignment: MainAxisAlignment.start,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      /// *** link Community *** ///
-      const SizedBox(height: 25),
-      /// *** partnerships *** ///
-      Text('Link to your Communities', style: TextStyle(
-        color: model.disabledTextColor,
-        fontSize: model.secondaryQuestionTitleFontSize,
-        )
-      ),
-      const SizedBox(height: 25),
-      InkWell(
-        onTap: () {
-          didSelectCreateNewPartner();
-        },
-        child: Container(
-          width: 675,
-          height: 60,
-          decoration: BoxDecoration(
-            color: model.webBackgroundColor,
-            borderRadius: const BorderRadius.all(Radius.circular(15)),
-          ),
-          child: Align(
-            child: Text('Link Community', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+  return Visibility(
+    visible: false,
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        /// *** link Community *** ///
+        const SizedBox(height: 25),
+        /// *** partnerships *** ///
+        Text('Link to your Communities', style: TextStyle(
+          color: model.disabledTextColor,
+          fontSize: model.secondaryQuestionTitleFontSize,
+          )
+        ),
+        const SizedBox(height: 25),
+        InkWell(
+          onTap: () {
+            didSelectCreateNewPartner();
+          },
+          child: Container(
+            width: 675,
+            height: 60,
+            decoration: BoxDecoration(
+              color: model.webBackgroundColor,
+              borderRadius: const BorderRadius.all(Radius.circular(15)),
+            ),
+            child: Align(
+              child: Text('Link Community', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+            ),
           ),
         ),
-      ),
-      const SizedBox(height: 25),
-      /// *** partnerships *** ///
-      Text('Activity Partners', style: TextStyle(
-        color: model.disabledTextColor,
-        fontSize: model.secondaryQuestionTitleFontSize,
-        )
-      ),
-      const SizedBox(height: 20),
-      Container(
-        // width: 675,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Partners can request to Join?', style: TextStyle(fontSize: model.secondaryQuestionTitleFontSize, color: model.paletteColor,)),
-                Text('Attendees can request to join as a partner', style: TextStyle(color: model.disabledTextColor))
-                ],
-              )
-            ),
-
-            FlutterSwitch(
-              width: 60,
-              inactiveColor: model.accentColor,
-              activeColor: model.paletteColor,
-              value: state.activitySettingsForm.profileService.activityBackground.isPartnersInviteOnly ?? activityForm.profileService.activityBackground.isPartnersInviteOnly ?? false,
-              onToggle: (value) {
-                isPartnersInviteOnly(value);
-              },
-            ),
-          ],
+        const SizedBox(height: 25),
+        /// *** partnerships *** ///
+        Text('Activity Partners', style: TextStyle(
+          color: model.disabledTextColor,
+          fontSize: model.secondaryQuestionTitleFontSize,
+          )
         ),
-      ),
-      const SizedBox(height: 15),
-      /// *** partner attendees *** ///
-      getPartnerAttendees,
-      const SizedBox(height: 25),
-      InkWell(
-        onTap: () {
-          didSelectCreateNewPartner();
-        },
-        child: Container(
-          width: 675,
-          height: 60,
-          decoration: BoxDecoration(
-            color: model.webBackgroundColor,
-            borderRadius: const BorderRadius.all(Radius.circular(15)),
-          ),
-          child: Align(
-            child: Text('Invite New Partner', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
-          ),
-        ),
-      ),
-      Visibility(
-      // visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.classesLessons,
-      child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 25),
-            Row(
-              children: [
-                Icon(Icons.sports, color: model.paletteColor),
-                const SizedBox(width: 15),
-                Expanded(child: Text('About The Instructors', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize))),
-              ],
-            ),
-            Text(AppLocalizations.of(context)!.activityClassesBackgroundMoreYearsSub, style: TextStyle(color: model.paletteColor)),
-            const SizedBox(height: 15),
-            /// *** instructor attendees *** ///
-            getInstructorAttendees,
-            const SizedBox(height: 20),
-
-            // isInstructorInviteOnly
-            Container(
-              width: 675,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        const SizedBox(height: 20),
+        Container(
+          // width: 675,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Instructor can request to Join?', style: TextStyle(fontSize: model.secondaryQuestionTitleFontSize, color: model.paletteColor,)),
-                      Text('Attendees can request to join as an Instructor based on a fee set by you.', style: TextStyle(color: model.disabledTextColor))
-                      ],
-                    )
-                  ),
-                  FlutterSwitch(
-                    width: 60,
-                    inactiveColor: model.accentColor,
-                    activeColor: model.paletteColor,
-                    value: state.activitySettingsForm.profileService.activityBackground.isInstructorInviteOnly ?? false,
-                    onToggle: (value) {
-                      isInstructorInviteOnly(value);
-                    },
-                  ),
+                  Text('Partners can request to Join?', style: TextStyle(fontSize: model.secondaryQuestionTitleFontSize, color: model.paletteColor,)),
+                  Text('Attendees can request to join as a partner', style: TextStyle(color: model.disabledTextColor))
+                  ],
+                )
+              ),
+
+              FlutterSwitch(
+                width: 60,
+                inactiveColor: model.accentColor,
+                activeColor: model.paletteColor,
+                value: state.activitySettingsForm.profileService.activityBackground.isPartnersInviteOnly ?? activityForm.profileService.activityBackground.isPartnersInviteOnly ?? false,
+                onToggle: (value) {
+                  isPartnersInviteOnly(value);
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 15),
+        /// *** partner attendees *** ///
+        getPartnerAttendees,
+        const SizedBox(height: 25),
+        InkWell(
+          onTap: () {
+            didSelectCreateNewPartner();
+          },
+          child: Container(
+            width: 675,
+            height: 60,
+            decoration: BoxDecoration(
+              color: model.webBackgroundColor,
+              borderRadius: const BorderRadius.all(Radius.circular(15)),
+            ),
+            child: Align(
+              child: Text('Invite New Partner', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+              ),
+            ),
+          ),
+        Visibility(
+        visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.classesLessons,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 25),
+              Row(
+                children: [
+                  Icon(Icons.sports, color: model.paletteColor),
+                  const SizedBox(width: 15),
+                  Expanded(child: Text('About The Instructors', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize))),
                 ],
               ),
-            ),
-            const SizedBox(height: 15),
-            InkWell(
-              onTap: () {
-                didSelectCreateInstructor();
-              },
-              child: Container(
+              Text(AppLocalizations.of(context)!.activityClassesBackgroundMoreYearsSub, style: TextStyle(color: model.paletteColor)),
+              const SizedBox(height: 15),
+              /// *** instructor attendees *** ///
+              getInstructorAttendees,
+              const SizedBox(height: 20),
+
+              // isInstructorInviteOnly
+              Container(
                 width: 675,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: model.webBackgroundColor,
-                  borderRadius: const BorderRadius.all(Radius.circular(15)),
-                ),
-                child: Align(
-                  child: Text('Invite New Instructor', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Instructor can request to Join?', style: TextStyle(fontSize: model.secondaryQuestionTitleFontSize, color: model.paletteColor,)),
+                        Text('Attendees can request to join as an Instructor based on a fee set by you.', style: TextStyle(color: model.disabledTextColor))
+                        ],
+                      )
+                    ),
+                    FlutterSwitch(
+                      width: 60,
+                      inactiveColor: model.accentColor,
+                      activeColor: model.paletteColor,
+                      value: state.activitySettingsForm.profileService.activityBackground.isInstructorInviteOnly ?? false,
+                      onToggle: (value) {
+                        isInstructorInviteOnly(value);
+                      },
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
-        )
-      ),
-
-    ],
+              const SizedBox(height: 15),
+              InkWell(
+                onTap: () {
+                  didSelectCreateInstructor();
+                },
+                child: Container(
+                  width: 675,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: model.webBackgroundColor,
+                    borderRadius: const BorderRadius.all(Radius.circular(15)),
+                  ),
+                  child: Align(
+                    child: Text('Invite New Instructor', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+                  ),
+                ),
+              ),
+            ],
+          )
+        ),
+      ],
+    ),
   );
 }
 
@@ -559,10 +564,8 @@ Widget mainTopContainer({required BuildContext context, required DashboardModel 
                 height: 150,
                 width: 150,
                 child:
-                (imageItem.imageToUpload != null) ?
-                Image.memory(imageItem.imageToUpload!, fit: BoxFit.cover) :
-                (imageItem.uriPath != null) ?
-                Image.network(imageItem.uriPath!, fit: BoxFit.cover) :
+                (imageItem.imageToUpload != null) ? Image.memory(imageItem.imageToUpload!, fit: BoxFit.cover) :
+                (imageItem.uriPath != null) ? Image.network(imageItem.uriPath!, fit: BoxFit.cover) :
                 Icon(Icons.error_outline, color: model.disabledTextColor, size: 55,)),
           ),
           Positioned(

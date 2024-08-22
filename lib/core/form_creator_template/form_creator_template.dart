@@ -44,7 +44,7 @@ class _FormCreatorDashboardMainState extends State<FormCreatorDashboardMain> wit
             child: Container(
               width: MediaQuery.of(context).size.width,
               child: Padding(
-                padding: const EdgeInsets.only(left: 8.0, right: 28),
+                padding: EdgeInsets.only(left: (isLessThanMain || showPreviewer) ? 40.0 : 8.0, right: 28),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -66,7 +66,7 @@ class _FormCreatorDashboardMainState extends State<FormCreatorDashboardMain> wit
             duration: const Duration(milliseconds: 650),
             curve: Curves.easeInOut,
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.only(right: 75.0, top: 75, bottom: 75),
               child: Container(
                   decoration: BoxDecoration(
                       color: widget.model.webBackgroundColor,
@@ -77,14 +77,13 @@ class _FormCreatorDashboardMainState extends State<FormCreatorDashboardMain> wit
                             spreadRadius: 5,
                             blurRadius: 13,
                             offset: const Offset(5,0)
-                        )
-                      ]
+                      )
+                    ]
                   ),
                   width: ReservationHelperCore.previewerWidth,
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(25),
-                    child: widget.previewFormWidget
-                )
+                      borderRadius: BorderRadius.circular(25),
+                      child: widget.previewFormWidget)
               ),
             ),
           ),

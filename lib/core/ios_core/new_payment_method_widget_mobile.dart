@@ -64,7 +64,10 @@ class _NewPaymentMethodWidgetState extends State<NewPaymentMethodWidget> {
               InkWell(
                 onTap: () async {
 
-                  if (_card != null && _card?.validExpiryDate == CardValidationState.Valid && _card?.validCVC == CardValidationState.Valid && _card?.validNumber == CardValidationState.Valid) {
+                  if (_card != null &&
+                      _card?.validExpiryDate == CardValidationState.Valid &&
+                      _card?.validCVC == CardValidationState.Valid &&
+                      _card?.validNumber == CardValidationState.Valid) {
                     var cardToken = await Stripe.instance.createToken(CreateTokenParams.card(params: CardTokenParams(
                       type: TokenType.Card,
                     )));

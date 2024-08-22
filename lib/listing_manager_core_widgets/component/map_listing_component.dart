@@ -51,6 +51,9 @@ class _MapListingComponentState extends State<MapListingComponent> {
       initialData: <Marker>{widget.locationMarker},
       future: generateMarker(widget.locationMarker),
       builder: (context, snapshot) {
+        if (snapshot.data == null) {
+          return Container();
+        }
         return GoogleMap(
             mapToolbarEnabled: false,
             zoomControlsEnabled: false,

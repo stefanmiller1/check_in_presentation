@@ -1,44 +1,32 @@
 part of check_in_presentation;
 
 
-Widget profileImageEditor(DashboardModel model, String title, String subTitle, Image? currentNetworkImage, Image? selectedImage, {required Function() didSelectImage}) {
-  return ListTile(
-    onTap: () => didSelectImage(),
-    leading: Container(
-        height: 60,
-        width: 60,
-        child: InkWell(
-          onTap: () => didSelectImage(),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: model.accentColor,
-                backgroundImage: (currentNetworkImage != null) ? (selectedImage == null) ? currentNetworkImage.image : selectedImage.image : (selectedImage != null) ? selectedImage.image : null,
-              ),
-              Icon(Icons.camera_alt, size: 20, color: model.disabledTextColor),
-            ],
-          ),
-        )
-    ),
-    title: Text('$title*', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
-    subtitle: Text(subTitle, style: TextStyle(color: model.disabledTextColor)),
-  );
-}
 
-Widget saveCancelFooter(DashboardModel model, bool isSaving, bool isChangeMade, bool isValid, bool canDelete, {required Function() didSelectSave, required Function() didSelectCancel, required Function() didSelectDelete}) {
+
+
+Widget saveCancelFooter(BuildContext context, DashboardModel model, bool isSaving, bool isChangeMade, bool isValid, bool canDelete, {required Function() didSelectSave, required Function() didSelectCancel, required Function() didSelectDelete}) {
   return Padding(
-    padding: const EdgeInsets.all(4.0),
+    padding: const EdgeInsets.only(left: 8.0),
     child: Container(
+      // width: MediaQuery.of(context).size.width,
       decoration: BoxDecoration(
         color: (isSaving) ? Colors.transparent : model.accentColor,
-        borderRadius: BorderRadius.circular(18)
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+              color: model.disabledTextColor.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 8,
+              offset: const Offset(5,0)
+          )
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: (isSaving) ? JumpingDots(numberOfDots: 3, color: model.paletteColor) : Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             InkWell(
               onTap: () {
@@ -55,7 +43,8 @@ Widget saveCancelFooter(DashboardModel model, bool isSaving, bool isChangeMade, 
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 18),
+            // const Spacer(),
             Row(
               children: [
                 if (canDelete) InkWell(

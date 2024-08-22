@@ -6,26 +6,35 @@ void presentALertDialogMobile(BuildContext context, String title, String descrip
   if (!Platform.isIOS) {
     showDialog(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (contexts) => AlertDialog(
             title: Text(title),
-            content: Text(description),
+            content: Builder(
+              builder: (context) {
+                return Container(
+                  width: 600,
+                  child: Text(description),
+                );
+              }
+            ),
             actions: [
               InkWell(
                   onTap: () => Navigator.of(context).pop(),
                   child: Text('Canacel')
               ),
               InkWell(
-                  onTap: () => didSelectDone(),
-                  child: Text(donButton)
-          ),
-        ]
-      )
+                  onTap: () {
+                    didSelectDone();
+                  },
+                child: Text(donButton)
+            ),
+          ]
+        )
     );
   }
 
   showCupertinoDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
+      builder: (contexts) => CupertinoAlertDialog(
         title: Text(title),
         content: Text(description),
         actions: [

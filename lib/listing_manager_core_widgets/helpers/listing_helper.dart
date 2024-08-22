@@ -309,26 +309,29 @@ Widget retrievedListingsFooter(BuildContext context, DashboardModel model, Listi
                   ],
                 ),
                 const SizedBox(height: 5),
-                Container(
-                  // width: 100,
-                  decoration: BoxDecoration(
-                    color: model.paletteColor,
-                    borderRadius: const BorderRadius.all(Radius.circular(40)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Visibility(
-                          visible: listings.listingRulesService.isPricingRuleFixed == true,
-                          child: Text('${completeTotalPriceWithOutCurrency((listings.listingRulesService.defaultPricingRuleSettings.defaultPricingRate ?? 0).toDouble(), listings.listingProfileService.backgroundInfoServices.currency)} / Slot', style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis,),
-                        ),
-                        Visibility(
-                            visible: listings.listingRulesService.isPricingRuleFixed == false,
-                            child: Text('${completeTotalPriceWithOutCurrency((currentPricing.defaultPricingRate ?? 0).toDouble(), listings.listingProfileService.backgroundInfoServices.currency)} / Slot', style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis,),
-                        )
-                      ],
+                Visibility(
+                  visible: false,
+                  child: Container(
+                    // width: 100,
+                    decoration: BoxDecoration(
+                      color: model.paletteColor,
+                      borderRadius: const BorderRadius.all(Radius.circular(40)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Visibility(
+                            visible: listings.listingRulesService.isPricingRuleFixed == true,
+                            child: Text('${completeTotalPriceWithOutCurrency((listings.listingRulesService.defaultPricingRuleSettings.defaultPricingRate ?? 0).toDouble(), listings.listingProfileService.backgroundInfoServices.currency)} / Slot', style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis,),
+                          ),
+                          Visibility(
+                              visible: listings.listingRulesService.isPricingRuleFixed == false,
+                              child: Text('${completeTotalPriceWithOutCurrency((currentPricing.defaultPricingRate ?? 0).toDouble(), listings.listingProfileService.backgroundInfoServices.currency)} / Slot', style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis,),
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 ),

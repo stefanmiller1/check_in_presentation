@@ -61,6 +61,9 @@ class _VendorFormCustomOptionsWidgetState extends State<VendorFormCustomOptionsW
                         activeColor: widget.model.paletteColor,
                         value: widget.form.customOptions?.map((e) => e.customRuleOption?.ruleId).contains(e.customRuleOption?.ruleId) == true,
                         onToggle: (value) {
+                          if (e.customRuleOption?.ruleId.getOrCrash() == '6e24dae0-96dd-11eb-babc-joij90hh7hii') {
+                            return;
+                          }
                           widget.onChanged(value, e);
                         },
                       ),
@@ -72,11 +75,11 @@ class _VendorFormCustomOptionsWidgetState extends State<VendorFormCustomOptionsW
                       createDocumentPagingView(
                       widget.form.customOptions!.firstWhere((element) => element.customRuleOption?.ruleId == e.customRuleOption?.ruleId),
                   ),
-                  if (e.customRuleOption?.ruleId.getOrCrash() == '6e24dae0-96dd-11eb-babc-joij90hh7hii')
-                    if (widget.form.customOptions?.map((e) => e.customRuleOption?.ruleId).contains(e.customRuleOption?.ruleId) == true)
-                    createCustomListPagingView(
-                    widget.form.customOptions!.firstWhere((element) => element.customRuleOption?.ruleId == e.customRuleOption?.ruleId).customRuleOption?.selectionLabelOption
-                  )
+                  // if (e.customRuleOption?.ruleId.getOrCrash() == '6e24dae0-96dd-11eb-babc-joij90hh7hii')
+                  //   if (widget.form.customOptions?.map((e) => e.customRuleOption?.ruleId).contains(e.customRuleOption?.ruleId) == true)
+                  //   createCustomListPagingView(
+                  //   widget.form.customOptions!.firstWhere((element) => element.customRuleOption?.ruleId == e.customRuleOption?.ruleId).customRuleOption?.selectionLabelOption
+                  // )
                 ],
               )
           ).toList()

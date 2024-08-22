@@ -3,9 +3,13 @@ part of check_in_presentation;
 class ProfileMainContainer extends StatefulWidget {
 
   final DashboardModel model;
-  final UserProfileModel currentUserProfile;
+  final String currentUserId;
+  final UserProfileModel? currentUserProfile;
+  final ProfileTypeMarker? profileType;
+  final bool? isMobileViewOnly;
+  final Function()? didSelectAppearancesGetStarted;
 
-  const ProfileMainContainer({super.key, required this.model, required this.currentUserProfile});
+  const ProfileMainContainer({super.key, required this.model, required this.currentUserProfile, required this.currentUserId, this.isMobileViewOnly, this.profileType, this.didSelectAppearancesGetStarted});
 
   @override
   State<ProfileMainContainer> createState() => _ProfileMainContainerState();
@@ -18,14 +22,15 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
   late bool isCommunityProfileEditorVisible = false;
   late bool isReloading = false;
   late EventMerchantVendorProfile? selectedProfile = null;
+  late ProfileTypeMarker? currentProfileTab = widget.profileType ?? ProfileTypeMarker.generalProfile;
 
-  List<ProfileCreatorContainerModel> profileModel(UserProfileModel userProfile, List<ReservationItem> reservations, List<EventMerchantVendorProfile> vProfiles, List<AttendeeItem> attendingList, List<ListingManagerForm> listings, bool isOwner) => [
+  List<ProfileCreatorContainerModel> profileModel(UserProfileModel userProfile, List<EventMerchantVendorProfile> vProfiles, List<AttendeeItem> attendingList, List<ListingManagerForm> listings, List<ReservationItem> reservationsComingUp, List<ReservationItem> reservationsCompleted, List<AccountNotificationItem> notifications, bool isOwner) => [
     ProfileCreatorContainerModel(
         isEditorVisible: isGeneralProfileEditorVisible,
         profileHeaderIcon: CupertinoIcons.settings,
         profileHeaderTitle: '${userProfile.legalName.getOrCrash()}\'s Profile',
         profileHeaderSubTitle: 'Edit Profile',
-        profileTabTitle: 'Profile',
+        profileTabTitle: '${userProfile.legalName.getOrCrash()}\'s Profile',
         isOwner: isOwner,
         showAddIcon: true,
         didSelectNew: () {
@@ -33,6 +38,7 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
             isGeneralProfileEditorVisible = !isGeneralProfileEditorVisible;
           });
         },
+        profileType: ProfileTypeMarker.generalProfile,
         profileMainEditor: ProfileEditorWidgetModel(
           height: 165,
           editorItem: GeneralProfileCreatorEditor(
@@ -54,9 +60,21 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
           currentUser: userProfile,
           isOwner: isOwner,
           model: widget.model,
+          isMobileOnly: widget.isMobileViewOnly == true,
+          notifications: notifications,
           facilities: listings,
-          reservations: reservations,
+          reservations: reservationsComingUp,
+          completedReservations: reservationsCompleted,
           attending: attendingList,
+          didSelectEditProfile: (user) {
+            if (kIsWeb) {
+              didSelectEditGeneralProfile(context, widget.model, user);
+            } else {
+              setState(() {
+                isGeneralProfileEditorVisible = !isGeneralProfileEditorVisible;
+              });
+            }
+        },
       )
     ),
     ProfileCreatorContainerModel(
@@ -66,6 +84,7 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
         profileHeaderTitle: 'Vendor Profile',
         profileHeaderSubTitle: 'Create New',
         profileTabTitle: 'Vendor Profile',
+        profileType: ProfileTypeMarker.vendorProfile,
         isOwner: isOwner,
         showAddIcon: vProfiles.isEmpty,
         didSelectNew: () {
@@ -81,7 +100,7 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
           });
         },
         profileMainEditor: ProfileEditorWidgetModel(
-            height: 760,
+            height: 400,
             editorItem: VendorProfileCreatorEditor(
                 model: widget.model,
                 didSaveSuccessfully: () {
@@ -101,10 +120,19 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
             currentUser: userProfile,
             vendorProfiles: vProfiles,
             isOwner: isOwner,
+            isMobileOnly: widget.isMobileViewOnly == true,
             attending: attendingList,
             model: widget.model,
+            didSelectAppearancesGetStarted: () {
+              if (widget.didSelectAppearancesGetStarted != null) {
+                widget.didSelectAppearancesGetStarted!();
+              }
+            },
+            didSelectReveiewApplication: () {
+              didSelectReviewApplications(context, widget.model, userProfile.userId);
+            },
             didSelectShare: () {
-
+              if (widget.currentUserProfile != null) didSelectShareProfile(widget.currentUserProfile!, ProfileTypeMarker.vendorProfile);
             },
             didSelectAddPartners: () {
 
@@ -115,17 +143,21 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
               });
             },
             didSelectEdit: (profile) {
-              setState(() {
-                isReloading = true;
-                selectedProfile = profile;
-                isVendorMerchProfileEditorVisible = true;
-            });
+              if (kIsWeb) {
+                didSelectEditVendorProfile(context, widget.model, profile);
+              } else {
+                setState(() {
+                  isReloading = true;
+                  selectedProfile = profile;
+                  isVendorMerchProfileEditorVisible = true;
+                });
 
-            Future.delayed(const Duration(milliseconds: 750), () {
-              setState(() {
-                isReloading = false;
-              });
-            });
+                Future.delayed(const Duration(milliseconds: 750), () {
+                  setState(() {
+                    isReloading = false;
+                  });
+                });
+              }
         },
       )
     ),
@@ -138,15 +170,19 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (_) => getIt<UserProfileWatcherBloc>()..add(const UserProfileWatcherEvent.watchUserProfileStarted()),
+    if (widget.currentUserProfile != null) {
+      return getVendorMerchProfiles(widget.currentUserProfile!);
+    }
+    return BlocProvider(create: (_) => getIt<UserProfileWatcherBloc>()..add(UserProfileWatcherEvent.watchSelectedUserProfileStarted(widget.currentUserId)),
         child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
             builder: (context, authState) {
               return authState.maybeMap(
-                  loadUserProfileSuccess: (item) {
+                loadSelectedProfileSuccess: (item) {
                     return getVendorMerchProfiles(item.profile);
                   },
                   orElse: () {
-                    return getVendorMerchProfiles(null);
+                    /// user cant be found
+                    return profileNotFound(context, widget.model);
             }
           );
         }
@@ -154,70 +190,104 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
     );
   }
 
-  Widget getVendorMerchProfiles(UserProfileModel? currentLoggedIn) {
-    return BlocProvider(create: (_) => getIt<VendorMerchProfileWatcherBloc>()..add(VendorMerchProfileWatcherEvent.watchCurrentUsersMerchVendorList(widget.currentUserProfile.userId.getOrCrash())),
+  Widget getVendorMerchProfiles(UserProfileModel currentUserProfile) {
+    return BlocProvider(create: (_) => getIt<VendorMerchProfileWatcherBloc>()..add(VendorMerchProfileWatcherEvent.watchCurrentUsersMerchVendorList(widget.currentUserId)),
       child: BlocBuilder<VendorMerchProfileWatcherBloc, VendorMerchProfileWatcherState>(
         builder: (context, state) {
           return state.maybeMap(
-              loadCurrentUserVendorMerchListSuccess: (list) => getFacilities(currentLoggedIn, list.items),
-              orElse: () => getFacilities(currentLoggedIn, [])
+              loadCurrentUserVendorMerchListSuccess: (list) => getFacilities(currentUserProfile, list.items),
+              orElse: () => getFacilities(currentUserProfile, [])
           );
         },
       ),
     );
   }
 
-  Widget getFacilities(UserProfileModel? currentLoggedIn, List<EventMerchantVendorProfile> vProfiles) {
-    return BlocProvider(create: (_) => getIt<PublicListingWatcherBloc>()..add(PublicListingWatcherEvent.watchAllPublicListingsStarted([''])),
+  Widget getFacilities(UserProfileModel currentUserProfile, List<EventMerchantVendorProfile> vProfiles) {
+    return BlocProvider(create: (_) => getIt<PublicListingWatcherBloc>()..add(PublicListingWatcherEvent.watchSelectedUsersPublicListingsStarted([ManagerListingStatusType.finishSetup], widget.currentUserId, null)),
       child: BlocBuilder<PublicListingWatcherBloc, PublicListingWatcherState>(
       builder: (context, state) {
         return state.maybeMap(
-          loadAllPublicListingItemsSuccess: (e) => getCreatedReservations(currentLoggedIn, e.items.where((element) => element.listingProfileService.backgroundInfoServices.listingOwner == widget.currentUserProfile.userId).toList(), vProfiles),
-          orElse: () => getCreatedReservations(currentLoggedIn, [], vProfiles));
+            loadAllSelectedUsersPublicListingsSuccess: (e) {
+            return getReservations(currentUserProfile, e.items, vProfiles);
+          },
+          orElse: () => getReservations(currentUserProfile, [], vProfiles));
         }
       ),
     );
   }
 
-  Widget getCreatedReservations(UserProfileModel? currentLoggedIn, List<ListingManagerForm> listings, List<EventMerchantVendorProfile> vProfiles) {
-    return BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations([ReservationSlotState.current, ReservationSlotState.confirmed, ReservationSlotState.completed], widget.currentUserProfile, false)),
+  Widget getReservations(UserProfileModel currentUserProfile, List<ListingManagerForm> listings, List<EventMerchantVendorProfile> vProfiles) {
+    return BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations([ReservationSlotState.current, ReservationSlotState.confirmed], currentUserProfile, false, 3, true)),
       child: BlocBuilder<ReservationManagerWatcherBloc, ReservationManagerWatcherState>(
           builder: (context, state) {
             return state.maybeMap(
-                loadCurrentUserReservationsSuccess: (e) => getAttendingReservations(currentLoggedIn, listings, e.item, vProfiles),
-                orElse: () => getAttendingReservations(currentLoggedIn, listings, [], vProfiles)
+                loadCurrentUserReservationsSuccess: (e) => getReservationsCompleted(currentUserProfile, listings, e.item, vProfiles),
+                orElse: () => getReservationsCompleted(currentUserProfile, listings, [], vProfiles)
           );
         }
       ),
     );
   }
 
-  Widget getAttendingReservations(UserProfileModel? currentLoggedIn, List<ListingManagerForm> listings, List<ReservationItem> reservations, List<EventMerchantVendorProfile> vProfiles) {
-    return BlocProvider(create: (_) => getIt<UserProfileWatcherBloc>()..add(const UserProfileWatcherEvent.watchProfileAllAttendingResStarted(ContactStatus.joined, AttendeeType.vendor, null)),
+  Widget getReservationsCompleted(UserProfileModel currentUserProfile, List<ListingManagerForm> listings, List<ReservationItem> reservations, List<EventMerchantVendorProfile> vProfiles) {
+    return BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations([ReservationSlotState.completed], currentUserProfile, false, 6, true)),
+      child: BlocBuilder<ReservationManagerWatcherBloc, ReservationManagerWatcherState>(
+          builder: (context, state) {
+            return state.maybeMap(
+                loadCurrentUserReservationsSuccess: (e) => getAttendingReservations(currentUserProfile, listings, reservations, e.item, vProfiles),
+                orElse: () => getAttendingReservations(currentUserProfile, listings, reservations, [], vProfiles)
+            );
+          }
+      ),
+    );
+  }
+
+  Widget getAttendingReservations(UserProfileModel currentUserProfile, List<ListingManagerForm> listings, List<ReservationItem> reservations, List<ReservationItem> reservationsCompleted, List<EventMerchantVendorProfile> vProfiles) {
+    return BlocProvider(create: (_) => getIt<UserProfileWatcherBloc>()..add(UserProfileWatcherEvent.watchProfileAllAttendingResStarted(ContactStatus.joined, AttendeeType.vendor, null, widget.currentUserId)),
         child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
         builder: (context, state) {
           return state.maybeMap(
             loadProfileAttendingResSuccess: (e) {
-              return getMainContainer(currentLoggedIn, listings, reservations, e.attending, vProfiles);
+              return getNotificationsForAllReservations(currentUserProfile, listings, reservations, reservationsCompleted, e.attending, vProfiles);
             },
-            orElse: () => getMainContainer(currentLoggedIn, listings, reservations, [], vProfiles)
+            orElse: () => getNotificationsForAllReservations(currentUserProfile, listings, reservations, reservationsCompleted, [], vProfiles)
           );
         }
       )
     );
   }
 
-  Widget getMainContainer(UserProfileModel? currentLoggedIn, List<ListingManagerForm> listings, List<ReservationItem> reservations, List<AttendeeItem> attendingList, List<EventMerchantVendorProfile> vProfiles) {
-    final bool isOwner = currentLoggedIn?.userId == widget.currentUserProfile.userId;
+  Widget getNotificationsForAllReservations(UserProfileModel currentUserProfile, List<ListingManagerForm> listings, List<ReservationItem> reservations, List<ReservationItem> reservationsCompleted, List<AttendeeItem> attendingList, List<EventMerchantVendorProfile> vProfiles) {
+    return BlocProvider(create: (_) => getIt<NotificationWatcherBloc>()..add(NotificationWatcherEvent.watchAllAccountNotificationAmountByType([AccountNotificationType.invite, AccountNotificationType.request, AccountNotificationType.joined, AccountNotificationType.activityPost, AccountNotificationType.resSlot], null)),
+        child: BlocBuilder<NotificationWatcherBloc, NotificationWatcherState>(
+            builder: (context, authState) {
+              return authState.maybeMap(
+                  loadAllAccountNotificationByTypeSuccess: (item) {
+                    return getMainContainer(currentUserProfile, listings, reservations, reservationsCompleted, attendingList, vProfiles, item.notifications);
+                  },
+            orElse: () => getMainContainer(currentUserProfile, listings, reservations, reservationsCompleted, attendingList, vProfiles, [])
+          );
+        }
+      )
+    );
+  }
 
+  Widget getMainContainer(UserProfileModel currentUserProfile, List<ListingManagerForm> listings, List<ReservationItem> reservations, List<ReservationItem> reservationsCompleted, List<AttendeeItem> attendingList, List<EventMerchantVendorProfile> vProfiles, List<AccountNotificationItem> notifications) {
+    final bool isOwner = widget.currentUserId == facade.FirebaseChatCore.instance.firebaseUser?.uid;
+
+    // print(reservations.length);
     return ProfileMainDashboardMain(
         model: widget.model,
+        isMobileOnly: widget.isMobileViewOnly == true,
         profileContainerItem: profileModel(
-            widget.currentUserProfile,
-            reservations,
+            currentUserProfile,
             vProfiles,
             attendingList,
             listings,
+            reservations,
+            reservationsCompleted,
+            notifications,
             isOwner
       ),
     );

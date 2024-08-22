@@ -300,7 +300,7 @@ Widget getFooterForResWithoutActivity(BuildContext context, DashboardModel model
 
 Widget getFooterForFreeActivity(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityForm, List<ReservationSlotItem> resSorted, bool isEnded, bool isOwner, bool showAttendeeOnly, String? currentUser, bool isLimitedAttendance, List<AttendeeItem> allAttending, AttendeeItem? currentAttendee, {required Function() didSelectManage, required Function() didSelectJoin, required Function() didSelectInterested}) {
   
-  final bool isAttending = currentAttendee?.contactStatus == ContactStatus.joined || isOwner;
+  final bool isAttending = currentAttendee?.contactStatus == ContactStatus.joined || currentAttendee?.contactStatus == ContactStatus.requested || isOwner;
   final int numberOfFreeAttendees = allAttending.where((element) => element.attendeeType == AttendeeType.free && element.contactStatus == ContactStatus.joined).length;
   final int numberOfVendorAttendees = allAttending.where((element) => element.attendeeType == AttendeeType.vendor && element.contactStatus == ContactStatus.joined).length;
   final int numberOfPartnerAttendees = allAttending.where((element) => element.attendeeType == AttendeeType.partner && element.contactStatus == ContactStatus.joined).length;

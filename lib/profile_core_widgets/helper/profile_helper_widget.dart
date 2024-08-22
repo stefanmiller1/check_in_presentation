@@ -1,6 +1,6 @@
 part of check_in_presentation;
 
-Widget profileHeaderContainer(UserProfileModel profile, DashboardModel model, bool isCurrentUser, int listingCount, int reservationCount, int joinedResCount, {required Function() editProfile}) {
+Widget profileHeaderContainer(UserProfileModel profile, DashboardModel model, bool isCurrentUser, int listingCount, int joinedResCount, String userId, {required Function() editProfile, required Function() didSelectShare}) {
   return Column(
     mainAxisAlignment: MainAxisAlignment.start,
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -9,14 +9,23 @@ Widget profileHeaderContainer(UserProfileModel profile, DashboardModel model, bo
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          mobileUserProfileWidget(
-              model,
-              profile: profile,
-              showBadge: true,
-              radius: 80,
-              onTapUserProfile: (UserProfileModel profile) {
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              mobileUserProfileWidget(
+                  model,
+                  profile: profile,
+                  showBadge: true,
+                  radius: 80,
+                  onTapUserProfile: (UserProfileModel profile) {
 
-            }
+                }
+              ),
+              IconButton(
+                  onPressed: () => didSelectShare(),
+                  icon: Icon(CupertinoIcons.share, color: model.disabledTextColor)
+              ),
+            ],
           ),
 
           Row(
@@ -24,7 +33,7 @@ Widget profileHeaderContainer(UserProfileModel profile, DashboardModel model, bo
               Column(
                 children: [
                   Icon(Icons.home_outlined, color: model.paletteColor),
-                  Text('Hosting'),
+                  Text('Hosting', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold)),
                   Text(listingCount.toString(), style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold))
                 ],
               ),
@@ -32,15 +41,30 @@ Widget profileHeaderContainer(UserProfileModel profile, DashboardModel model, bo
               Column(
                 children: [
                   Icon(Icons.calendar_today_outlined, color: model.paletteColor),
-                  Text('Reservations'),
-                  Text(reservationCount.toString(), style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold))
+                  Text('Activities', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold)),
+                  FutureBuilder<int>(
+                    future: facade.ReservationFacade.instance.getNumberOfReservationsBooked(
+                        listingId: null,
+                        statusType: [ReservationSlotState.completed, ReservationSlotState.confirmed, ReservationSlotState.current],
+                        hoursTimeAhead: null,
+                        hoursTimeBefore: null,
+                        isActivity: null,
+                        userId: userId
+                    ),
+                    builder: (context, snap) {
+                      if (!(snap.hasData) || snap.data == null) {
+                        return Text('0', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold));
+                      }
+                      return Text('${snap.data}', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold));
+                    }
+                  ),
                 ],
               ),
               const SizedBox(width: 14),
               Column(
                 children: [
                   Icon(Icons.accessibility_new_rounded, color: model.paletteColor),
-                  Text('Joined'),
+                  Text('Joined', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold)),
                   Text(joinedResCount.toString(), style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold))
                 ],
               )
@@ -54,22 +78,60 @@ Widget profileHeaderContainer(UserProfileModel profile, DashboardModel model, bo
       Text('Joined in ${DateFormat.y().format(profile.joinedDate)}', style: TextStyle(color: model.disabledTextColor)),
       // SizedBox(height: 12),
 
-      // if (isCurrentUser) InkWell(
-      //   onTap: () {
-      //     editProfile();
-      //   },
-      //   child: Container(
-      //     height: 45,
-      //     decoration: BoxDecoration(
-      //       borderRadius: BorderRadius.circular(15),
-      //       color: model.accentColor
-      //     ),
-      //     child: Center(
-      //       child: Text('Edit Profile', style: TextStyle(color: model.paletteColor)),
-      //     ),
-      //   ),
-      // )
+       if (isCurrentUser) Column(
+         children: [
+           const SizedBox(height: 12),
+           InkWell(
+             onTap: () {
+               editProfile();
+             },
+             child: Container(
+               height: 50,
+               decoration: BoxDecoration(
+                 color: model.accentColor,
+                 borderRadius: BorderRadius.circular(15),
+                 // border: Border.all(color: model.disabledTextColor)
+               ),
+               child: Center(
+                 child: Text('Edit My Profile', style: TextStyle(color: model.disabledTextColor)),
+               ),
+             ),
+           ),
+         ],
+       )
     ],
+  );
+}
+
+Widget mainPagedListViewContainer(BuildContext context, bool isMobileOnly, double width, double subWidth, int index, Widget pagedList, Widget subContainer) {
+  /// if mobile (column condition)
+  /// if desktop (row condition)
+  final isMobile = isMobileOnly || Responsive.isMobile(context);
+
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Flexible(
+        child: Container(
+          width: (isMobileOnly) ? (isMobile) ? 500 : MediaQuery.of(context).size.width : subWidth + 150,
+          // constraints: (isMobile) ? BoxConstraints(
+          //   maxWidth: 500
+          // ) : null,
+          child: Column(
+            children: [
+              if (index == 0) const SizedBox(height: 10),
+              if (isMobile && index == 0) subContainer,
+              pagedList,
+            ]
+          ),
+        ),
+      ),
+      if (!(isMobile)) Flexible(
+        child: SizedBox(
+          width: width,
+        ),
+      ),
+    ]
   );
 }
 
@@ -103,11 +165,6 @@ Widget getVendorMerchProfileHeader(DashboardModel model, bool isOwner, EventMerc
                       onPressed: () => didSelectAddPartners(),
                       icon: Icon(CupertinoIcons.person_crop_circle_badge_plus, color: model.disabledTextColor)
                   ),
-                  if (isOwner) IconButton(
-                      onPressed: () => didSelectEdit(),
-                      icon: Icon(CupertinoIcons.settings, color: model.disabledTextColor)
-                  ),
-
                 ],
               )
             ],
@@ -117,8 +174,8 @@ Widget getVendorMerchProfileHeader(DashboardModel model, bool isOwner, EventMerc
             child: Column(
               children: [
                 Icon(Icons.accessibility_new_rounded, color: model.paletteColor),
-                Text('Joined'),
-                Text(resJoinedCount!.toString(), style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold))
+                Text('Joined', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold)),
+                Text(resJoinedCount.toString(), style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold))
               ],
             ),
           ),
@@ -133,7 +190,7 @@ Widget getVendorMerchProfileHeader(DashboardModel model, bool isOwner, EventMerc
           const SizedBox(width: 8),
           Expanded(
             child: Container(
-                child: Text(profile.backgroundInfo.getOrCrash())
+                child: Text(profile.backgroundInfo.getOrCrash(), style: TextStyle(color: model.disabledTextColor))
             ),
           ),
         ],
@@ -143,7 +200,7 @@ Widget getVendorMerchProfileHeader(DashboardModel model, bool isOwner, EventMerc
         spacing: 4,
         runSpacing: 2,
         children: [
-          if (profile.instagramLink != null) InkWell(
+          if (profile.instagramLink != null && profile.instagramLink!.isNotEmpty) InkWell(
             onTap: () async {
               if (await canLaunchUrlString('https://www.instagram.com/${profile.instagramLink}')) {
                 launchUrlString('https://www.instagram.com/${profile.instagramLink}');
@@ -172,8 +229,28 @@ Widget getVendorMerchProfileHeader(DashboardModel model, bool isOwner, EventMerc
             ),
           )
         ],
+      ),
+      if (isOwner) Column(
+        children: [
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: () {
+              didSelectEdit();
+            },
+            child: Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: model.accentColor,
+                borderRadius: BorderRadius.circular(15),
+                // border: Border.all(color: model.disabledTextColor)
+              ),
+              child: Center(
+                child: Text('Edit My Profile', style: TextStyle(color: model.disabledTextColor)),
+              ),
+            ),
+          ),
+        ],
       )
-
     ]
   );
 }
@@ -295,76 +372,50 @@ Widget getUpComingReservations(BuildContext context, UserProfileModel currentUse
         ),
       ),
 
-      if (reservations.isNotEmpty)
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 14,
-            children: reservations.map(
-              (e) {
-                return FutureBuilder<ListingManagerForm?>(
-                  future: facade.ListingFacade.instance.getListingManagerItem(listingId: e.instanceId.getOrCrash()),
-                  builder: (context, listingSnap) {
-                    if (listingSnap.connectionState == ConnectionState.waiting) {
-                      // return JumpingDots(color: model.paletteColor, numberOfDots: 3);
-                    } else if (listingSnap.data == null) {
-
-                    }
-
-                    final listing = listingSnap.data;
-
-                    return FutureBuilder<ActivityManagerForm?>(
-                        future: facade.ActivitySettingsFacade.instance.getActivitySettings(reservationId: e.reservationId.getOrCrash()),
-                          builder: (context, activitySnap) {
-                            if (activitySnap.connectionState == ConnectionState.waiting) {
-                            // return JumpingDots(color: model.paletteColor, numberOfDots: 3);
-                            } else if (activitySnap.data == null) {
-                              return Container();
-                            }
-
-                          final activity = activitySnap.data;
-
-                          return baseSearchItemContainer(
-                            model: model,
-                            backgroundWidget: getReservationMediaFrameFlexible(context, model, 400, 400, listing, activity, e, false, didSelectItem: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (_) {
-                                    return ActivityPreviewScreen(
-                                      model: model,
-                                      listing: null,
-                                      reservation: e,
-                                      currentReservationId: e.reservationId,
-                                      currentListingId: e.instanceId,
-                                        didSelectBack: () {}
-                                    );
-                                  }
-                                )
-                              );
-                            }),
-                            bottomWidget: getSearchFooterWidget(
-                                context,
-                                model,
-                                currentUser.userId,
-                                model.paletteColor,
-                                model.disabledTextColor,
-                                model.accentColor,
-                                listing,
-                                activity,
-                                e,
-                                false,
-                                didSelectItem: () {
-                                },
-                                didSelectInterested: () {
-
-                                }
-                            )
-                        );
-                      }
-                    );
-                  }
-                );
-              }
-            ).toList()
-          ),
+      // if (reservations.isNotEmpty)
+      //     Wrap(
+      //       alignment: WrapAlignment.center,
+      //       spacing: 14,
+      //       children: reservations.map(
+      //         (e) {
+      //               return baseSearchItemContainer(
+      //                 model: model,
+      //                 backgroundWidget: getReservationMediaFrameFlexible(context, model, 400, 400, listing, activity, e, false, didSelectItem: () {
+      //                   Navigator.of(context).push(MaterialPageRoute(
+      //                       builder: (_) {
+      //                         return ActivityPreviewScreen(
+      //                           model: model,
+      //                           listing: null,
+      //                           reservation: e,
+      //                           currentReservationId: e.reservationId,
+      //                           currentListingId: e.instanceId,
+      //                             didSelectBack: () {}
+      //                         );
+      //                       }
+      //                     )
+      //                   );
+      //                 }),
+      //                 bottomWidget: getSearchFooterWidget(
+      //                     context,
+      //                     model,
+      //                     currentUser.userId,
+      //                     model.paletteColor,
+      //                     model.disabledTextColor,
+      //                     model.accentColor,
+      //                     listing,
+      //                     activity,
+      //                     e,
+      //                     false,
+      //                     didSelectItem: () {
+      //                     },
+      //                     didSelectInterested: () {
+      //
+      //                     }
+      //                 )
+      //             );
+      //         }
+      //       ).toList()
+      //     ),
           // Container(
           //   height: 143,
           //   child: PageView.builder(

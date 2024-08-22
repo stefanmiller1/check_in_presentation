@@ -27,7 +27,16 @@ Widget getActivityBackgroundForPreview(BuildContext context, DashboardModel mode
         ),
         const SizedBox(height: 8),
         getActivityBackgroundHeader(context, model, activityForm, isOwner, linkedCommunities),
-        getActivityBackgroundRowOne(context, model, activityForm, reservation, activityOwner),
+        getActivityBackgroundRowOne(context, model, 650, activityForm, reservation, activityOwner),
+
+        if (activityOwner != null) Column(
+          children: [
+            const SizedBox(height: 8),
+            Divider(color: model.disabledTextColor),
+            const SizedBox(height: 8),
+            getPostedOnBehalfColumn(context, model, activityOwner, activityForm),
+          ]
+        ),
         getActivityBackgroundRowTwo(context, 620, model, showSuggestions, activityForm, activityOwner, reservation)
       ],
     ),
@@ -50,7 +59,7 @@ Widget getActivityBackgroundColumn(BuildContext context, DashboardModel model, b
           visible: isLessThanMain == false,
           child: Column(
             children: [
-              getActivityBackgroundRowOne(context, model, activityForm, reservation, activityOwner),
+              getActivityBackgroundRowOne(context, model, 620, activityForm, reservation, activityOwner),
               getActivityBackgroundRowTwo(context, 620, model, showSuggestions, activityForm, activityOwner, reservation)
             ],
           ),
@@ -62,7 +71,7 @@ Widget getActivityBackgroundColumn(BuildContext context, DashboardModel model, b
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: getActivityBackgroundRowOne(context, model, activityForm, reservation, activityOwner),
+                child: getActivityBackgroundRowOne(context, model, 250, activityForm, reservation, activityOwner),
               ),
               const SizedBox(width: 6),
               getActivityBackgroundRowTwo(context, 250, model, showSuggestions, activityForm, activityOwner, reservation)
@@ -175,24 +184,20 @@ Widget getActivityBackgroundHeader(BuildContext context, DashboardModel model, A
 }
 
 
-Widget getActivityBackgroundRowOne(BuildContext context, DashboardModel model, ActivityManagerForm activityForm, ReservationItem reservation, UserProfileModel? activityOwner) {
+Widget getActivityBackgroundRowOne(BuildContext context, DashboardModel model, double width, ActivityManagerForm activityForm, ReservationItem reservation, UserProfileModel? activityOwner) {
   return Column(
     mainAxisAlignment: MainAxisAlignment.start,
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Padding(
         padding: const EdgeInsets.only(left: 8.0),
-        child: activityForm.profileService.activityBackground.activityDescription1.value.fold(
-            (l) => Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Tell them about the what\'s in store. So far, they know Reservation was made ${getTitleForActivityOption(context, activityForm.activityType.activityId) ?? ''}, tell them how you plan to make the space into a unique experience.', style: TextStyle(color: model.disabledTextColor), overflow: TextOverflow.ellipsis, maxLines: 2),
-                const SizedBox(height: 8),
-                Text('You also have the option to Add more details here.', style: TextStyle(color: model.disabledTextColor), overflow: TextOverflow.ellipsis, maxLines: 2)
-              ],
-            ),
-          (r) => Text(r, style: TextStyle(color: model.disabledTextColor), overflow: TextOverflow.ellipsis, maxLines: 2),
+        child: ExpandableText(
+          model: model,
+          width: width,
+          text: activityForm.profileService.activityBackground.activityDescription1.value.fold(
+            (l) => 'Tell them about the what\'s in store. So far, they know Reservation was made ${getTitleForActivityOption(context, activityForm.activityType.activityId) ?? ''}, tell them how you plan to make the space into a unique experience. \n You also have the option to Add more details here.',
+            (r) => r,
+          )
         ),
       ),
       const SizedBox(height: 5),
@@ -221,25 +226,10 @@ Widget getActivityBackgroundRowTwo(BuildContext context, double width, Dashboard
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
+
+
         Visibility(
-          visible: showSuggestions && activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantInviteOnly != true,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: Container(
-              width: width,
-              height: 60,
-              decoration: BoxDecoration(
-                border: Border.all(color: model.disabledTextColor.withOpacity(0.25)),
-                borderRadius: const BorderRadius.all(Radius.circular(15)),
-              ),
-              child: Align(
-                child: Text('Setup Vendor Support', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
-              ),
-            ),
-          ),
-        ),
-        Visibility(
-          visible: showSuggestions && activityForm.profileService.activityBackground.isPartnersInviteOnly != true,
+          visible: false,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4.0),
             child: Container(
@@ -316,40 +306,9 @@ Widget getActivityBackgroundRowTwo(BuildContext context, double width, Dashboard
             ),
           ),
         ),
-        Visibility(
-          visible: activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantInviteOnly == true,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: InkWell(
-              onTap: () {
-                if (activityOwner != null) {
-                  presentNewVendorAttendee(
-                      context,
-                      model,
-                      reservation,
-                      activityForm,
-                      activityOwner
-                  );
-                }
-              },
-              child: Container(
-                width: width,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: model.accentColor,
-                  borderRadius: const BorderRadius.all(Radius.circular(15)),
-                ),
-                child: Align(
-                  child: Text('Join as a Vendor or Merchant', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
-                ),
-              ),
-            ),
-          ),
-        ),
-        if (activityForm.profileService.activityRequirements.eventActivityRulesRequirement != null) Visibility(
-            visible: (activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.merchantLimit != null),
-            child: Text('Looking for ${activityForm.profileService.activityRequirements.eventActivityRulesRequirement!.merchantLimit} Merchants or Vendors', style: TextStyle(color: model.disabledTextColor))
-        ),
+
+
+
       ],
     );
 }
@@ -384,8 +343,7 @@ Widget getActivityRequirementsColumn(BuildContext context, DashboardModel model,
       hasProvisions ||
       activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.isFoodForSale == true ||
       activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.isAlcoholForSale == true && activityAgeSetting ||
-      showSuggestions ||
-      isVendorAttendee == null || isVendorAttendee == false,
+      showSuggestions,
     child: SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Padding(
@@ -501,56 +459,6 @@ Widget getActivityRequirementsColumn(BuildContext context, DashboardModel model,
                 ],
               ),
             ),
-
-            Visibility(
-              visible: isVendorAttendee == false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(40),
-                    color: model.disabledTextColor.withOpacity(0.2),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: Icon(Icons.storefront_sharp, color: model.paletteColor),
-                          title: Text('Planning to Be a Vendor?', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
-                          subtitle: Text('Add your vendor profile to this activity if you\'ve been confirmed as a vendor for this event. Make it easy to share and for everyone to know about where they can find you!', style: TextStyle(color: model.paletteColor)),
-                        ),
-                        const SizedBox(height: 10),
-                        InkWell(
-                          onTap: () {
-                            if (activityOwner != null) {
-                              presentNewVendorAttendee(
-                                  context,
-                                  model,
-                                  reservation,
-                                  activityForm,
-                                  activityOwner
-                              );
-                            }
-                          },
-                          child: Container(
-                            // width: MediaQue,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: model.accentColor,
-                              borderRadius: const BorderRadius.all(Radius.circular(15)),
-                            ),
-                            child: Align(
-                              child: Text('Join as a Vendor or Merchant', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  )
-                ),
-              )
-            )
           ],
         ),
       ),
@@ -693,6 +601,7 @@ Widget getActivityRequirementRowTwoSuggest(BuildContext context, double width, D
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 8),
         Text('What We Provide:', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize), overflow: TextOverflow.ellipsis, maxLines: 1),
         Text('For Example...', style: TextStyle(color: model.disabledTextColor)),
         const SizedBox(height: 15),
@@ -953,6 +862,297 @@ Widget getActivityTicketOptionsColumn(
 }
 
 
+Widget getActivityVendorOptionColumn(
+    BuildContext context,
+    DashboardModel model,
+    ListingManagerForm listingForm,
+    ReservationItem reservation,
+    ActivityManagerForm activityForm,
+    UserProfileModel? activityOwner,
+    bool showSuggestions,
+    double width,
+    bool isVendor,
+    {required Function() didSelectManage}
+    ) {
+
+  return isVendor ? Column(
+    mainAxisAlignment: MainAxisAlignment.start,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 15),
+      Padding(
+        padding: const EdgeInsets.only(left: 4.0),
+        child: Text('Vendor Applications', style: TextStyle(color: model.paletteColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold)),
+      ),
+      const SizedBox(height: 8),
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: InkWell(
+          onTap: () {
+            didSelectManage();
+          },
+          child: Container(
+            width: width,
+            height: 60,
+            decoration: BoxDecoration(
+              color: model.accentColor,
+              borderRadius: const BorderRadius.all(Radius.circular(15)),
+            ),
+            child: Align(
+              child: Text('Manage Vendor Application', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+            ),
+          ),
+        ),
+      ),
+    ],
+  ) : Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 15),
+          Padding(
+            padding: const EdgeInsets.only(left: 4.0),
+            child: Text('Vendor Applications', style: TextStyle(color: model.paletteColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold)),
+          ),
+          Visibility(
+              visible: activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true && (activityForm.rulesService.vendorMerchantForms?.where((e) => e.formStatus == FormStatus.published) ?? []).isNotEmpty == false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(40),
+                      color: model.disabledTextColor.withOpacity(0.2),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: Icon(Icons.storefront_sharp, color: model.paletteColor),
+                            title: Text('Planning to Be a Vendor?', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+                            subtitle: Text('Add your vendor profile to this activity if you\'ve been confirmed as a vendor for this event. Make it easy to share and for everyone to know about where they can find you!', style: TextStyle(color: model.paletteColor)),
+                          ),
+                          const SizedBox(height: 10),
+                          InkWell(
+                            onTap: () {
+                              if (activityOwner != null) {
+                                presentNewVendorAttendee(
+                                    context,
+                                    model,
+                                    null,
+                                    listingForm,
+                                    reservation,
+                                    activityForm,
+                                    activityOwner
+                                );
+                              }
+                            },
+                            child: Container(
+                              // width: MediaQue,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: model.accentColor,
+                                borderRadius: const BorderRadius.all(Radius.circular(15)),
+                              ),
+                              child: Align(
+                                child: Text('Join as a Vendor or Merchant', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                )
+              ),
+            )
+          ),
+          Visibility(
+            visible: showSuggestions && activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported != true,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Container(
+                width: width,
+                height: 60,
+                decoration: BoxDecoration(
+                  border: Border.all(color: model.disabledTextColor.withOpacity(0.25)),
+                  borderRadius: const BorderRadius.all(Radius.circular(15)),
+                ),
+                child: Align(
+                  child: Text('Setup Vendor Support', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+                ),
+              ),
+            ),
+          ),
+
+          /// list of vendor item options
+          Visibility(
+            visible: activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true && activityForm.rulesService.vendorMerchantForms?.where((e) => e.formStatus == FormStatus.published).isNotEmpty == true,
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 15),
+                Text('Pick a Form Below', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize), overflow: TextOverflow.ellipsis, maxLines: 1),
+                const SizedBox(height: 4),
+                ...activityForm.rulesService.vendorMerchantForms?.where((element) => element.formStatus == FormStatus.published).toList().asMap().map(
+                (i, e) =>  MapEntry(i, Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: vendorFormApplyButton(
+                       context,
+                       model,
+                       reservation,
+                       listingForm,
+                       activityForm,
+                       activityOwner,
+                       showSuggestions,
+                       width,
+                       isVendor,
+                       e,
+                       e,
+                       i,
+                       didSelectNewVendor: () {
+
+                      }
+                   )
+                ),
+              ),
+            ).values.toList() ?? []
+          ]
+        ),
+      ),
+    ]
+  );
+}
+
+
+Widget vendorFormApplyButton(BuildContext context,
+    DashboardModel model,
+    ReservationItem reservation,
+    ListingManagerForm listingForm,
+    ActivityManagerForm activityForm,
+    UserProfileModel? activityOwner,
+    bool showSuggestions,
+    double width,
+    bool isVendor,
+    VendorMerchantForm e,
+    VendorMerchantForm editedForm,
+    int index,
+    {required Function() didSelectNewVendor}) {
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.start,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      InkWell(
+        onTap: () {
+          if (activityOwner != null && isFormValid(e)) {
+            didSelectNewVendor();
+            presentNewVendorAttendee(
+                context,
+                model,
+                editedForm,
+                listingForm,
+                reservation,
+                activityForm,
+                activityOwner
+            );
+          }
+        },
+        child: Container(
+          width: width,
+          // height: 75,
+          decoration: BoxDecoration(
+            color: (isFormValid(e)) ? model.accentColor : model.disabledTextColor.withOpacity(0.36),
+            borderRadius: const BorderRadius.all(Radius.circular(15)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: InkWell(
+              onTap: () {},
+              child: ListTile(
+                onTap: () {
+                  if (activityOwner != null && isFormValid(e)) {
+                    didSelectNewVendor();
+                    presentNewVendorAttendee(
+                        context,
+                        model,
+                        editedForm,
+                        listingForm,
+                        reservation,
+                        activityForm,
+                        activityOwner
+                    );
+                  }
+                },
+                leading: isFormValid(e) ? Icon(Icons.lock_open, color: model.paletteColor,) : Icon(Icons.lock, color: model.disabledTextColor),
+                title: Text(e.formTitle ?? 'Application ${index + 1}', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
+                subtitle: Text('Join as a Vendor'),
+              ),
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(height: 4),
+
+      //// get attending limit..looking for...more
+      if (isFormValid(e) && e.availableTimeSlots?.where((element) => element.slotLimit != null && element.slotLimit != 0).isNotEmpty == true) Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Text('Looking for at least ${getHighestSlotLimitAmount(e.availableTimeSlots ?? [])}, Vendors', style: TextStyle(color: model.disabledTextColor)),
+      ),
+
+      /// opens at (& closed at...show timer or lock?)
+      if (e.openCloseDates != null && e.openCloseDates!.start.isAfter(DateTime.now())) Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Row(
+          children: [
+            Icon(Icons.timer_outlined, color: model.disabledTextColor),
+            const SizedBox(width: 8),
+            Text((numberOfDaysToGo(e) == 1) ? 'Accepting Applicants Tomorrow' : 'Accepting Applications in ${numberOfDaysToGo(e)} days!', style: TextStyle(color: model.disabledTextColor)),
+          ],
+        ),
+      ),
+      if (e.openCloseDates != null && e.openCloseDates!.end.isBefore(DateTime.now())) Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Row(
+          children: [
+            Icon(Icons.timer_outlined, color: model.disabledTextColor),
+            const SizedBox(width: 8),
+            Text((numberOfDaysEnded(e) == 1) ? 'Form Closed Yesterday' : 'Form Closed ${numberOfDaysEnded(e)} days ago.', style: TextStyle(color: model.disabledTextColor)),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+int numberOfDaysEnded(VendorMerchantForm form) {
+  return form.openCloseDates?.end.difference(DateTime.now()).inDays ?? 0;
+}
+
+int numberOfDaysToGo(VendorMerchantForm form) {
+  return form.openCloseDates?.start.difference(DateTime.now()).inDays ?? 0;
+}
+
+bool isFormValid(VendorMerchantForm form) {
+  if (form.openCloseDates != null && form.openCloseDates!.end.isBefore(DateTime.now()) || form.openCloseDates != null && form.openCloseDates!.start.isAfter(DateTime.now())) {
+    return false;
+  }
+  return true;
+}
+
+MCCustomAvailability findHighestSlotLimit(List<MCCustomAvailability> availableTimeSlots) {
+
+  return availableTimeSlots.reduce((currentMax, element) =>
+  (element.slotLimit ?? 0) > (currentMax.slotLimit ?? 0) ? element : currentMax);
+}
+
+int getHighestSlotLimitAmount(List<MCCustomAvailability> availableTimeSlots) {
+  if (availableTimeSlots.isEmpty) {
+    return 0; // Return a default value if the list is empty
+  }
+
+  MCCustomAvailability maxSlot = findHighestSlotLimit(availableTimeSlots);
+  return maxSlot.slotLimit ?? 0; // Assuming 0 as a default if slotLimit is null
+}
+
 /// HOW DOES THIS APPLY TO MERCHANT BASED ACTIVITIES?
 /// OPTION TO JOIN VIA TICKET OR PASS ATTENDEE
 Widget getActivityAttendeeOptionsColumn(BuildContext context, DashboardModel model, ActivityManagerForm activityForm,) {
@@ -978,7 +1178,7 @@ Widget getActivityCancellationsRefunds(BuildContext context, DashboardModel mode
 Widget flagOrReportActivityColumn(DashboardModel model, {required Function() didSelectReport}) {
   return ListTile(
     onTap: () {
-
+      didSelectReport();
     },
     leading: Icon(Icons.flag, color: model.paletteColor),
     title: Text('Report This Listing', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
@@ -1162,7 +1362,8 @@ Widget getInstructorAttendees(BuildContext context, DashboardModel model, Activi
       ),
     );
 }
-//
+
+
 // Widget getAttendeesForTicketActivity(DashboardModel model, ActivityManagerForm activityForm) {
 //   return BlocProvider(create: (context) =>  getIt<AttendeeManagerWatcherBloc>()..add(AttendeeManagerWatcherEvent.watchAllAttendanceByType(AttendeeType.tickets.toString(), activityForm.activityFormId.getOrCrash())),
 //     child: BlocBuilder<AttendeeManagerWatcherBloc, AttendeeManagerWatcherState>(

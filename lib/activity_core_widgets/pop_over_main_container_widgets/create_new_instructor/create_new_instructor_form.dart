@@ -296,7 +296,7 @@ class _CreateNewInstructorFormState extends State<CreateNewInstructorForm> {
                         model: widget.model,
                         isLoading: isLoading,
                         isPreviewer: false,
-                        child: attendeeMainContainer(context, item.profile, state)
+                        child: attendeeMainContainer(context, item.profile, state).map((e) => e.childWidget).toList()
                     ),
 
                     ClipRRect(
@@ -311,6 +311,7 @@ class _CreateNewInstructorFormState extends State<CreateNewInstructorForm> {
                                 widget.model,
                                 false,
                                 currentMarkerItem,
+                                null,
                                 null,
                                 widget.activityForm,
                                 state,
@@ -343,7 +344,7 @@ class _CreateNewInstructorFormState extends State<CreateNewInstructorForm> {
                   ],
                 );
               },
-              orElse: () => GetLoginSignUpWidget(model: widget.model, didLoginSuccess: () {  },)
+              orElse: () => GetLoginSignUpWidget(showFullScreen: false, model: widget.model, didLoginSuccess: () {  },)
           );
         },
       ),

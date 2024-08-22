@@ -15,21 +15,21 @@ class ProfileSettingListModel {
     });
 }
 
-List<ProfileSettingListModel> accountSettingsList(BuildContext context, bool isActivityApp) {
+List<ProfileSettingListModel> accountSettingsList(bool isActivityApp) {
   return [
-    ProfileSettingListModel(title: 'Personal Infomration', icon: Icons.account_circle_outlined, marker: ProfileSettingMarker.personalIno),
+    ProfileSettingListModel(title: 'Personal Information', icon: Icons.account_circle_outlined, marker: ProfileSettingMarker.personalIno),
     ProfileSettingListModel(title: 'Payments & Payouts', icon: Icons.payments_outlined, marker: ProfileSettingMarker.payments),
-    if (!isActivityApp) ProfileSettingListModel(title: 'Notifications', icon: Icons.notifications_none, marker: ProfileSettingMarker.notification),
+    if (!isActivityApp) ProfileSettingListModel(title: 'Notifications - Coming Soon', icon: Icons.notifications_none, marker: ProfileSettingMarker.notification),
     ProfileSettingListModel(title: 'Privacy', icon: Icons.privacy_tip_outlined, marker: ProfileSettingMarker.privacy),
   ];
 }
 
 List<ProfileSettingListModel> accountHostingList(BuildContext context) {
   return [
-    ProfileSettingListModel(title: 'Switch to Hosting', icon: Icons.swap_calls_rounded, marker: ProfileSettingMarker.switchToHosting),
-    ProfileSettingListModel(title: 'List Your Space', icon: Icons.house_outlined, marker: ProfileSettingMarker.listSpace),
+    ProfileSettingListModel(title: 'Switch to Hosting - Coming Soon', icon: Icons.swap_calls_rounded, marker: ProfileSettingMarker.switchToHosting),
+    ProfileSettingListModel(title: 'List Your Space - Coming Soon', icon: Icons.house_outlined, marker: ProfileSettingMarker.listSpace),
     // ProfileSettingListModel(title: 'List Your Activity', icon: Icons.directions_run_rounded, marker: ProfileSettingMarker.listActivity),
-    ProfileSettingListModel(title: 'Manage Your Spaces', icon: Icons.add_business_outlined, marker: ProfileSettingMarker.manageSpace),
+    ProfileSettingListModel(title: 'Manage Your Spaces - Coming Soon', icon: Icons.add_business_outlined, marker: ProfileSettingMarker.manageSpace),
   ];
 }
 
@@ -49,7 +49,7 @@ List<ProfileSettingListModel> accountLegalList(BuildContext context) {
 }
 
 
-Widget profileSettingItemWidget(DashboardModel model, IconData icon, String title, bool isEnnd, {required Function() didSelectItem}) {
+Widget profileSettingItemWidget(DashboardModel model, IconData icon, String title, bool isEnnd, bool isSelected, {required Function() didSelectItem}) {
   return Column(
     mainAxisAlignment: MainAxisAlignment.start,
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,22 +63,26 @@ Widget profileSettingItemWidget(DashboardModel model, IconData icon, String titl
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  children: [
-                    Icon(icon, color: model.paletteColor),
-                    const SizedBox(width: 18.0),
-                    Text(title, style: TextStyle(color: model.paletteColor)),
-                  ],
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Row(
+                    children: [
+                      Icon(icon, color: (isSelected) ? model.paletteColor : model.disabledTextColor),
+                      const SizedBox(width: 18.0),
+                      Expanded(child: Text(title, style: TextStyle(color: (isSelected) ? model.paletteColor : model.disabledTextColor), overflow: TextOverflow.ellipsis, maxLines: 1)),
+                    ],
+                  ),
                 ),
               ),
-              Icon(Icons.keyboard_arrow_right_rounded, color: model.paletteColor)
+              Icon(Icons.keyboard_arrow_right_rounded, color: (isSelected) ? model.paletteColor : model.disabledTextColor)
             ],
           ),
         ),
       ),
-      if (!isEnnd) Divider(color: model.disabledTextColor)
+      if (!isEnnd && kIsWeb == false) Divider(color: model.disabledTextColor)
     ],
   );
 }
+
+

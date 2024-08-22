@@ -1,28 +1,85 @@
 part of check_in_presentation;
 
-bool isDocumentsOptionValid(VendorMerchantForm form) {
-  if (form.customOptions?.isNotEmpty == true) {
-    if (form.customOptions?.map((e) => e.customRuleOption?.ruleId.getOrCrash()).contains('6e24dae0-96dd-11eb-babc-gykug7878f67') == true) {
-      if (form.customOptions?.where((element) => (element.customRuleOption != null) && element.customRuleOption!.ruleId.getOrCrash() == '6e24dae0-96dd-11eb-babc-gykug7878f67').isNotEmpty == true) {
-        return form.customOptions?.firstWhere((element) => (element.customRuleOption != null) && element.customRuleOption!.ruleId.getOrCrash() == '6e24dae0-96dd-11eb-babc-gykug7878f67').customRuleOption?.customDocumentOptions?.isNotEmpty == true;
-        }
-      }
-    }
-  return false;
-}
+Widget getVendorSimpleAvailableTimeSlot(
+  BuildContext context,
+  DashboardModel model,
+  MCCustomAvailability timeOption,
+  int index,
+  bool isSelected,
+  {required Function(MCCustomAvailability) didSelectTimeOption}) {
 
-List<DocumentFormOption>? getDocumentsList(VendorMerchantForm? form) {
-  if (form?.customOptions?.where((element) => (element.customRuleOption != null) && element.customRuleOption!.ruleId.getOrCrash() == '6e24dae0-96dd-11eb-babc-gykug7878f67').isNotEmpty == true) {
-    return form?.customOptions?.firstWhere((element) => (element.customRuleOption != null) && element.customRuleOption!.ruleId.getOrCrash() == '6e24dae0-96dd-11eb-babc-gykug7878f67').customRuleOption?.customDocumentOptions;
-  }
-  return null;
-}
+  return SlideInTransitionWidget(
+      durationTime: 300 * index,
+      offset: Offset(0, 0.25),
+      transitionWidget: Container(
+        height: 160,
+        width: 160,
+        decoration: BoxDecoration(
+            color: model.accentColor,
+            borderRadius: BorderRadius.circular(25),
+            border: isSelected ? Border.all(color: model.paletteColor, width: 1.5) : null
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(9.0),
+          child: IntrinsicHeight(
+            child: InkWell(
+              onTap: () {
+                didSelectTimeOption(timeOption);
+              },
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(CupertinoIcons.calendar_today, size: 30, color: isSelected ? model.paletteColor : model.disabledTextColor),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isSelected ? model.paletteColor : Colors.transparent,
+                          border: isSelected ? null : Border.all(color: model.disabledTextColor),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Text(' ${timeOption.selectedSlotItem.length} Dates ', style: TextStyle(color: isSelected ? model.accentColor : model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis), maxLines: 1),
+                        ),
+                      ),
+                      if (timeOption.dateTitle == null) Visibility(
+                        visible: timeOption.dateTitle == null,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 4),
+                              Text('Slot ${index + 1}', style: TextStyle(color: model.paletteColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis), maxLines: 1),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (timeOption.dateTitle != null) Visibility(
+                          visible: timeOption.dateTitle != null,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 4.0),
+                            child: Column(
+                                children: [
+                                  const SizedBox(height: 4),
+                                  Text(timeOption.dateTitle!, style: TextStyle(color: model.paletteColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis), maxLines: 1),
+                                ]
+                            ),
+                          )
+                      ),
+                    ],
+                  ),
 
-MVCustomOption? getDocumentRuleOption(VendorMerchantForm? form) {
-  if (form?.customOptions?.where((element) => (element.customRuleOption != null) && element.customRuleOption!.ruleId.getOrCrash() == '6e24dae0-96dd-11eb-babc-gykug7878f67').isNotEmpty == true) {
-    return form?.customOptions?.firstWhere((element) => (element.customRuleOption != null) && element.customRuleOption!.ruleId.getOrCrash() == '6e24dae0-96dd-11eb-babc-gykug7878f67');
-  }
-  return null;
+              ],
+            ),
+          ),
+        ),
+      ),
+    )
+  );
 }
 
 Widget getVendorAvailableTimeSlot(
@@ -30,6 +87,7 @@ Widget getVendorAvailableTimeSlot(
     DashboardModel model,
     MCCustomAvailability timeOption,
     int index,
+    bool showExtra,
     bool isSelected,
   {required Function(MCCustomAvailability) didSelectTimeOption}) {
 
@@ -162,7 +220,7 @@ Widget getVendorAvailableTimeSlot(
         ),
 
         if (timeOption.vendorType != null && timeOption.vendorType!.isNotEmpty) Visibility(
-          visible: timeOption.vendorType != null && timeOption.vendorType!.isNotEmpty,
+          visible: timeOption.vendorType != null && timeOption.vendorType!.isNotEmpty && showExtra,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Wrap(
@@ -230,6 +288,7 @@ Widget getBoothPaymentsOption(
                                   color: model.disabledTextColor
                               ),
                               Icon(Icons.storefront, size: 45, color: isSelected ? model.paletteColor : model.disabledTextColor),
+                              const SizedBox(height: 6),
                               if (booth.isLimited == true) Visibility(
                                 visible: booth.isLimited == true,
                                 child: Container(
@@ -240,15 +299,15 @@ Widget getBoothPaymentsOption(
                                 visible: booth.fee != null,
                                 child: Container(
                                   decoration: BoxDecoration(
-                                      color: model.paletteColor,
+                                      color: isSelected ? model.paletteColor : Colors.transparent,
+                                      border: isSelected ? null : Border.all(color: model.disabledTextColor),
                                       borderRadius: BorderRadius.circular(25),
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(completeTotalPriceWithCurrency(
                                         booth.fee!.toDouble() +
-                                        booth.fee!.toDouble()*CICOReservationPercentageFee +
-                                        booth.fee!.toDouble()*CICOTaxesFee, currency), style: TextStyle(color: model.accentColor, overflow: TextOverflow.fade), textAlign: TextAlign.center, maxLines: 1),
+                                        booth.fee!.toDouble()*CICOBuyerPercentageFee, currency), style: TextStyle(color: isSelected ? model.accentColor : model.disabledTextColor, overflow: TextOverflow.fade), textAlign: TextAlign.center, maxLines: 1),
                                   )
                                 )
                               ),
@@ -433,3 +492,221 @@ Widget documentDownloadUploadWidget(BuildContext context, DashboardModel model, 
     ]
   );
 }
+
+
+Widget getPricingPreviewWidget(DashboardModel model, String purchaseDescription, double totalFee, double? taxPercentage, StripeTaxBreakdown? taxBreakdown, String state, String currency) {
+  final totalTaxAmount = totalFee * (taxPercentage ?? CICOTaxesFee);
+  final buyerFee = totalFee * CICOBuyerPercentageFee;
+  final totalBuyerTaxAmount = buyerFee * (taxPercentage ?? CICOTaxesFee);
+
+
+  return Column(
+    children: [
+      Container(
+          width: 600,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+              border: Border.all(width: 0.5, color: model.disabledTextColor)
+          ),
+          child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
+                    child: Text('Application Details', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize)),
+                  ),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          /// title...(could be related to number of attendees refunding)
+                          Text('Vendor Fee', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,)),
+                          /// description...(could be related to total in terms of booth refunds & number of booths refunded)
+                          Text(purchaseDescription, style: TextStyle(color: model.disabledTextColor)),
+                        ],
+                      ),
+
+                      Text(completeTotalPriceWithCurrency(totalFee, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+
+                  SizedBox(height: 10),
+                  Container(
+                    width: 600,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      // crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Service Fee', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,)),
+                            Text(purchaseDescription, style: TextStyle(color: model.disabledTextColor)),
+                          ],
+                        ),
+
+                        Text(completeTotalPriceWithCurrency(buyerFee, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (taxBreakdown == null) Text('Taxes & Fees HST (13% - Ontario, Canada)', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis), maxLines: 1),
+                            if (taxBreakdown != null) Text('Taxes & Fees ${taxBreakdown.stripeTaxRateDetails.taxType.toUpperCase()} (${(taxPercentage ?? CICOTaxesFee) * 100} - ${state}, ${taxBreakdown.stripeTaxRateDetails.country})', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis), maxLines: 1),
+                            Text(purchaseDescription, style: TextStyle(color: model.disabledTextColor)),
+                          ],
+                        ),
+                      ),
+
+                      Text(completeTotalPriceWithCurrency(totalTaxAmount + totalBuyerTaxAmount, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+
+                    ],
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Divider(color: model.disabledTextColor),
+                  ),
+
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text('Total', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,)),
+                        Text(completeTotalPriceWithCurrency(totalFee + buyerFee + totalTaxAmount + totalBuyerTaxAmount, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+
+                      ]
+                  ),
+                  SizedBox(height: 10)
+                ],
+              )
+          )
+      )
+    ]
+  );
+}
+
+
+void didSelectCreateNeVendorProfile(BuildContext context, DashboardModel model, UserProfileModel user) {
+
+  if (kIsWeb) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: 'Profile',
+      transitionDuration: Duration(milliseconds: 350),
+      pageBuilder: (BuildContext contexts, anim1, anim2) {
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Align(
+                alignment: Alignment.center,
+                child: ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(25)),
+                    child: Container(
+                        decoration: BoxDecoration(
+                            color: model.webBackgroundColor,
+                            borderRadius: BorderRadius.all(Radius.circular(17.5))
+                        ),
+                        width: 565,
+                        height: 675,
+                        child: Scaffold(
+                          appBar: AppBar(
+                            automaticallyImplyLeading: false,
+                            titleTextStyle: TextStyle(color: model.paletteColor),
+                            title: Text('Create My Profile', style: TextStyle(color: model.accentColor)),
+                            elevation: 0,
+                            centerTitle: true,
+                            backgroundColor: model.paletteColor,
+                          ),
+                          body: VendorProfileCreatorEditor(
+                            model: model,
+                            didSaveSuccessfully: () {
+                              Navigator.of(context).pop();
+                              // setState(() {
+                              // isVendorMerchProfileEditorVisible = false;
+                              // });
+                            },
+                            didCancel: () {
+                              Navigator.of(context).pop();
+                              // setState(() {
+                              // isVendorMerchProfileEditorVisible = !isVendorMerchProfileEditorVisible;
+                              // });
+                            },
+                            selectedVendorProfile: null,
+                          ),
+                        )
+                    )
+                )
+
+          ),
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return Transform.scale(
+            scale: anim1.value,
+            child: Opacity(
+                opacity: anim1.value,
+                child: child
+            )
+        );
+      },
+    );
+  } else {
+    Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) {
+          return Scaffold(
+            resizeToAvoidBottomInset: false,
+            appBar: AppBar(
+              backgroundColor: model.mobileBackgroundColor,
+              elevation: 0,
+              title: const Text('Profile'),
+              titleTextStyle: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold),
+              centerTitle: true,
+            ),
+            body:  VendorProfileCreatorEditor(
+            model: model,
+            didSaveSuccessfully: () {
+              Navigator.of(context).pop();
+              // setState(() {
+                // isVendorMerchProfileEditorVisible = false;
+              // });
+              },
+              didCancel: () {
+                Navigator.of(context).pop();
+                // setState(() {
+                // isVendorMerchProfileEditorVisible = !isVendorMerchProfileEditorVisible;
+                // });
+              },
+              selectedVendorProfile: null,
+            )
+          );
+        }
+      )
+    );
+  }
+}
+
+// void didSelectCreateNewPaymentMethod((BuildContext context, DashboardModel model, ) {
+//   if (kIsWeb) {
+//
+//   }
+// }

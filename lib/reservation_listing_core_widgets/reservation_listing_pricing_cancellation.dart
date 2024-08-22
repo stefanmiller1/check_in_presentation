@@ -55,7 +55,7 @@ Widget getPricingDetails(DashboardModel model, List<ReservationSlotItem> allSlot
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(child: Text('Service Fee', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,))),
-              Text(completeTotalPriceWithCurrency((getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOReservationPercentageFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+              Text(completeTotalPriceWithCurrency((getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOBuyerPercentageFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -79,7 +79,7 @@ Widget getPricingDetails(DashboardModel model, List<ReservationSlotItem> allSlot
             Text('Total', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,)),
             SizedBox(width: 15),
             Text(completeTotalPriceWithCurrency((getListingTotalPriceDouble(allSlots, cancelledSlots) +
-                getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOReservationPercentageFee +
+                getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOBuyerPercentageFee +
                 getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOTaxesFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
           ],
         )
@@ -146,7 +146,7 @@ bool checkIfReservationSelected(List<ReservationSlotItem> allSlots,  List<Reserv
 }
 
 Widget getTotalPriceOnly(DashboardModel model, List<ReservationSlotItem> allSlots, List<ReservationSlotItem> cancelledSlots, int numberOfSlots, String currency) {
-  return Text(completeTotalPriceWithCurrency((getListingTotalPriceDouble(allSlots, cancelledSlots) + getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOReservationPercentageFee + getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOTaxesFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold));
+  return Text(completeTotalPriceWithCurrency((getListingTotalPriceDouble(allSlots, cancelledSlots) + getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOBuyerPercentageFee + getListingTotalPriceDouble(allSlots, cancelledSlots)*CICOTaxesFee), currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold));
 }
 
 Widget getPricingWithFeeCancellation(BuildContext context, DashboardModel model, List<DateTime> reservation, List<FeeBasedCancellation> feePercentages) {

@@ -2,7 +2,7 @@ part of check_in_presentation;
 
 /// DashboardModel class is the base of the Authenticated dashboard browser
 /// It contains the sizes, control, theme information
-
+enum AppOption {activities, organizers, owners}
 
 class DashboardModel extends Listenable {
 
@@ -11,6 +11,72 @@ class DashboardModel extends Listenable {
 
   // /// Holds the searched control list
   // late List<Control> searchControlItems;
+
+
+  Future<bool> isAppCircleForActivities() async {
+    try {
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      if (packageInfo.appName == 'check_in_activities') {
+        return true;
+      }
+    } catch (e) {
+      return false;
+    }
+    return false;
+  }
+
+  Future<bool> isAppCirclesForOrganizers() async {
+    try {
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      if (packageInfo.appName == 'check_in_web_mobile_explore') {
+        return true;
+      }
+    } catch (e) {
+      return false;
+    }
+    return false;
+  }
+
+  Future<bool> isAppCirclesForOwners() async {
+    try {
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      if (packageInfo.appName == 'check_in_web') {
+        return true;
+      }
+    } catch (e) {
+      return false;
+    }
+    return false;
+  }
+
+  Future<AppOption?> getCurrentAppOption() async {
+
+    late AppOption? currentOption = null;
+
+    try {
+
+      final bool isAppActivities = await isAppCircleForActivities();
+      final bool isAppOrganizers = await isAppCirclesForOrganizers();
+      final bool isAppOwners = await isAppCirclesForOwners();
+
+      if (isAppActivities) {
+        currentOption = AppOption.activities;
+      }
+      if (isAppOrganizers) {
+        currentOption = AppOption.organizers;
+      }
+      if (isAppOwners) {
+        currentOption = AppOption.owners;
+      }
+
+       return currentOption;
+    } catch (e) {
+      Future.error(e);
+    }
+
+    return null;
+  }
+
 
   double? mainContentWidth;
 

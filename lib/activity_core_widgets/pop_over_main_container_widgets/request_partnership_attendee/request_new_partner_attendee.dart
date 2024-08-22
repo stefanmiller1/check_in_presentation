@@ -179,7 +179,7 @@ class _ReservationRequestPartnershipAttendeeState extends State<ReservationReque
                         model: widget.model,
                         isLoading: isLoading,
                         isPreviewer: false,
-                        child: attendeeMainContainer(context, item.profile, state)
+                        child: attendeeMainContainer(context, item.profile, state).map((e) => e.childWidget).toList()
                     ),
 
                     if (currentMarkerItem != NewAttendeeStepsMarker.requestToJoinComplete) ClipRRect(
@@ -194,6 +194,7 @@ class _ReservationRequestPartnershipAttendeeState extends State<ReservationReque
                                 widget.model,
                                 false,
                                 currentMarkerItem,
+                                null,
                                 null,
                                 widget.activityForm,
                                 state,
@@ -233,7 +234,7 @@ class _ReservationRequestPartnershipAttendeeState extends State<ReservationReque
                   ],
                 );
               },
-              orElse: () => GetLoginSignUpWidget(model: widget.model, didLoginSuccess: () {  },)
+              orElse: () => GetLoginSignUpWidget(showFullScreen: true, model: widget.model, didLoginSuccess: () {  },)
           );
         },
       ),
