@@ -13,6 +13,19 @@ class NewActivityModel {
 }
 
 
+List<EventMerchantVendorProfile> filterProfilesByJoinedAttendees(
+    List<EventMerchantVendorProfile> vendorProfiles,
+    List<AttendeeItem> attendeeItems) {
+
+  // Filter the AttendeeItems by status "Joined"
+  List<AttendeeItem> joinedAttendees = attendeeItems.where((attendee) => attendee.contactStatus == ContactStatus.joined).toList();
+
+  // Filter the EventMerchantVendorProfiles based on matching ownerId
+  return vendorProfiles.where((profile) {
+    return joinedAttendees.any((attendee) => attendee.attendeeOwnerId == profile.profileOwner);
+  }).toList();
+}
+
 Widget getActivityBackgroundForPreview(BuildContext context, DashboardModel model, bool showSuggestions, bool isOwner, ActivityManagerForm activityForm, ReservationItem reservation, List<UniqueId> linkedCommunities, UserProfileModel? activityOwner) {
   return SizedBox(
     width: ReservationHelperCore.previewerWidth,
@@ -158,7 +171,7 @@ Widget getActivityBackgroundHeader(BuildContext context, DashboardModel model, A
                 (l) => Container(
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      color: model.disabledTextColor.withOpacity(0.25)
+                      color: model.webBackgroundColor,
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -236,7 +249,7 @@ Widget getActivityBackgroundRowTwo(BuildContext context, double width, Dashboard
               width: width,
               height: 60,
               decoration: BoxDecoration(
-                border: Border.all(color: model.disabledTextColor.withOpacity(0.25)),
+                border: Border.all(color: model.webBackgroundColor),
                 borderRadius: const BorderRadius.all(Radius.circular(15)),
               ),
               child: Align(
@@ -301,20 +314,17 @@ Widget getActivityBackgroundRowTwo(BuildContext context, double width, Dashboard
                 ),
                 child: Align(
                   child: Text('Be an Instructor', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
-                ),
               ),
             ),
           ),
         ),
-
-
-
-      ],
-    );
+      ),
+    ],
+  );
 }
 
 
-Widget getActivityRequirementsColumn(BuildContext context, DashboardModel model, bool showSuggestions, bool isLessThanMain, UserProfileModel? activityOwner, ActivityManagerForm activityForm, ReservationItem reservation, List<AttendeeItem>? listOfVendors, String? currentUserAttending, {required Function() didSelectAttendees}) {
+Widget getActivityRequirementsColumn(BuildContext context, DashboardModel model, bool isLoading, bool showSuggestions, bool isLessThanMain, UserProfileModel? activityOwner, ActivityManagerForm activityForm, ReservationItem reservation, List<AttendeeItem> attendees, List<EventMerchantVendorProfile>? listOfVendors, String? currentUserAttending, {required Function() didSelectAttendees}) {
   bool activityAgeSetting = activityForm.profileService.activityRequirements.minimumAgeRequirement >= 18 && !activityForm.profileService.activityRequirements.isSeventeenAndUnder;
   bool rowOneProvisions = activityForm.profileService.activityRequirements.isSeventeenAndUnder ||
       activityForm.profileService.activityRequirements.minimumAgeRequirement >= 18 && !(activityForm.profileService.activityRequirements.isSeventeenAndUnder) ||
@@ -334,8 +344,12 @@ Widget getActivityRequirementsColumn(BuildContext context, DashboardModel model,
       hasProvisions ||
       activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.isAlcoholForSale == true && activityAgeSetting;
 
-  bool attendeeItems = listOfVendors != null && listOfVendors.isNotEmpty;
-  bool? isVendorAttendee = listOfVendors?.map((e) => e.attendeeOwnerId.getOrCrash()).contains(currentUserAttending);
+  List<EventMerchantVendorProfile>? joinedVendors = filterProfilesByJoinedAttendees(listOfVendors ?? [], attendees);
+  bool attendeeItems = joinedVendors.isNotEmpty;
+  bool? isVendorAttendee = joinedVendors.map((e) => e.profileOwner.getOrCrash()).contains(currentUserAttending);
+  
+
+  // print('$listOfVendors);
   return Visibility(
     visible:
       attendeeItems ||
@@ -450,8 +464,9 @@ Widget getActivityRequirementsColumn(BuildContext context, DashboardModel model,
                   getVendorAttendees(
                     context,
                     model,
+                    isLoading,
                     activityForm,
-                    listOfVendors!,
+                    joinedVendors.map((e) => e.uriImage?.uriPath ?? '').toList(),
                     didSelectAttendee: () {
                       didSelectAttendees();
                     }
@@ -1060,7 +1075,7 @@ Widget vendorFormApplyButton(BuildContext context,
           width: width,
           // height: 75,
           decoration: BoxDecoration(
-            color: (isFormValid(e)) ? model.accentColor : model.disabledTextColor.withOpacity(0.36),
+            color: (isFormValid(e)) ? model.accentColor : model.webBackgroundColor,
             borderRadius: const BorderRadius.all(Radius.circular(15)),
           ),
           child: Padding(
@@ -1082,9 +1097,9 @@ Widget vendorFormApplyButton(BuildContext context,
                     );
                   }
                 },
-                leading: isFormValid(e) ? Icon(Icons.lock_open, color: model.paletteColor,) : Icon(Icons.lock, color: model.disabledTextColor),
+                leading: isFormValid(e) ? Icon(Icons.content_paste_rounded, color: model.paletteColor,) : Icon(Icons.lock, color: model.disabledTextColor),
                 title: Text(e.formTitle ?? 'Application ${index + 1}', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, fontSize: model.secondaryQuestionTitleFontSize)),
-                subtitle: Text('Join as a Vendor'),
+                subtitle: isFormValid(e) ? Text('Join as a Vendor') : Text('Applications are closed'),
               ),
             ),
           ),
@@ -1115,7 +1130,7 @@ Widget vendorFormApplyButton(BuildContext context,
           children: [
             Icon(Icons.timer_outlined, color: model.disabledTextColor),
             const SizedBox(width: 8),
-            Text((numberOfDaysEnded(e) == 1) ? 'Form Closed Yesterday' : 'Form Closed ${numberOfDaysEnded(e)} days ago.', style: TextStyle(color: model.disabledTextColor)),
+            Text((numberOfDaysEnded(e) == -1) ? 'Form Closed Yesterday' : 'Form Closed ${numberOfDaysEnded(e)} days ago.', style: TextStyle(color: model.disabledTextColor)),
           ],
         ),
       ),
@@ -1124,7 +1139,7 @@ Widget vendorFormApplyButton(BuildContext context,
 }
 
 int numberOfDaysEnded(VendorMerchantForm form) {
-  return form.openCloseDates?.end.difference(DateTime.now()).inDays ?? 0;
+  return (form.openCloseDates?.end.difference(DateTime.now()).inDays ?? 0).abs();
 }
 
 int numberOfDaysToGo(VendorMerchantForm form) {
@@ -1186,9 +1201,9 @@ Widget flagOrReportActivityColumn(DashboardModel model, {required Function() did
 }
 
 
-Widget getVendorAttendees(BuildContext context, DashboardModel model, ActivityManagerForm activityForm, List<AttendeeItem> attendees, {required Function() didSelectAttendee}) {
+Widget getVendorAttendees(BuildContext context, DashboardModel model, bool isLoading, ActivityManagerForm activityForm, List<String> attendeeImages, {required Function() didSelectAttendee}) {
 
-    if (attendees.isEmpty) {
+    if (attendeeImages.isEmpty) {
       return Container();
     }
     return ListTile(
@@ -1196,82 +1211,71 @@ Widget getVendorAttendees(BuildContext context, DashboardModel model, ActivityMa
         didSelectAttendee();
       },
       leading: Icon(Icons.storefront_sharp, color: model.paletteColor),
-      title: Text('Vendors', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold)),
+      title: Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Text('${attendeeImages.length} Vendors', style: TextStyle(color: model.paletteColor)),
+      ),
       subtitle: SizedBox(
         height: 70,
         child: Stack(
           children: [
-            if (attendees.length <= 10)
-              ..._buildAvatarStack(model, attendees),
-            if (attendees.length > 10)
-              ..._buildAvatarStack(model, attendees.sublist(0, 9)),
-            if (attendees.length > 10)
-              _buildRemainingAvatar(model, attendees.sublist(9)),
+            if (attendeeImages.length <= 10)
+              ..._buildAvatarStack(model, isLoading, attendeeImages),
+            if (attendeeImages.length > 10)
+              ..._buildAvatarStack(model, isLoading, attendeeImages.sublist(0, 9)),
+            if (attendeeImages.length > 10)
+              _buildRemainingAvatar(model, attendeeImages.sublist(9)),
         ],
             ),
       )
   );
 }
 
-List<Widget> _buildAvatarStack(DashboardModel model, List<AttendeeItem> attendees) {
+List<Widget> _buildAvatarStack(DashboardModel model, bool isLoading, List<String> attendeeProfile) {
   return List.generate(
-        attendees.length,
+        attendeeProfile.length,
         (index) => Positioned(
-      left: index * 25.0, // Adjust positioning as needed
-      child: (attendees[index].eventMerchantVendorProfile != null) ? FutureBuilder<EventMerchantVendorProfile?>(
-        future: facade.MerchVenFacade.instance.getMerchVendorProfile(profileId: attendees[index].eventMerchantVendorProfile!.getOrCrash()),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return SizedBox(
-              width: 70,
-              height: 70,
-              child: Shimmer.fromColors(
-                baseColor: Colors.grey.shade400,
-                highlightColor: Colors.grey.shade100,
-                child: Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: model.accentColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                ),
-              ),
-            );
-          } else if (snapshot.hasError || snapshot.data == null) {
-            return CircleAvatar(
-              backgroundImage: Image.asset('assets/profile-avatar.png').image,
-              radius: 35, // Adjust radius as needed
-            );
-          } else {
-            final EventMerchantVendorProfile profile = snapshot.data!;
-
-            return Container(
-              height: 70,
-              decoration: BoxDecoration(
-                color: model.paletteColor,
-                shape: BoxShape.circle,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(1.25),
-                child: CircleAvatar(
-                  backgroundColor: model.accentColor,
-                  backgroundImage: Image.network(profile.uriImage?.uriPath ?? '').image,
-                  radius: 35, // Adjust radius as needed
-                ),
-              ),
-            );
-          }
-        },
-      ) : CircleAvatar(
-        backgroundImage: Image.asset('assets/profile-avatar.png').image,
-        radius: 35, // Adjust radius as needed
-      ),
+          left: index * 25.0, // Adjust positioning as needed
+          child: (isLoading) ? SizedBox(
+                  width: 70,
+                  height: 70,
+          ) : Container(
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: model.paletteColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(1.25),
+                      child: CircleAvatar(
+                      foregroundImage:  Image.network(attendeeProfile[index], scale: 0.1).image,
+                      backgroundImage:  Image.asset('assets/profile-avatar.png').image,
+                      radius: 35, // Adjust radius as needed
+          ),
+        ),
+      )
     ),
   );
 }
 
+// else {
+//
+// return Container(
+// height: 70,
+// decoration: BoxDecoration(
+// color: model.paletteColor,
+// shape: BoxShape.circle,
+// ),
+// child: Padding(
+// padding: const EdgeInsets.all(1.25),
+// child: CircleAvatar(
+// backgroundColor: model.accentColor,
+// backgroundImage: Image.network(attendeeProfile[index], scale: 0.1).image,
+// radius: 35, // Adjust radius as needed
+// ),
+// ),
 
-Widget _buildRemainingAvatar(DashboardModel model, List<AttendeeItem> remainingAttendees) {
+Widget _buildRemainingAvatar(DashboardModel model, List<String> remainingAttendees) {
   return Positioned(
     left: 9 * 25.0, // Position it after the 9th avatar
     child: Container(

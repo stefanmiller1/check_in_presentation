@@ -165,8 +165,70 @@ Widget getPaymentItemWidget(
 
 
 Widget getPaymentHistoryOnly(BuildContext context, DashboardModel model, PaymentIntent paymentIntent, {required Function(PaymentIntent) didSelectPayment}) {
-  return Container(
+  // final isARefund = paymentIntent. ;
 
+  return ListTile(
+    onTap: () {
+      didSelectPayment(paymentIntent);
+    },
+    title: Text('Receipt ID: ${paymentIntent.id}',
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        color: model.paletteColor, // Use model color
+      ),
+    ),
+    hoverColor: model.accentColor,
+    trailing: Container(
+      width: 200,
+      child: Row(
+        children: [
+          if (paymentIntent.amount != null && paymentIntent.currency != null) Expanded(
+            child: Text('${totalPriceNumberOnly(paymentIntent.amount!.toDouble() / 100)} ${paymentIntent.currency!.toUpperCase()}', // Assuming amount is in cents
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: model.secondaryQuestionTitleFontSize,
+                color: model.paletteColor, // Use model color
+              ),
+            ),
+          ),
+          const SizedBox(width: 5),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25.0),
+              color:  model.accentColor,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Full Receipt',
+                style: TextStyle(
+                  color: model.disabledTextColor, // Use model accent color
+                  fontSize: model.secondaryQuestionTitleFontSize,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+    subtitle: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        if (paymentIntent.created != null)
+          Text(
+            'Created: ${DateTime.fromMillisecondsSinceEpoch(paymentIntent.created! * 1000).toLocal().toString()}',
+            style: TextStyle(
+              fontSize: 12,
+              color: model.disabledTextColor, // Use model color
+            ),
+          ),
+      ],
+    ),
+    contentPadding: const EdgeInsets.all(8.0),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(25),
+    ),
   );
 }
 

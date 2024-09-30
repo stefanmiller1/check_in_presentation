@@ -622,35 +622,29 @@ Widget reservationDatesWrapped(
         Wrap(
           children: entry.value.map(
                   (e) {
-                return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(45),
-                    ),
-                    child: Padding(
-                        padding: const EdgeInsets.all(3.0),
-                        child: Container(
-                            decoration: BoxDecoration(
-                                color: model.paletteColor.withOpacity(0.025),
-                                borderRadius: BorderRadius.all(Radius.circular(45))
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Flexible(child: Text('${DateFormat.MMMEd().format(e.selectedDate)} ·', style: TextStyle(fontSize: 15, color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade), maxLines: 1)),
-                                  const SizedBox(width: 5),
-                                  ...groupConsecutiveSlots(e.selectedSlots).map((f) => (isFullDaySlot(f)) ? Text('All Day', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade, fontSize: 15), maxLines: 1,) : Text('${DateFormat.jm().format(f.slotRange.start)} - ${DateFormat.jm().format(f.slotRange.end)}', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade, fontSize: 15), maxLines: 1,),
-                                  ).toList(),
-                                  const SizedBox(width: 10),
-                                  Icon(Icons.calendar_today_outlined, size: 24, color: model.disabledTextColor),
-                      ],
-                    ),
-                  )
-                )
-              )
-            );
+                return Padding(
+                    padding: const EdgeInsets.all(3.0),
+                    child: Container(
+                        decoration: BoxDecoration(
+                            color: model.webBackgroundColor,
+                            borderRadius: const BorderRadius.all(Radius.circular(45))
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(child: Text('${DateFormat.MMMEd().format(e.selectedDate)} ·', style: TextStyle(fontSize: 15, color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade), maxLines: 1)),
+                              const SizedBox(width: 5),
+                              ...groupConsecutiveSlots(e.selectedSlots).map((f) => (isFullDaySlot(f)) ? Text('All Day', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade, fontSize: 15), maxLines: 1,) : Text('${DateFormat.jm().format(f.slotRange.start)} - ${DateFormat.jm().format(f.slotRange.end)}', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold, overflow: TextOverflow.fade, fontSize: 15), maxLines: 1,),
+                              ).toList(),
+                              const SizedBox(width: 10),
+                              Icon(Icons.calendar_today_outlined, size: 24, color: model.disabledTextColor),
+                  ],
+                ),
+                                  )
+                                )
+                              );
           }
         ).toList()
       ),

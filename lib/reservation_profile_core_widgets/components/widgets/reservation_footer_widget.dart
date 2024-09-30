@@ -319,7 +319,7 @@ Widget getFooterForFreeActivity(BuildContext context, DashboardModel model, Rese
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       const SizedBox(width: 6),
-                      Flexible(
+                      if (!(kIsWeb && Responsive.isMobile(context))) Flexible(
                         child: InkWell(
                           onTap: () {
 
@@ -331,7 +331,7 @@ Widget getFooterForFreeActivity(BuildContext context, DashboardModel model, Rese
                                Icon(Icons.people_outline),
                               Container(
                                   decoration: BoxDecoration(
-                                    color: model.accentColor.withOpacity(0.35),
+                                    color: model.accentColor,
                                     borderRadius: BorderRadius.circular(25),
                                   ),
                                   child: Padding(
@@ -358,7 +358,7 @@ Widget getFooterForFreeActivity(BuildContext context, DashboardModel model, Rese
                               Icon(Icons.favorite_border_rounded),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: model.accentColor.withOpacity(0.35),
+                                  color: model.accentColor,
                                   borderRadius: BorderRadius.circular(25),
                                 ),
                                 child: Padding(
@@ -385,7 +385,7 @@ Widget getFooterForFreeActivity(BuildContext context, DashboardModel model, Rese
                               Icon(Icons.add_business_outlined, color: model.paletteColor),
                               Container(
                                   decoration: BoxDecoration(
-                                    color: model.accentColor.withOpacity(0.35),
+                                    color: model.accentColor,
                                     borderRadius: BorderRadius.circular(25),
                                   ),
                                   child: Padding(

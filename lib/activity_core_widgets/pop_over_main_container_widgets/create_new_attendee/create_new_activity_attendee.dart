@@ -206,7 +206,7 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
-                          icon: Icon(Icons.cancel, color: widget.model.accentColor, size: 40),
+                          icon: Icon(Icons.cancel, color: (widget.model.systemTheme.brightness != Brightness.dark) ? widget.model.accentColor : widget.model.paletteColor, size: 40),
                           padding: EdgeInsets.only(right: 18),
                       ),
                     )
@@ -229,18 +229,19 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
                     child: JumpingDots(numberOfDots: 3, color: widget.model.paletteColor)
                 ),
 
-                ClipRRect(
+                if (attendeeMainContainer(context, null, state).first.markerItem != currentMarkerItem) ClipRRect(
                     child: BackdropFilter(
                       filter: UI.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
                       child: Container(
                         height: 90,
                         width: MediaQuery.of(context).size.width,
-                        color: Colors.grey.shade200.withOpacity(0.5),
+                        color: widget.model.accentColor.withOpacity(0.5),
                         child: footerWidgetForNewAttendee(
                             context,
                             widget.model,
                             false,
                             currentMarkerItem,
+                            null,
                             null,
                             null,
                             widget.activityForm,

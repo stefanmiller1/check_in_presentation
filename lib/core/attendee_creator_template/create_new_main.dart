@@ -71,7 +71,7 @@ class _CreateNewMainState extends State<CreateNewMain> {
 }
 
 
-Widget createNewMainFooter(BuildContext context, DashboardModel model, bool showBackButton, bool showNextButton, {required Function() didSelectBack, required Function() didSelectNext}) {
+Widget createNewMainFooter(BuildContext context, DashboardModel model, bool showBackButton, bool showNextButton, String? nextButtonTitle, {required Function() didSelectBack, required Function() didSelectNext}) {
   return ClipRRect(
     child: BackdropFilter(
       filter: UI.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
@@ -120,7 +120,7 @@ Widget createNewMainFooter(BuildContext context, DashboardModel model, bool show
                       child: Center(
                         child: Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Text('Next', style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis, maxLines: 1)),
+                            child: Text(nextButtonTitle ?? 'Next', style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis, maxLines: 1)),
                     ),
                   ),
                 )

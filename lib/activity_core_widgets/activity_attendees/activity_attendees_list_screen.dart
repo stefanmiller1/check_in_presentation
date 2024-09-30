@@ -7,11 +7,12 @@ class ActivityAttendeesListScreen extends StatefulWidget {
   final ActivityManagerForm? activityManagerForm;
   final AttendeeType? attendeeTypeTab;
   final String? currentUser;
+  late List<AttendeeItem>? attendeeList;
   late AttendeeItem? selectedAttendee;
   late UserProfileModel? selectedUserProfile;
   final Function(AttendeeItem attendee, UserProfileModel user) didSelectAttendee;
 
-  ActivityAttendeesListScreen({super.key, required this.model, required this.activityManagerForm, required this.reservationItem, required this.didSelectAttendee, required this.currentUser, this.selectedAttendee, this.selectedUserProfile, this.attendeeTypeTab});
+  ActivityAttendeesListScreen({super.key, required this.model, required this.activityManagerForm, required this.reservationItem, required this.didSelectAttendee, required this.currentUser, this.attendeeList, this.selectedAttendee, this.selectedUserProfile, this.attendeeTypeTab});
 
   @override
   State<ActivityAttendeesListScreen> createState() => _ActivityAttendeesListScreenState();
@@ -31,6 +32,8 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
     _textController = TextEditingController();
     widget.selectedAttendee = null;
     widget.selectedUserProfile = null;
+    retrieveVendorList(widget.attendeeList ?? []);
+    initLoading();
     super.initState();
   }
 
@@ -42,20 +45,27 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
     super.dispose();
   }
 
+  void initLoading() {
+    setState(() {
+      isLoading = true;
+      Future.delayed(const Duration(milliseconds: 800), () {
+        setState(() {
+          isLoading = false;
+        });
+      });
+    });
+  }
+
   void retrieveVendorList(List<AttendeeItem> allVendorAttendees) async {
 
-      if (allVendorAttendees.length != allVendorProfiles.length) {
         for (AttendeeItem attendee in allVendorAttendees) {
-
           if (attendee.eventMerchantVendorProfile == null) {
             return;
           }
 
           final EventMerchantVendorProfile? profile = await facade.MerchVenFacade.instance.getMerchVendorProfile(profileId: attendee.eventMerchantVendorProfile!.getOrCrash());
-
-          if (profile != null) {
+          if (profile != null && !allVendorProfiles.map((e) => e.profileOwner).contains(attendee.attendeeOwnerId)) {
             allVendorProfiles.add(profile);
-        }
       }
     }
   }
@@ -95,7 +105,6 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
             final AttendeeItem? currentAttendee = allAttendees.item.where((element) => element.attendeeOwnerId.getOrCrash() == widget.currentUser).isNotEmpty ? allAttendees.item.where((element) => element.attendeeOwnerId.getOrCrash() == widget.currentUser).first : null;
             final bool isAttendee = currentAttendee != null && currentAttendee.contactStatus == ContactStatus.joined;
             final bool isOwner = widget.reservationItem?.reservationOwnerId.getOrCrash() == widget.currentUser;
-
 
 
           return Stack(
@@ -324,7 +333,6 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
                                       ),
                                     ),
                                   );
-
                                 }
                               ),
                             ),
@@ -334,8 +342,11 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
                     ),
 
                     if (isLoading == true) Expanded(
-                      child: SingleChildScrollView(
-                        child: emptyLoadingListView(context, kIsWeb),
+                      child: Container(
+                        height: MediaQuery.of(context).size.height,
+                        child: SingleChildScrollView(
+                          child: emptyLoadingListView(context, kIsWeb),
+                        ),
                       ),
                     )
                   ],
@@ -343,7 +354,7 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
 
 
                 Container(
-                    height: 200,
+                    height: 130,
                     child: Padding(
                       padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0),
                       child: ClipRRect(

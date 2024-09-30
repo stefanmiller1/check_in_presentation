@@ -122,13 +122,15 @@ class _GetLoginSignUpWidgetState extends State<GetLoginSignUpWidget> {
                             // height: MediaQuery.of(context).size.height,
                             width: MediaQuery.of(context).size.width,
                           ),
-                          if (_controller.value.isInitialized) Container(
-                            width: 750,
-                            child: AspectRatio(
-                              aspectRatio: _controller.value.aspectRatio,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(25),
-                                  child: VideoPlayer(_controller)
+
+                          if ((kIsWeb && Responsive.isMobile(context)) == false)
+                            if (_controller.value.isInitialized) Container(
+                              width: 750,
+                              child: AspectRatio(
+                                aspectRatio: _controller.value.aspectRatio,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(25),
+                                    child: VideoPlayer(_controller)
                             ),
                           ),
                         ) else
@@ -136,7 +138,8 @@ class _GetLoginSignUpWidgetState extends State<GetLoginSignUpWidget> {
                               height: 600,
                               width: MediaQuery.of(context).size.width,
                               child: JumpingDots(numberOfDots: 3, color: widget.model.paletteColor)
-                          ),
+                        ),
+
                           Container(
                             width: 600,
                             child: Padding(

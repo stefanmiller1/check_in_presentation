@@ -427,6 +427,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
       List<UserProfileModel> userProfiles,
       ActivityManagerForm activityForm,
       List<AttendeeItem> allAttendees,
+      List<EventMerchantVendorProfile> allAttendeeVendorProfiles,
       List<UniqueId> linkedCommunities,
       AttendeeItem? currentAttendee) {
    return Stack(
@@ -447,6 +448,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
                      postList,
                      userProfiles,
                      allAttendees,
+                     allAttendeeVendorProfiles,
                      linkedCommunities,
                      activityForm
                )
@@ -739,7 +741,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
             return state.maybeMap(
               loadListingManagerItemFailure: (_) => LoadingReservationCard(context),
               loadListingManagerItemSuccess: (item) {
-                return retrieveCurrentUserProfile(context, reservation, item.failure);
+                return retrieveReservationOwnerProfile(context, reservation, item.failure);
               },
             orElse: () => Container()
           );
@@ -748,13 +750,27 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
     );
   }
 
+  /// retrieve res owner profile
+  Widget retrieveReservationOwnerProfile(BuildContext context, ReservationItem reservation, ListingManagerForm listing) {
+    return BlocProvider(create: (_) => getIt<UserProfileWatcherBloc>()..add(UserProfileWatcherEvent.watchSelectedUserProfileStarted(reservation.reservationOwnerId.getOrCrash())),
+        child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
+            builder: (context, authState) {
+              return authState.maybeMap(
+                  loadSelectedProfileSuccess: (item) => retrieveCurrentUserProfile(context, reservation, listing, item.profile),
+                  orElse: () => Container()
+              );
+            }
+        )
+    );
+  }
+
   /// retrieve current user
-  Widget retrieveCurrentUserProfile(BuildContext context, ReservationItem reservation, ListingManagerForm listing) {
+  Widget retrieveCurrentUserProfile(BuildContext context, ReservationItem reservation, ListingManagerForm listing, UserProfileModel reservationOwner) {
     return BlocProvider(create: (_) => getIt<UserProfileWatcherBloc>()..add(const UserProfileWatcherEvent.watchUserProfileStarted()),
       child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
         builder: (context, authState) {
           return authState.maybeMap(
-            loadUserProfileSuccess: (item) => retrieveActivitySettings(context, reservation, listing, item.profile),
+            loadUserProfileSuccess: (item) => retrieveActivitySettings(context, reservation, listing, reservationOwner, item.profile),
             orElse: () => Container()
           );
         },
@@ -769,7 +785,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
         return state.maybeMap(
             resLoadInProgress: (_) => JumpingDots(color: widget.model.paletteColor, numberOfDots: 3),
             loadReservationItemSuccess: (e) {
-              return retrieveActivitySettings(context, e.item, listingForm, currentUser);
+              return retrieveReservationOwnerProfile(context, e.item, listingForm);
             },
             orElse: () => Container(),
         );
@@ -779,7 +795,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
 
 
   /// check if reservation has activity - if not, load main container with reservation only
-  Widget retrieveActivitySettings(BuildContext context, ReservationItem reservationItem, ListingManagerForm listingForm, UserProfileModel currentUser) {
+  Widget retrieveActivitySettings(BuildContext context, ReservationItem reservationItem, ListingManagerForm listingForm, UserProfileModel reservationOwner, UserProfileModel currentUser) {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => getIt<BookedReservationFormBloc>()..add(BookedReservationFormEvent.initializedPostForm(dart.optionOf(Post(authorId: currentUser.userId, id: UniqueId().getOrCrash(), status: PostStatus.sending, reservationId: widget.reservationId, type: PostType.text))))),
@@ -789,10 +805,9 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
           builder: (context, state) {
             return state.maybeMap(
                 loadInProgress: (_) => JumpingDots(color: widget.model.paletteColor, numberOfDots: 3),
-                loadActivityManagerFormFailure: (_) => mainContainer(context, listingForm, reservationItem, null, currentUser, [], [], null, [], [], []),
+                loadActivityManagerFormFailure: (_) => mainContainer(context, listingForm, reservationItem, reservationOwner, currentUser, [], [], null, [], [], [], []),
                 loadActivityManagerFormSuccess: (item) {
-
-                  return retrieveExistingPosts(reservationItem, listingForm, currentUser, item.item);
+                  return retrieveExistingPosts(reservationItem, listingForm, reservationOwner, currentUser, item.item);
                 },
                 orElse: () => Container(),
           );
@@ -801,7 +816,10 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
     );
   }
 
-  Widget retrieveExistingPosts(ReservationItem reservationItem, ListingManagerForm listingForm, UserProfileModel currentUser, ActivityManagerForm activityForm) {
+
+
+
+  Widget retrieveExistingPosts(ReservationItem reservationItem, ListingManagerForm listingForm, UserProfileModel reservationOwner, UserProfileModel currentUser, ActivityManagerForm activityForm) {
     return  BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentReservationPosts(widget.reservationId)),
         child: BlocBuilder<ReservationManagerWatcherBloc, ReservationManagerWatcherState>(
           builder: (context, state) {
@@ -811,11 +829,11 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
                   postList.addAll(e.posts);
                   postList.sort((a,b) => b.createdAt?.compareTo(a.createdAt ?? DateTime.now()) ?? 0);
 
-                  return retrieveReservationPostProfiles(context, postList, listingForm, reservationItem, currentUser, activityForm);
+                  return retrieveAllAttendees(context, listingForm, reservationItem, reservationOwner, currentUser, postList, [], activityForm);
                 },
-                loadReservationPostListFailure: (_) => retrieveReservationPostProfiles(context, [], listingForm, reservationItem, currentUser, activityForm),
-                orElse: () => retrieveReservationPostProfiles(context, [], listingForm, reservationItem, currentUser, activityForm)
-          );
+                loadReservationPostListFailure: (_) => retrieveAllAttendees(context, listingForm, reservationItem, reservationOwner, currentUser, [], [], activityForm),
+                orElse: () => retrieveAllAttendees(context, listingForm, reservationItem, reservationOwner, currentUser, [], [], activityForm),
+            );
         },
       ),
     );
@@ -858,41 +876,41 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
   }
 
 /// TODO: REMOVE THIS FROM RESERVATIONS - SHOULD NOT CALL WATCH ALL USERS
-  Widget retrieveReservationPostProfiles(BuildContext context, List<Post> postList, ListingManagerForm listing,  ReservationItem reservationItem, UserProfileModel currentUser, ActivityManagerForm activityForm) {
-    return BlocProvider(create: (_) => getIt<UserProfileWatcherBloc>()..add(const UserProfileWatcherEvent.watchUserAllProfilesStarted()),
-        child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
-            builder: (context, authState) {
-              return authState.maybeMap(
-                  loadAllUserProfilesSuccess: (items) => retrieveReservationOwnerProfile(context, listing, reservationItem, currentUser, postList, items.profile, activityForm),
-                  orElse: () => retrieveReservationOwnerProfile(context, listing, reservationItem, currentUser, postList, [], activityForm)
-          );
-        }
-      )
-    );
-  }
+//   Widget retrieveReservationPostProfiles(BuildContext context, List<Post> postList, ListingManagerForm listing,  ReservationItem reservationItem, UserProfileModel currentUser, ActivityManagerForm activityForm) {
+    // return BlocProvider(create: (_) => getIt<UserProfileWatcherBloc>()..add(const UserProfileWatcherEvent.watchUserAllProfilesStarted()),
+    //     child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
+    //         builder: (context, authState) {
+    //           return authState.maybeMap(
+    //               loadAllUserProfilesSuccess: (items) => retrieveReservationOwnerProfile(context, listing, reservationItem, currentUser, postList, items.profile, activityForm),
+    //               orElse: () => retrieveReservationOwnerProfile(context, listing, reservationItem, currentUser, postList, [], activityForm)
+    //       );
+    //     }
+    //   )
+    // );
+  // }
 
   /// watch activity owner only
-  Widget retrieveReservationOwnerProfile(BuildContext context, ListingManagerForm listing, ReservationItem reservation, UserProfileModel currentUser, List<Post> postList, List<UserProfileModel> userProfiles, ActivityManagerForm activityForm) {
-    return BlocProvider(create: (_) => getIt<UserProfileWatcherBloc>()..add(UserProfileWatcherEvent.watchSelectedUserProfileStarted(reservation.reservationOwnerId.getOrCrash())),
-        child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
-            builder: (context, authState) {
-              return authState.maybeMap(
-                loadSelectedProfileSuccess: (item) => retrieveAllAttendees(context, listing, reservation, item.profile, currentUser, postList, userProfiles, activityForm),
-                  orElse: () => retrieveAllAttendees(context, listing, reservation, null, currentUser, postList, [], activityForm)
-              );
-            }
-        )
-    );
-  }
 
 
-  Widget retrieveAllAttendees(BuildContext context, ListingManagerForm listing, ReservationItem reservation, UserProfileModel? reservationOwner, UserProfileModel currentUser, List<Post> postList, List<UserProfileModel> userProfiles, ActivityManagerForm activityForm) {
+
+  Widget retrieveAllAttendees(BuildContext context, ListingManagerForm listing, ReservationItem reservation, UserProfileModel reservationOwner, UserProfileModel currentUser, List<Post> postList, List<UserProfileModel> userProfiles, ActivityManagerForm activityForm) {
       return BlocProvider(create: (context) =>  getIt<AttendeeManagerWatcherBloc>()..add(AttendeeManagerWatcherEvent.watchAllAttendance(reservation.reservationId.getOrCrash())),
         child: BlocBuilder<AttendeeManagerWatcherBloc, AttendeeManagerWatcherState>(
           builder: (context, state) {
             return state.maybeMap(
-                loadAllAttendanceActivitySuccess: (item) => retrieveAllNotifications(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, item.item),
-                orElse: () => retrieveAllNotifications(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, [])
+                loadAllAttendanceActivitySuccess: (attendees) {
+                  return BlocProvider(create: (context) => getIt<VendorMerchProfileWatcherBloc>()..add(VendorMerchProfileWatcherEvent.watchAllEventMerchProfileFromIds(attendees.item.where((e) => e.attendeeType == AttendeeType.vendor).map((e) => (e.eventMerchantVendorProfile != null) ? e.eventMerchantVendorProfile!.getOrCrash() : '').toList())),
+                      child: BlocBuilder<VendorMerchProfileWatcherBloc, VendorMerchProfileWatcherState>(
+                        builder: (context, state) {
+                          return state.maybeMap(
+                              loadAllMerchVendorFromIdsSuccess: (item) => retrieveAllNotifications(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, attendees.item, item.items),
+                              orElse: () => retrieveAllNotifications(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, attendees.item, [])
+                        );
+                      },
+                    )
+                  );
+                },
+                orElse: () => retrieveAllNotifications(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, [], [])
           );
         },
       ),
@@ -900,15 +918,16 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
   }
 
 
-  Widget retrieveAllNotifications(BuildContext context, ListingManagerForm listing, ReservationItem reservation, UserProfileModel? reservationOwner, UserProfileModel currentUser, List<Post> postList, List<UserProfileModel> userProfiles, ActivityManagerForm activityForm, List<AttendeeItem> allAttendees) {
+
+  Widget retrieveAllNotifications(BuildContext context, ListingManagerForm listing, ReservationItem reservation, UserProfileModel reservationOwner, UserProfileModel currentUser, List<Post> postList, List<UserProfileModel> userProfiles, ActivityManagerForm activityForm, List<AttendeeItem> allAttendees, List<EventMerchantVendorProfile> allAttendeeVendorProfiles) {
     return BlocProvider(create: (_) => getIt<NotificationWatcherBloc>()..add(NotificationWatcherEvent.watchAllAccountNotificationAmountByType([AccountNotificationType.reservation, AccountNotificationType.activity, AccountNotificationType.activityPost], reservation.reservationId)),
         child: BlocBuilder<NotificationWatcherBloc, NotificationWatcherState>(
             builder: (context, authState) {
               return authState.maybeMap(
                   loadAllAccountNotificationByTypeSuccess: (item) {
-                    return retrieveAllLinkedCommunityIds(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, allAttendees, item.notifications);
+                    return retrieveAllLinkedCommunityIds(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, allAttendees, allAttendeeVendorProfiles, item.notifications);
                   },
-              orElse: () => retrieveAllLinkedCommunityIds(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, allAttendees, [])
+              orElse: () => retrieveAllLinkedCommunityIds(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, allAttendees, allAttendeeVendorProfiles, [])
           );
         }
       )
@@ -916,13 +935,13 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
   }
 
 
-  Widget retrieveAllLinkedCommunityIds(BuildContext context, ListingManagerForm listing, ReservationItem reservation, UserProfileModel? reservationOwner, UserProfileModel currentUser, List<Post> postList, List<UserProfileModel> userProfiles, ActivityManagerForm activityForm, List<AttendeeItem> allAttendees, List<AccountNotificationItem> notifications) {
+  Widget retrieveAllLinkedCommunityIds(BuildContext context, ListingManagerForm listing, ReservationItem reservation, UserProfileModel reservationOwner, UserProfileModel currentUser, List<Post> postList, List<UserProfileModel> userProfiles, ActivityManagerForm activityForm, List<AttendeeItem> allAttendees, List<EventMerchantVendorProfile> allAttendeeVendorProfiles, List<AccountNotificationItem> notifications) {
     return BlocProvider(create: (_) => getIt<CommunityManagerWatcherBloc>()..add(CommunityManagerWatcherEvent.watchReservationLinkedCommunity(reservation.reservationId)),
       child: BlocBuilder<CommunityManagerWatcherBloc, CommunityManagerWatcherState>(
         builder: (context, authState) {
           return authState.maybeMap(
-              loadReservationLinkedCommunitiesSuccess: (item) => mainContainer(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, allAttendees, notifications, item.communityIds),
-              orElse: () => mainContainer(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, allAttendees, notifications, [])
+              loadReservationLinkedCommunitiesSuccess: (item) => mainContainer(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, allAttendees, allAttendeeVendorProfiles, notifications, item.communityIds),
+              orElse: () => mainContainer(context, listing, reservation, reservationOwner, currentUser, postList, userProfiles, activityForm, allAttendees, allAttendeeVendorProfiles, notifications, [])
           );
         }
       )
@@ -930,7 +949,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
   }
 
 
-  Widget mainContainer(BuildContext context, ListingManagerForm listing, ReservationItem reservation, UserProfileModel? reservationOwner, UserProfileModel currentUser, List<Post> postList, List<UserProfileModel> userProfiles, ActivityManagerForm? activityForm, List<AttendeeItem> allAttendees, List<AccountNotificationItem> notifications, List<UniqueId> linkedCommunities) {
+  Widget mainContainer(BuildContext context, ListingManagerForm listing, ReservationItem reservation, UserProfileModel reservationOwner, UserProfileModel currentUser, List<Post> postList, List<UserProfileModel> userProfiles, ActivityManagerForm? activityForm, List<AttendeeItem> allAttendees, List<EventMerchantVendorProfile> allAttendeeVendorProfiles, List<AccountNotificationItem> notifications, List<UniqueId> linkedCommunities) {
         return BlocConsumer<BookedReservationFormBloc, BookedReservationFormState>(
            listenWhen: (p,c) => p.isSubmitting != c.isSubmitting || p.isCreatingLink != c.isCreatingLink,
            listener: (context, state) {
@@ -982,7 +1001,8 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
              isOwner = currentUser.userId == reservation.reservationOwnerId;
              final isAttendee = allAttendees.map((e) => e.attendeeOwnerId).contains(currentUser.userId);
              final AttendeeItem? currentAttendee = allAttendees.where((element) => element.attendeeOwnerId == currentUser.userId).isNotEmpty ? allAttendees.where((element) => element.attendeeOwnerId == currentUser.userId).first : null;
-             final resOwner = (userProfiles.where((element) => element.userId == reservation.reservationOwnerId).isNotEmpty) ? userProfiles.where((element) => element.userId == reservation.reservationOwnerId).first : currentUser;
+
+             // (userProfiles.where((element) => element.userId == reservation.reservationOwnerId).isNotEmpty) ? userProfiles.where((element) => element.userId == reservation.reservationOwnerId).first : currentUser;
 
 
              return Stack(
@@ -1002,7 +1022,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
                       state,
                       isOwner,
                       notifications,
-                      resOwner,
+                      reservationOwner,
                       listing,
                       reservation,
                       reservationOwner,
@@ -1016,7 +1036,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
                      state,
                      isOwner,
                      notifications,
-                     resOwner,
+                     reservationOwner,
                      listing,
                      reservation,
                      reservationOwner,
@@ -1025,6 +1045,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
                      userProfiles,
                      activityForm,
                      allAttendees,
+                     allAttendeeVendorProfiles,
                      linkedCommunities,
                      currentAttendee
                  ),
@@ -1078,17 +1099,17 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
                           activityManagerForm: activityForm,
                           attendeeItem: currentAttendee,
                           reservation: reservation,
-                          reservationOwner: resOwner,
+                          reservationOwner: reservationOwner,
                           listingForm: listing,
                         ),
                         model: widget.model
                     ),
 
 
-            ]
-          );
-        }
-      );
+          ]
+        );
+      }
+    );
   }
 
   Widget mainContainerHeaderTabMobile(List<AccountNotificationItem> notifications, ActivityManagerForm? activity) {
@@ -1099,61 +1120,64 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
              surfaceVariant: Colors.transparent
        )
      ),
-     child: Container(
-       height: 40,
-       width: MediaQuery.of(context).size.width,
-       child: (activity != null) && activitySetupComplete(activity) ? TabBar(
-         indicatorSize: TabBarIndicatorSize.tab,
-         controller: _tabController,
-         onTap: (index) {
-           setState(() {
-             ReservationCoreHelper.resOverViewTabs = tabItems(notifications)[index].tabMarker;
-             ReservationCoreHelper.pageController?.animateToPage(index, duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
-             updateNotifications(context, widget.model, tabItems(notifications)[index].tabMarker, notifications);
-           });
-         },
-         tabAlignment: TabAlignment.center,
-         indicatorColor: widget.model.webBackgroundColor,
-         labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-         labelColor: widget.model.webBackgroundColor,
-         unselectedLabelColor: widget.model.disabledTextColor,
-         isScrollable: true,
-         tabs: tabItems(notifications).map(
-                 (e) => badges.Badge(
-                   position: badges.BadgePosition.topEnd(top: 0),
-                   showBadge: e.showBadge,
-                   badgeAnimation: const badges.BadgeAnimation.scale(animationDuration: Duration(milliseconds: 700)),
-                   badgeContent: Text(e.badgeTitle ?? '1', style: TextStyle(color: widget.model.accentColor)),
-                   child: Tab(
-                       child: Padding(
-                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                         child: Text(e.tabTitle.toUpperCase(), overflow: TextOverflow.ellipsis, maxLines: 1,),
-                       )
-             ),
-           )
-         ).toList()
-       ) : TabBar(
+     child: Padding(
+       padding: const EdgeInsets.symmetric(horizontal: 8.0),
+       child: Container(
+         height: 40,
+         width: MediaQuery.of(context).size.width,
+         child: (activity != null) && activitySetupComplete(activity) ? TabBar(
            indicatorSize: TabBarIndicatorSize.tab,
-           controller: _resOnlyTabController,
-           tabAlignment: TabAlignment.fill,
+           controller: _tabController,
            onTap: (index) {
+             setState(() {
+               ReservationCoreHelper.resOverViewTabs = tabItems(notifications)[index].tabMarker;
+               ReservationCoreHelper.pageController?.animateToPage(index, duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
+               updateNotifications(context, widget.model, tabItems(notifications)[index].tabMarker, notifications);
+             });
            },
+           tabAlignment: TabAlignment.center,
            indicatorColor: widget.model.webBackgroundColor,
            labelStyle: const TextStyle(fontWeight: FontWeight.bold),
            labelColor: widget.model.webBackgroundColor,
            unselectedLabelColor: widget.model.disabledTextColor,
-           isScrollable: false,
-           tabs: [
-             badges.Badge(
-               position: badges.BadgePosition.topEnd(top: 0),
-               showBadge: notifications.where((element) => element.notificationType == AccountNotificationType.reservation).isNotEmpty,
-               badgeAnimation: const badges.BadgeAnimation.scale(animationDuration: Duration(milliseconds: 700)),
-               badgeContent: Text(notifications.where((element) => element.notificationType == AccountNotificationType.reservation).length.toString(), style: TextStyle(color: widget.model.accentColor)),
-               child: Tab(
-                 text: 'Reservation'
+           isScrollable: true,
+           tabs: tabItems(notifications).map(
+                   (e) => badges.Badge(
+                     position: badges.BadgePosition.topEnd(top: 0),
+                     showBadge: e.showBadge,
+                     badgeAnimation: const badges.BadgeAnimation.scale(animationDuration: Duration(milliseconds: 700)),
+                     badgeContent: Text(e.badgeTitle ?? '1', style: TextStyle(color: widget.model.accentColor)),
+                     child: Tab(
+                         child: Padding(
+                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                           child: Text(e.tabTitle.toUpperCase(), overflow: TextOverflow.ellipsis, maxLines: 1,),
+                         )
                ),
              )
-         ]
+           ).toList()
+         ) : TabBar(
+             indicatorSize: TabBarIndicatorSize.tab,
+             controller: _resOnlyTabController,
+             tabAlignment: TabAlignment.fill,
+             onTap: (index) {
+             },
+             indicatorColor: widget.model.webBackgroundColor,
+             labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+             labelColor: widget.model.webBackgroundColor,
+             unselectedLabelColor: widget.model.disabledTextColor,
+             isScrollable: false,
+             tabs: [
+               badges.Badge(
+                 position: badges.BadgePosition.topEnd(top: 0),
+                 showBadge: notifications.where((element) => element.notificationType == AccountNotificationType.reservation).isNotEmpty,
+                 badgeAnimation: const badges.BadgeAnimation.scale(animationDuration: Duration(milliseconds: 700)),
+                 badgeContent: Text(notifications.where((element) => element.notificationType == AccountNotificationType.reservation).length.toString(), style: TextStyle(color: widget.model.accentColor)),
+                 child: Tab(
+                   text: 'Reservation'
+                 ),
+               )
+           ]
+         ),
        ),
      ),
    );
@@ -1354,6 +1378,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
       List<Post> postList,
       List<UserProfileModel> userProfiles,
       List<AttendeeItem> allAttendees,
+      List<EventMerchantVendorProfile> allAttendeeVendorProfiles,
       List<UniqueId> linkedCommunities,
       ActivityManagerForm activityForm) {
    return PageView.builder(
@@ -1380,6 +1405,8 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
                         activityOwner: reservationOwner,
                         reservation: reservation,
                         allAttendees: allAttendees,
+                        isLoading: false,
+                        allVendors: allAttendeeVendorProfiles,
                         linkedCommunities: linkedCommunities,
                         isOwner: isOwner,
                         activitySetupComplete: activitySetupComplete(activityForm) || !isOwner,
@@ -1505,15 +1532,15 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
           }
 
 
-         return SingleChildScrollView(
-           child: Padding(
-             padding: const EdgeInsets.symmetric(horizontal: (kIsWeb) ? 25.0 : 0),
-             child: Row(
-               children: [
-                 getMainWidget(pageIndex)
+         return ListView.builder(
+             itemCount: 1,
+             itemBuilder: (context, index) {
+               return Row(
+                   children: [
+                   getMainWidget(pageIndex)
              ]
-           ),
-         ),
+           );
+         }
        );
      }
    );

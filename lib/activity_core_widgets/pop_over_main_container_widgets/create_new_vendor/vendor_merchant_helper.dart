@@ -1,5 +1,37 @@
 part of check_in_presentation;
 
+
+bool isDiscountCodeValid(VendorMerchantForm? vendorForm, String? discountCode) {
+
+  final currentUser = facade.FirebaseChatCore.instance.firebaseUser?.uid ?? '';
+  final discountOptions = vendorForm?.discountOptions ?? [];
+
+  if (discountCode == null || discountOptions.isEmpty || currentUser.isEmpty) {
+    return false;
+  }
+
+  final DiscountCode? matchedDiscountCode = discountOptions.firstWhereOrNull(
+        (discount) => discount.codeId == discountCode,
+  );
+
+  // If no matching discount code is found, return false
+  if (matchedDiscountCode == null) {
+    return false;
+  }
+
+  if (matchedDiscountCode.isNotValid == true) {
+    return false;
+  }
+
+  // If the discount code is private, check if the current user's ID is in the privateList
+  if (matchedDiscountCode.isPrivate == true) {
+    return matchedDiscountCode.privateList?.contains(currentUser) ?? false;
+  }
+
+  return true;
+}
+
+
 Widget getVendorSimpleAvailableTimeSlot(
   BuildContext context,
   DashboardModel model,
@@ -494,11 +526,12 @@ Widget documentDownloadUploadWidget(BuildContext context, DashboardModel model, 
 }
 
 
-Widget getPricingPreviewWidget(DashboardModel model, String purchaseDescription, double totalFee, double? taxPercentage, StripeTaxBreakdown? taxBreakdown, String state, String currency) {
-  final totalTaxAmount = totalFee * (taxPercentage ?? CICOTaxesFee);
-  final buyerFee = totalFee * CICOBuyerPercentageFee;
-  final totalBuyerTaxAmount = buyerFee * (taxPercentage ?? CICOTaxesFee);
+Widget getPricingPreviewWidget(DashboardModel model, String purchaseDescription, double totalFee, double? taxPercentage, DiscountCode? voucherAmount, StripeTaxBreakdown? taxBreakdown, String state, String currency) {
 
+  final fee = (voucherAmount?.discountAmount != null) ? totalFee * (1 - (voucherAmount!.discountAmount.toDouble() / 100)) : totalFee;
+  final totalTaxAmount = fee * (taxPercentage ?? CICOTaxesFee);
+  final buyerFee = fee * CICOBuyerPercentageFee;
+  final totalBuyerTaxAmount = buyerFee * (taxPercentage ?? CICOTaxesFee);
 
   return Column(
     children: [
@@ -519,24 +552,47 @@ Widget getPricingPreviewWidget(DashboardModel model, String purchaseDescription,
                     child: Text('Application Details', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize)),
                   ),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          /// title...(could be related to number of attendees refunding)
-                          Text('Vendor Fee', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,)),
-                          /// description...(could be related to total in terms of booth refunds & number of booths refunded)
-                          Text(purchaseDescription, style: TextStyle(color: model.disabledTextColor)),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              /// title...(could be related to number of attendees refunding)
+                              Text('Vendor Fee', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,)),
+                              /// description...(could be related to total in terms of booth refunds & number of booths refunded)
+                              Text(purchaseDescription, style: TextStyle(color: model.disabledTextColor)),
+                            ],
+                          ),
+
+                          Text(completeTotalPriceWithCurrency(totalFee, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, decoration: (voucherAmount != null) ? TextDecoration.lineThrough : null, fontWeight: FontWeight.bold)),
                         ],
                       ),
-
-                      Text(completeTotalPriceWithCurrency(totalFee, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+                      if (voucherAmount != null) Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Your Voucher', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,)),
+                                  Text('${voucherAmount.discountAmount}% OFF', style: TextStyle(color: Colors.green.shade300)),
+                                ],
+                              ),
+                              Text(completeTotalPriceWithCurrency(fee, currency), style: TextStyle(color: Colors.green, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+                        ]
+                      ),
                     ],
                   ),
+
+
 
                   SizedBox(height: 10),
                   Container(
@@ -592,14 +648,14 @@ Widget getPricingPreviewWidget(DashboardModel model, String purchaseDescription,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text('Total', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,)),
-                        Text(completeTotalPriceWithCurrency(totalFee + buyerFee + totalTaxAmount + totalBuyerTaxAmount, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+                        Text(completeTotalPriceWithCurrency(fee + buyerFee + totalTaxAmount + totalBuyerTaxAmount, currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
 
                       ]
                   ),
-                  SizedBox(height: 10)
-                ],
-              )
+              SizedBox(height: 10)
+            ],
           )
+        )
       )
     ]
   );

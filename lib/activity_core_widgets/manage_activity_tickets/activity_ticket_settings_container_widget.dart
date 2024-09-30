@@ -19,9 +19,7 @@ class ActivityTicketSettingsMainContainerWidget extends StatelessWidget {
         title: const Text('Ticket'),
         centerTitle: true,
       ) : null,
-      body: Padding(
-        padding: (kIsWeb) ? const EdgeInsets.only(right: 30.0, left: 30.0, bottom: 30.0, top: 40.0) : EdgeInsets.zero,
-        child: Container(
+      body: Container(
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.height,
           decoration: BoxDecoration(
@@ -29,7 +27,6 @@ class ActivityTicketSettingsMainContainerWidget extends StatelessWidget {
             borderRadius: BorderRadius.all(Radius.circular(20))
           ),
           child: (selectedTicketOption != null) ? retrieveAuthenticationState(context, selectedTicketOption!) : defaultPagePreview()
-        )
       ),
     );
   }

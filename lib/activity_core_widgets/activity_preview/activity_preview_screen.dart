@@ -23,6 +23,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
   late bool isSubmittingSignIn = false;
   late PageController _pageController = PageController(initialPage: 0);
   late int _currentPageIndex = 0;
+  late bool isLoading = false;
   ActivityCreateNewMarker activityMarker = ActivityCreateNewMarker.activityDetails;
   ActivityPreviewTabs activityOverviewMarker = ActivityPreviewTabs.activity;
 
@@ -33,9 +34,22 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
     dashboardModel = DashboardModel.instance;
     _scrollController = ScrollController();
     _tabController = TabController(initialIndex: 0, length: ActivityPreviewTabs.values.length, vsync: this);
+    // updateStateSafely();
     super.initState();
   }
 
+  void updateStateSafely() {
+
+    setState(() {
+      isLoading = true;
+    });
+
+    Future.delayed(const Duration(milliseconds: 1350), () {
+      setState(() {
+        isLoading = false;
+      });
+    });
+  }
 
   Widget getMainContainerForActivityDetails(
       BuildContext context,
@@ -45,12 +59,171 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
       ReservationItem reservation,
       UserProfileModel activityOwner,
       List<AttendeeItem> allAttendees,
+      List<EventMerchantVendorProfile> allAttendeeVendorProfiles,
       List<UniqueId> linkedCommunities,
       ) {
 
     final String? currentUser = facade.FirebaseChatCore.instance.firebaseUser?.uid;
     final bool isOwner = reservation.reservationOwnerId.getOrCrash() == currentUser;
     final AttendeeItem? currentAttendee = allAttendees.where((element) => element.attendeeOwnerId.getOrCrash() == currentUser).isNotEmpty ? allAttendees.where((element) => element.attendeeOwnerId.getOrCrash() == currentUser).first : null;
+    final main = Container(
+      height: 100,
+      width: MediaQuery.of(context).size.width,
+      color: (kIsWeb && (Responsive.isMobile(context))) ? model.accentColor : model.accentColor.withOpacity(0.35),
+      child: getReservationFooterWidget(
+          context,
+          model,
+          activityForm,
+          reservation,
+          currentAttendee,
+          allAttendees,
+          currentUser,
+          isOwner,
+          false,
+          didSelectJoin: () {
+            setState(() {
+              presentNewAttendeeJoin(
+                  context,
+                  model,
+                  listing,
+                  reservation,
+                  activityForm,
+                  activityOwner
+              );
+            });
+          },
+          didSelectManage: () {
+            setState(() {
+              if (isOwner) {
+                if (kIsWeb) {
+                  Beamer.of(context).update(
+                      configuration: RouteInformation(
+                          location: '/${DashboardMarker.resSettings.name.toString()}'
+                      ),
+                      rebuild: false
+                  );
+                  context.read<ListingsSearchRequirementsBloc>().add(const ListingsSearchRequirementsEvent.currentDashboardMarker(DashboardMarker.resSettings));
+                } else {
+                  // Navigator.push(context, MaterialPageRoute(
+                  //     builder: (_) {
+                  //       /// if owner else show attendee manage options
+                  //       return ActivitySettingsScreenMobile(
+                  //         model: model,
+                  //         reservationItem: reservation,
+                  //         activityManagerForm: activityForm,
+                  //         listing: listing,
+                  //         currentUser: currentUser,
+                  //       );
+                  //     })
+                  // );
+                }
+              }
+
+              switch (currentAttendee?.attendeeType) {
+                case AttendeeType.free:
+                  return presentALertDialogMobile(
+                      context,
+                      'Leaving?',
+                      'Are you sure you want to leave this Activity?',
+                      'Leave',
+                      didSelectDone: () {
+                        context.read<AttendeeFormBloc>().add(
+                            AttendeeFormEvent.didDeleteAttendee());
+                      }
+                  );
+                case AttendeeType.vendor:
+                  if (kIsWeb) {
+                    Beamer.of(context).update(
+                        configuration: RouteInformation(
+                            location: '/${DashboardMarker.resSettings.name.toString()}'
+                        ),
+                        rebuild: false
+                    );
+                    context.read<ListingsSearchRequirementsBloc>().add(const ListingsSearchRequirementsEvent.currentDashboardMarker(DashboardMarker.resSettings));
+                  } else {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) {
+                      return ManageAttendeeSettingsSubContainer(
+                          model: model,
+                          currentSettingItem: null,
+                          reservationItem: reservation,
+                          currentUser: currentUser,
+                          // currentActivityManagerForm: activityForm,
+                          // currentAttendee: currentAttendee,
+                          // currentActivityOwnerProfile: activityOwner,
+                          didSelectNavItem: (nav) {
+
+                          }
+                      );
+                    },
+                    )
+                    );
+                  }
+                  // TODO: Handle this case.
+                  break;
+                case null:
+                // TODO: Handle this case.
+                  break;
+              }
+            });
+          },
+          didSelectManageTickets: () {
+            setState(() {
+              if (kIsWeb) {
+
+              } else {
+
+              }
+            });
+          },
+          didSelectFindTickets: () {
+            setState(() {
+              presentNewTicketAttendeeJoin(
+                  context,
+                  model,
+                  reservation,
+                  activityForm,
+                  activityOwner
+              );
+            });
+          },
+          didSelectManagePasses: () {
+            setState(() {
+              if (kIsWeb) {
+
+              } else {
+
+              }
+            });
+          },
+          didSelectFindPass: () {
+            setState(() {
+              if (kIsWeb) {
+
+              } else {
+
+              }
+            });
+          },
+          didSelectShare: () {
+            presentActivityShareOptions(context, model, listing, reservation, activityForm);
+          },
+          didSelectMoreOptions: () {
+            if (kIsWeb) {
+
+            } else {
+
+            }
+          },
+          didSelectInterested: () {
+            if (kIsWeb) {
+
+            } else {
+
+            }
+          }
+      ),
+    );
+
 
     return Stack(
       children: [
@@ -66,6 +239,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                     listing,
                     activityOwner,
                     allAttendees,
+                    allAttendeeVendorProfiles,
                     linkedCommunities
                 ),
               ),
@@ -76,165 +250,9 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
         if (activityForm.rulesService.accessVisibilitySetting.isPrivateOnly != true) Positioned(
           bottom: 0,
           child: ClipRRect(
-            child: BackdropFilter(
+            child: (kIsWeb && (Responsive.isMobile(context))) ? main : BackdropFilter(
               filter: UI.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-              child: Container(
-                height: 100,
-                width: MediaQuery.of(context).size.width,
-                color: model.accentColor.withOpacity(0.35),
-                child: getReservationFooterWidget(
-                    context,
-                    model,
-                    activityForm,
-                    reservation,
-                    currentAttendee,
-                    allAttendees,
-                    currentUser,
-                    isOwner,
-                    false,
-                    didSelectJoin: () {
-                      setState(() {
-                        presentNewAttendeeJoin(
-                            context,
-                            model,
-                            listing,
-                            reservation,
-                            activityForm,
-                            activityOwner
-                        );
-                      });
-                    },
-                    didSelectManage: () {
-                      setState(() {
-                        if (isOwner) {
-                          if (kIsWeb) {
-                            Beamer.of(context).update(
-                                configuration: RouteInformation(
-                                    location: '/${DashboardMarker.resSettings.name.toString()}'
-                                ),
-                                rebuild: false
-                            );
-                            context.read<ListingsSearchRequirementsBloc>().add(const ListingsSearchRequirementsEvent.currentDashboardMarker(DashboardMarker.resSettings));
-                          } else {
-                            // Navigator.push(context, MaterialPageRoute(
-                            //     builder: (_) {
-                            //       /// if owner else show attendee manage options
-                            //       return ActivitySettingsScreenMobile(
-                            //         model: model,
-                            //         reservationItem: reservation,
-                            //         activityManagerForm: activityForm,
-                            //         listing: listing,
-                            //         currentUser: currentUser,
-                            //       );
-                            //     })
-                            // );
-                          }
-                        }
-
-                        switch (currentAttendee?.attendeeType) {
-                          case AttendeeType.free:
-                            return presentALertDialogMobile(
-                                context,
-                                'Leaving?',
-                                'Are you sure you want to leave this Activity?',
-                                'Leave',
-                                didSelectDone: () {
-                                  context.read<AttendeeFormBloc>().add(
-                                      AttendeeFormEvent.didDeleteAttendee());
-                              }
-                            );
-                          case AttendeeType.vendor:
-                            if (kIsWeb) {
-                              Beamer.of(context).update(
-                                  configuration: RouteInformation(
-                                      location: '/${DashboardMarker.resSettings.name.toString()}'
-                                  ),
-                                  rebuild: false
-                              );
-                              context.read<ListingsSearchRequirementsBloc>().add(const ListingsSearchRequirementsEvent.currentDashboardMarker(DashboardMarker.resSettings));
-                            } else {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (_) {
-                                return ManageAttendeeSettingsSubContainer(
-                                    model: model,
-                                    currentSettingItem: null,
-                                    reservationItem: reservation,
-                                    currentUser: currentUser,
-                                    // currentActivityManagerForm: activityForm,
-                                    // currentAttendee: currentAttendee,
-                                    // currentActivityOwnerProfile: activityOwner,
-                                    didSelectNavItem: (nav) {
-
-                                      }
-                                    );
-                                  },
-                                )
-                              );
-                            }
-                            // TODO: Handle this case.
-                            break;
-                          case null:
-                            // TODO: Handle this case.
-                            break;
-                        }
-                      });
-                    },
-                    didSelectManageTickets: () {
-                      setState(() {
-                        if (kIsWeb) {
-
-                        } else {
-
-                        }
-                      });
-                    },
-                    didSelectFindTickets: () {
-                      setState(() {
-                        presentNewTicketAttendeeJoin(
-                            context,
-                            model,
-                            reservation,
-                            activityForm,
-                            activityOwner
-                        );
-                      });
-                    },
-                    didSelectManagePasses: () {
-                      setState(() {
-                        if (kIsWeb) {
-
-                        } else {
-
-                        }
-                      });
-                    },
-                    didSelectFindPass: () {
-                      setState(() {
-                        if (kIsWeb) {
-
-                        } else {
-
-                        }
-                      });
-                    },
-                    didSelectShare: () {
-                      presentActivityShareOptions(context, model, listing, reservation, activityForm);
-                    },
-                    didSelectMoreOptions: () {
-                      if (kIsWeb) {
-
-                      } else {
-
-                      }
-                    },
-                    didSelectInterested: () {
-                      if (kIsWeb) {
-
-                      } else {
-
-                      }
-                    }
-                ),
-              ),
+              child: main
             ),
           ),
         ),
@@ -280,7 +298,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
     );
   }
 
-  Widget mainContainerPageView(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityManagerForm, ListingManagerForm listing, UserProfileModel activityOwner, List<AttendeeItem> allAttendees, List<UniqueId> linkedCommunities) {
+  Widget mainContainerPageView(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityManagerForm, ListingManagerForm listing, UserProfileModel activityOwner, List<AttendeeItem> allAttendees, List<EventMerchantVendorProfile> allAttendeeVendorProfiles, List<UniqueId> linkedCommunities) {
     return PageView.builder(
         controller: _pageController,
         itemCount: 2,
@@ -304,65 +322,67 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                   height: MediaQuery.of(context).size.height
               ),
 
-              SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: (kIsWeb) ? 25.0 : 0),
-                  child: Row(
+              ListView.builder(
+                itemCount: 1,
+                itemBuilder: (context, index) {
+                  return Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (pageIndex == ActivityPreviewTabs.activity) Flexible(
-                          child: Center(
-                            child: Container(
-                                  constraints: const BoxConstraints(maxWidth: 800),
-                                  child: ReservationActivityInfoWidget(
-                                      model: model,
-                                      listingForm: listing,
-                                      activityForm: activityManagerForm,
-                                      activityOwner: activityOwner,
-                                      reservation: reservation,
-                                      allAttendees: allAttendees,
-                                      showSuggestions: false,
-                                      activitySetupComplete: true,
-                                      linkedCommunities: linkedCommunities,
-                                      didSelectShowReservation: () {
-                                        setState(() {
-                                          _tabController?.animateTo(1, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
-                                          _pageController.animateToPage(1, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
-                                        });
-                                      },
-                                      didSelectActivityTicket: (ticket) {
-                                        setState(() {
-                                          presentNewTicketAttendeeJoin(
-                                              context,
-                                              model,
-                                              reservation,
-                                              activityManagerForm,
-                                              activityOwner
-                                          );
-                                        });
-                                      },
-                                      isOwner: false,
-                                      didSelectSeeMoreReservations: () {
+                        child: Center(
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 800),
+                            child: ReservationActivityInfoWidget(
+                              model: model,
+                              isLoading: false,
+                              listingForm: listing,
+                              activityForm: activityManagerForm,
+                              activityOwner: activityOwner,
+                              reservation: reservation,
+                              allAttendees: allAttendees,
+                              allVendors: allAttendeeVendorProfiles,
+                              showSuggestions: false,
+                              activitySetupComplete: true,
+                              linkedCommunities: linkedCommunities,
+                              didSelectShowReservation: () {
+                                setState(() {
+                                  _tabController?.animateTo(1, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+                                  _pageController.animateToPage(1, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+                                });
+                              },
+                              didSelectActivityTicket: (ticket) {
+                                setState(() {
+                                  presentNewTicketAttendeeJoin(
+                                      context,
+                                      model,
+                                      reservation,
+                                      activityManagerForm,
+                                      activityOwner
+                                  );
+                                });
+                              },
+                              isOwner: false,
+                              didSelectSeeMoreReservations: () {
 
-                                      },
-                                      didSelectSimilarRes: (res) {
-                                        if (kIsWeb) {
-                                          didSelectSimilarReservation(context, model, res);
-                                        } else {
-                                          Navigator.of(context).push(MaterialPageRoute(
-                                              builder: (_) {
-                                                return  ActivityPreviewScreen(
-                                                  model: widget.model,
-                                                  listing: res.listing,
-                                                  reservation: res.reservation,
-                                                  currentReservationId: res.reservation!.reservationId,
-                                                  currentListingId: res.reservation!.instanceId,
-                                                  didSelectBack: () {
+                              },
+                              didSelectSimilarRes: (res) {
+                                if (kIsWeb) {
+                                  didSelectSimilarReservation(context, model, res);
+                                } else {
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                      builder: (_) {
+                                        return  ActivityPreviewScreen(
+                                          model: widget.model,
+                                          listing: res.listing,
+                                          reservation: res.reservation,
+                                          currentReservationId: res.reservation!.reservationId,
+                                          currentListingId: res.reservation!.instanceId,
+                                          didSelectBack: () {
 
-                                                  },
-                                                );
-                                              }));
-                                        }
+                                          },
+                                        );
+                                      }));
+                                }
                               },
                             ),
                           ),
@@ -400,8 +420,8 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                         ),
                       )
                     ],
-                  ),
-                ),
+                  );
+                }
               ),
 
               if (MediaQuery.of(context).size.width >= 1600) Padding(
@@ -419,30 +439,64 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
   }
 
   Widget mainContainerHeaderTabMobile(BuildContext context, DashboardModel model) {
-    return Container(
-      height: 40,
-      width: MediaQuery.of(context).size.width,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Container(
+        height: 40,
+        width: MediaQuery.of(context).size.width,
+        child: TabBar(
+          indicatorSize: TabBarIndicatorSize.tab,
+          controller: _tabController,
+          onTap: (index) {
+            setState(() {
+              activityOverviewMarker = ActivityPreviewTabs.values[index];
+              _pageController.animateToPage(index, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+            });
+          },
+          indicatorColor: (model.systemTheme.brightness != Brightness.dark) ? model.webBackgroundColor : model.paletteColor,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          labelColor: (model.systemTheme.brightness != Brightness.dark) ? model.webBackgroundColor : model.paletteColor,
+          unselectedLabelColor: model.disabledTextColor,
+          tabs: ActivityPreviewTabs.values.map(
+                  (e) => Tab(text: e.name.toUpperCase())
+          ).toList()
+        ),
+      ),
+    );
+  }
+
+  Widget mainContainerHeaderTabWeb(DashboardModel model) {
+
+    Widget main = Container(
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25.0),
+          color: (kIsWeb && (Responsive.isMobile(context))) ? model.accentColor : model.accentColor.withOpacity(0.35)
+      ),
       child: TabBar(
         indicatorSize: TabBarIndicatorSize.tab,
         controller: _tabController,
         onTap: (index) {
           setState(() {
             activityOverviewMarker = ActivityPreviewTabs.values[index];
-            _pageController.animateToPage(index, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+            _pageController.jumpToPage(index);
           });
         },
-        indicatorColor: (model.systemTheme.brightness != Brightness.dark) ? model.webBackgroundColor : model.paletteColor,
+        indicator: BoxDecoration(
+            borderRadius: BorderRadius.circular(25.0),
+            color: model.paletteColor
+        ),
         labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-        labelColor: (model.systemTheme.brightness != Brightness.dark) ? model.webBackgroundColor : model.paletteColor,
-        unselectedLabelColor: model.disabledTextColor,
+        labelColor: model.accentColor,
+        unselectedLabelColor: model.paletteColor,
         tabs: ActivityPreviewTabs.values.map(
-                (e) => Tab(text: e.name.toUpperCase())
-        ).toList()
+                (e) => ClipRRect(
+              borderRadius: BorderRadius.circular(25),
+              child: Tab(text: e.name.toUpperCase()),
+            )
+        ).toList(),
       ),
     );
-  }
 
-  Widget mainContainerHeaderTabWeb(DashboardModel model) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -453,38 +507,10 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                   padding: const EdgeInsets.only(top: 18.0),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(25.0),
-                    child: BackdropFilter(
+                    child: (kIsWeb && (Responsive.isMobile(context))) ? main : BackdropFilter(
                       filter: UI.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25.0),
-                            color: model.accentColor.withOpacity(0.35)
-                        ),
-                        child: TabBar(
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          controller: _tabController,
-                          onTap: (index) {
-                            setState(() {
-                              activityOverviewMarker = ActivityPreviewTabs.values[index];
-                              _pageController.jumpToPage(index);
-                            });
-                          },
-                          indicator: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25.0),
-                              color: model.paletteColor
-                          ),
-                          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                          labelColor: model.accentColor,
-                          unselectedLabelColor: model.paletteColor,
-                          tabs: ActivityPreviewTabs.values.map(
-                                  (e) => ClipRRect(
-                                borderRadius: BorderRadius.circular(25),
-                                child: Tab(text: e.name.toUpperCase()),
-                        )
-                      ).toList(),
-                    ),
-                  ),
-                ),
+                      child: main
+                )
               ),
             )
           )
@@ -571,7 +597,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
       child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
             builder: (context, state) {
               return state.maybeMap(
-                  loadInProgress: (_) => JumpingDots(color: model.paletteColor, numberOfDots: 3),
+                  // loadInProgress: (_) => JumpingDots(color: model.paletteColor, numberOfDots: 3),
                   loadSelectedProfileFailure: (_) => Container(),
                   loadSelectedProfileSuccess: (item) => retrieveAllAttendees(model, listing, reservation, activityForm, item.profile),
                   orElse: () => Container()
@@ -586,29 +612,43 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
       child: BlocBuilder<AttendeeManagerWatcherBloc, AttendeeManagerWatcherState>(
         builder: (context, state) {
           return state.maybeMap(
-              loadAllAttendanceActivitySuccess: (item) => retrieveAllLinkedCommunityIds(model, listing, reservation, activityForm, activityOwnerProfile, item.item),
-              orElse: () => retrieveAllLinkedCommunityIds(model, listing, reservation, activityForm, activityOwnerProfile, [])
+              loadAllAttendanceActivitySuccess: (attendee) {
+                return BlocProvider(create: (context) => getIt<VendorMerchProfileWatcherBloc>()..add(VendorMerchProfileWatcherEvent.watchAllEventMerchProfileFromIds(attendee.item.where((e) => e.attendeeType == AttendeeType.vendor).map((e) => (e.eventMerchantVendorProfile != null) ? e.eventMerchantVendorProfile!.getOrCrash() : '').toList())),
+                    child: BlocBuilder<VendorMerchProfileWatcherBloc, VendorMerchProfileWatcherState>(
+                      builder: (context, state) {
+                        return state.maybeMap(
+                            loadAllMerchVendorFromIdsSuccess: (item) {
+                              return  retrieveAllLinkedCommunityIds(model, listing, reservation, activityForm, activityOwnerProfile, attendee.item, item.items);
+                          },
+                        orElse: () => retrieveAllLinkedCommunityIds(model, listing, reservation, activityForm, activityOwnerProfile, attendee.item, [])
+                      );
+                    },
+                  )
+                );
+                // return retrieveAllVendorProfiles(model, listing, reservation, activityForm, activityOwnerProfile, attendee.item);
+              },
+              orElse: () => retrieveAllLinkedCommunityIds(model, listing, reservation, activityForm, activityOwnerProfile, [], [])
           );
         },
       ),
     );
   }
 
-  Widget retrieveAllLinkedCommunityIds(DashboardModel model, ListingManagerForm listing, ReservationItem reservation, ActivityManagerForm activityForm, UserProfileModel activityOwnerProfile, List<AttendeeItem> allAttendees) {
+
+  Widget retrieveAllLinkedCommunityIds(DashboardModel model, ListingManagerForm listing, ReservationItem reservation, ActivityManagerForm activityForm, UserProfileModel activityOwnerProfile, List<AttendeeItem> allAttendees, List<EventMerchantVendorProfile> allAttendeeVendorProfiles) {
     return BlocProvider(create: (_) => getIt<CommunityManagerWatcherBloc>()..add(CommunityManagerWatcherEvent.watchReservationLinkedCommunity(reservation.reservationId)),
         child: BlocBuilder<CommunityManagerWatcherBloc, CommunityManagerWatcherState>(
             builder: (context, authState) {
               return authState.maybeMap(
-                  loadReservationLinkedCommunitiesSuccess: (item) => retrieveMainContainerForAttendee(model, listing, reservation, activityForm, activityOwnerProfile, allAttendees, item.communityIds),
-                  orElse: () => retrieveMainContainerForAttendee(model, listing, reservation, activityForm, activityOwnerProfile, allAttendees, [])
+                  loadReservationLinkedCommunitiesSuccess: (item) => retrieveMainContainerForAttendee(model, listing, reservation, activityForm, activityOwnerProfile, allAttendees, allAttendeeVendorProfiles, item.communityIds),
+                  orElse: () => retrieveMainContainerForAttendee(model, listing, reservation, activityForm, activityOwnerProfile, allAttendees, allAttendeeVendorProfiles, [])
           );
         }
       )
     );
   }
 
-
-  Widget retrieveMainContainerForAttendee(DashboardModel model, ListingManagerForm listing, ReservationItem reservation, ActivityManagerForm activityForm, UserProfileModel activityOwnerProfile, List<AttendeeItem> allAttendees, List<UniqueId> linkedCommunities) {
+  Widget retrieveMainContainerForAttendee(DashboardModel model, ListingManagerForm listing, ReservationItem reservation, ActivityManagerForm activityForm, UserProfileModel activityOwnerProfile, List<AttendeeItem> allAttendees, List<EventMerchantVendorProfile> allAttendeeVendorProfiles, List<UniqueId> linkedCommunities) {
     return BlocProvider(create: (_) => getIt<AttendeeFormBloc>()..add(AttendeeFormEvent.initializeAttendeeForm(dart.optionOf(AttendeeItem(
         attendeeId: AttendeeItem.empty().attendeeId,
         attendeeOwnerId: (facade.FirebaseChatCore.instance.firebaseUser != null) ? UniqueId.fromUniqueString(facade.FirebaseChatCore.instance.firebaseUser!.uid) : UniqueId(),
@@ -659,10 +699,15 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                     reservation,
                     activityOwnerProfile,
                     allAttendees,
+                    allAttendeeVendorProfiles,
                     linkedCommunities
               )
             ),
           ];
+
+          if (isLoading) {
+            return JumpingDots(color: model.paletteColor, numberOfDots: 3);
+          }
 
           return Stack(
             alignment: Alignment.topCenter,
@@ -683,7 +728,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
               if (activityForm.rulesService.accessVisibilitySetting.isPrivateOnly == true) Container(
                 height: MediaQuery.of(context).size.height,
                 width: MediaQuery.of(context).size.width,
-                color: model.mobileBackgroundColor.withOpacity(0.8),
+                color: model.mobileBackgroundColor
               ),
               /// handle non-activity reservation
               if (activitySetupComplete(activityForm) == false) Positioned(

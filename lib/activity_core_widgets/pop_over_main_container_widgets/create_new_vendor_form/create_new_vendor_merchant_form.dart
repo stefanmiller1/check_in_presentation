@@ -23,12 +23,15 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
   late ScrollController? _scrollController = null;
   late PageController? boothPaymentPageController = PageController(viewportFraction: 0.15);
   late PageController? availabilityPageController = PageController(viewportFraction: 0.175);
+  late PageController? discountPageController = PageController(viewportFraction: 0.175);
 
   late PageController? openClosePageController = PageController(viewportFraction: 0.25);
   late bool isHovering = false;
   late bool reloadMain = false;
   late bool isLoadingAvailability = false;
   late bool isLoadingBoothPayments = false;
+  late bool isLoadingDiscountCodes = false;
+  late String? _selectedDiscountCode = null;
   late UniqueId? _selectedAvailableTime = null;
   late UniqueId? _selectedBoothPayments = null;
 
@@ -44,6 +47,7 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
     '6e24dae0-96dd-11eb-babc-gyiugi7989h8' : 165.0,
     '6e24dae0-96dd-11eb-babc-iub9898h98hh' : 165.0,
     '6e24dae0-96dd-11eb-babc-gyug787gjhbh' : 165.0,
+    '6e24dae0-96dd-11eb-babc-udbisud909d9' : 110.0
   };
 
 
@@ -64,6 +68,7 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
     boothPaymentPageController?.dispose();
     availabilityPageController?.dispose();
     openClosePageController?.dispose();
+    discountPageController?.dispose();
     _scrollController?.dispose();
 
     super.dispose();
@@ -79,21 +84,49 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
     });
   }
 
-  List<FormCreatorContainerModel> formOption(BuildContext context, double customOptionsHeight, double customDisclaimerHeight, VendorMerchantForm form, MCCustomAvailability? currentAvailability, MVBoothPayments? currentBoothPayment, AutovalidateMode validator) => [
-
+  List<FormCreatorContainerModel> formOption(BuildContext context, double customOptionsHeight, double customDisclaimerHeight, VendorMerchantForm form, MCCustomAvailability? currentAvailability, MVBoothPayments? currentBoothPayment, DiscountCode? currentDiscounts, AutovalidateMode validator) => [
+    FormCreatorContainerModel(
+      formHeaderIcon: Icons.sticky_note_2_outlined,
+      formHeaderTitle: 'Form Title',
+      formHeaderSubTitle: 'Give this form a name',
+      height: 120,
+      formMainCreatorWidget: vendorFormTextField(
+          context,
+          widget.model,
+          1,
+          form.formTitle,
+          'Make this form for specific types of vendors by adding a title',
+          'Baked Goods Vendor Application...Clothing Vendor Application..',
+          onChanged: (message) {
+            context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeFormTitle(message));
+          }
+      ),
+      showAddIcon: true,
+      didSelectActivate: (active) {
+        if (active) {
+          context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeFormTitle(''));
+        } else {
+          context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeFormTitle(null));
+        }
+      },
+      isActivated: form.formTitle != null,
+    ),
     FormCreatorContainerModel(
         formHeaderIcon: Icons.favorite_border_rounded,
         formHeaderTitle: 'Welcome Message',
         errorMessage: 'Write something to welcome your vendors :)',
         showErrorMessage: validator == AutovalidateMode.always && !isWelcomeValid(form),
         height: 205,
-        formMainCreatorWidget: welcomeMessage(
-          context,
-          widget.model,
-          form,
-          onChanged: (message) {
-            context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeWelcomeMessage(message));
-          }
+        formMainCreatorWidget: vendorFormTextField(
+            context,
+            widget.model,
+            3,
+            form.welcomeMessage,
+            'Greet potential applicants with a welcome message - let them get a feel for the market they are applying for.',
+            'Just so you know...',
+            onChanged: (message) {
+              context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeWelcomeMessage(message));
+            }
         ),
         showAddIcon: true,
         didSelectActivate: (active) {
@@ -541,6 +574,174 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
       isActivated: form.disclaimerOptions != null,
     ),
     FormCreatorContainerModel(
+      formHeaderIcon: Icons.monetization_on_outlined,
+      formHeaderTitle: 'Discount Codes',
+      formHeaderSubTitle: 'Give your applicants exclusive deals and discounts',
+      errorMessage: 'Please make sure all vouchers are between 1 and 99 percent off',
+      showErrorMessage: validator == AutovalidateMode.always && !isVoucherOptionsValid(form),
+      isLoading: isLoadingDiscountCodes,
+      height: 680,
+      formSubHelper: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: pagingControllerForForm(
+            context,
+            widget.model,
+            discountPageController,
+            true,
+            (getTotalSelectedSlotItems(form) == widget.reservation.reservationSlotItem.length || form.availableTimeSlots?.map((e) => e.isConfirmed).where((element) => element == false).isEmpty == false) ? false : true,
+            85,
+            isHovering,
+            InkWell(
+              onTap: () {
+                final customUID = UniqueId().getOrCrash().substring(0, 5);
+                _selectedDiscountCode = customUID;
+
+                List<DiscountCode> currentList = [];
+                currentList.addAll(form.discountOptions?.toList() ?? []);
+                currentList.add(DiscountCode(codeId: customUID, discountAmount: 20, createdAt: DateTime.now()));
+                isLoadingDiscountCodes = true;
+
+                context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeDiscountCodeOptions(currentList));
+
+                Future.delayed(const Duration(milliseconds: 250), () {
+                  setState(() {
+                    isLoadingDiscountCodes = false;
+                  });
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                            color: widget.model.accentColor,
+                            borderRadius: BorderRadius.all(Radius.circular(25))
+                        ),
+                        height: 50,
+                        width: 50,
+                        child: Icon(Icons.add, color: widget.model.disabledTextColor),
+                      ),
+                    ),
+                    Text('New', style: TextStyle(color: widget.model.disabledTextColor, fontSize: widget.model.secondaryQuestionTitleFontSize))
+                  ],
+                ),
+              ),
+            ),
+            form.discountOptions?.asMap().map((i ,e) => MapEntry(
+                i,
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _selectedDiscountCode = e.codeId;
+                      isLoadingDiscountCodes = true;
+
+                      Future.delayed(const Duration(milliseconds: 250), () {
+                        setState(() {
+                          isLoadingDiscountCodes = false;
+                        });
+                      });
+                    });
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(25))
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.all(Radius.circular(35)),
+                              border: (_selectedDiscountCode == e.codeId) ? Border.all(color: widget.model.paletteColor) : null,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    color: widget.model.accentColor,
+                                    borderRadius: BorderRadius.all(Radius.circular(25))
+                                ),
+                                height: 50,
+                                width: 50,
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Text(e.discountTitle ?? 'Slot ${i + 1}', style: TextStyle(color: widget.model.disabledTextColor, fontSize: widget.model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis), maxLines: 1,))
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              )
+            ).values.toList() ?? [],
+            didStartHover: (show) {
+              setState(() {
+                isHovering = show;
+              });
+            },
+            didSelectArrow: (forwardBack) {
+              setState(() {
+                if (forwardBack) {
+                  discountPageController?.animateTo((discountPageController?.offset ?? 0) + 400, duration: Duration(milliseconds: 250), curve: Curves.easeInOut);
+                } else {
+                  discountPageController?.animateTo((discountPageController?.offset ?? 0) - 400, duration: Duration(milliseconds: 250), curve: Curves.easeInOut);
+                }
+              });
+            },
+            didSelectRemove: (index) {
+              isLoadingDiscountCodes = true;
+              List<DiscountCode> currentList = [];
+              currentList.addAll(form.discountOptions?.toList() ?? []);
+              currentList.removeAt(index);
+
+              if (currentList.isNotEmpty) {
+                _selectedDiscountCode = currentList.first.codeId;
+              }
+
+
+              context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeDiscountCodeOptions(currentList));
+
+              Future.delayed(const Duration(milliseconds: 250), () {
+                setState(() {
+                  isLoadingDiscountCodes = false;
+              });
+            });
+          }
+        ),
+      ),
+      formMainCreatorWidget: DiscountCodeGeneratorWidget(
+        model: widget.model,
+        form: form,
+        currentDiscountOption: currentDiscounts,
+        onChange: (discount) {
+          final List<DiscountCode> discounts = [];
+          discounts.addAll(form.discountOptions ?? []);
+
+          final int index = discounts.indexWhere((element) => element.codeId == discount.codeId);
+          discounts.replaceRange(index, index + 1, [discount]);
+
+          context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeDiscountCodeOptions(discounts));
+        }
+      ),
+      showAddIcon: true,
+      didSelectActivate: (active) {
+        setState(() {
+          if (active) {
+            final customUID = UniqueId().getOrCrash().substring(0, 5);
+            _selectedDiscountCode = customUID;
+            context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeDiscountCodeOptions([DiscountCode(codeId: customUID, discountAmount: 20, createdAt: DateTime.now())]));
+          } else {
+            context.read<VendorSettingsFormBloc>().add(VendorSettingsFormEvent.didChangeDiscountCodeOptions(null));
+          }
+        });
+      },
+      isActivated: form.discountOptions != null,
+    ),
+    FormCreatorContainerModel(
       formHeaderIcon: Icons.close,
       formHeaderTitle: 'Close Form',
       height: 0,
@@ -593,7 +794,7 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
               customOptionHeight += ruleIdToHeight[(option.customRuleOption?.ruleId != null) ? option.customRuleOption!.ruleId.getOrCrash() : null] ?? 0;
           });
 
-          double disclaimerOptionHeight = 515;
+          double disclaimerOptionHeight = 555;
 
           state.vendorMerchantForm.disclaimerOptions?.where((e) => e.isActive == true).forEach((option) {
               disclaimerOptionHeight += ruleIdToHeight[(option.customRuleOption?.ruleId != null) ? option.customRuleOption!.ruleId.getOrCrash() : null] ?? 0;
@@ -601,7 +802,7 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
 
           final MCCustomAvailability? currentAvailability = (state.vendorMerchantForm.availableTimeSlots?.where((element) => element.uid == _selectedAvailableTime).isNotEmpty == true) ? state.vendorMerchantForm.availableTimeSlots?.where((element) => element.uid == _selectedAvailableTime).first : null;
           final MVBoothPayments? currentBoothPayments = (state.vendorMerchantForm.boothPaymentOptions?.where((element) => element.uid == _selectedBoothPayments).isNotEmpty == true) ? state.vendorMerchantForm.boothPaymentOptions?.where((element) => element.uid == _selectedBoothPayments).first : null;
-
+          final DiscountCode? currentDiscount = (state.vendorMerchantForm.discountOptions?.where((element) => element.codeId == _selectedDiscountCode).isNotEmpty == true) ? state.vendorMerchantForm.discountOptions?.where((element) => element.codeId == _selectedDiscountCode).first : null;
 
           final bool isPublishedForm = widget.form?.formStatus == FormStatus.published;
           final bool isValidForm = isVendorFormValid(state.vendorMerchantForm, widget.reservation);
@@ -614,6 +815,10 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
 
           if (_selectedAvailableTime == null && state.vendorMerchantForm.availableTimeSlots?.isNotEmpty == true) {
             _selectedAvailableTime = state.vendorMerchantForm.availableTimeSlots?.first.uid;
+          }
+
+          if (_selectedDiscountCode == null && state.vendorMerchantForm.discountOptions?.isNotEmpty == true) {
+            _selectedDiscountCode  = state.vendorMerchantForm.discountOptions?.first.codeId;
           }
 
           return Scaffold(
@@ -734,7 +939,15 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
               autovalidateMode: state.showErrorMessages,
               child: (reloadMain) ? JumpingDots(numberOfDots: 3, color: widget.model.accentColor) : FormCreatorDashboardMain(
                 model: widget.model,
-                formContainerItem: formOption(context, customOptionHeight, disclaimerOptionHeight, state.vendorMerchantForm, currentAvailability, currentBoothPayments, state.showErrorMessages),
+                formContainerItem: formOption(
+                    context,
+                    customOptionHeight,
+                    disclaimerOptionHeight,
+                    state.vendorMerchantForm,
+                    currentAvailability,
+                    currentBoothPayments,
+                    currentDiscount,
+                    state.showErrorMessages),
                 showPreview: true,
                 previewFormWidget:  SingleChildScrollView(
                     controller: _scrollController,

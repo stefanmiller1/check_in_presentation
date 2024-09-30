@@ -27,6 +27,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
   late MCCustomAvailability? selectedBoothAvailability = null;
   late DocumentFormOption? selectedDocumentFormOption = null;
   late CardItem? selectedCardItem = null;
+  late String? discountCode = null;
   late StripeTaxCalculation? taxCalculation = null;
   late bool isLoadingBoothOptions = false;
   late bool isLoadingDocumentOptions = false;
@@ -94,7 +95,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
               Transform.scale(
                 scale: 0.8,
                 child: lottie.Lottie.asset(
-                    height: 425,
+                    height: 360,
                      repeat: false,
                     'assets/lottie_animations/q3nloTcuFQ.json'
                 ),
@@ -106,6 +107,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
               ),
               const SizedBox(height: 5),
               Text('Complete this form to potentially join us as a vendor!', style: TextStyle(color: widget.model.disabledTextColor), textAlign: TextAlign.center),
+              const SizedBox(height: 110)
             ]
           ),
         )
@@ -122,7 +124,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      height: 425,
+                      height: 360,
                       child: Transform.scale(
                         scale: 1.85,
                         child: lottie.Lottie.asset(
@@ -138,6 +140,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                     ),
                     const SizedBox(height: 5),
                     Text(widget.vendorForm?.welcomeMessage ?? '', style: TextStyle(color: widget.model.disabledTextColor), textAlign: TextAlign.center),
+                    const SizedBox(height: 110)
             ]
           ),
         )
@@ -828,9 +831,80 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                   const SizedBox(height: 18),
                   ListTile(
                     title: Text('How Payments Work', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize)),
-                    subtitle: Text('Charges are ONLY made until AFTER your application has received a confirmation by the organizer.'),
+                    subtitle: Text('Charges are ONLY made until AFTER your application has received a confirmation by the organizer.', style: TextStyle(color: widget.model.paletteColor)),
                   ),
-                  const SizedBox(height: 18),
+                  if (widget.vendorForm?.discountOptions?.isNotEmpty == true) Column(
+                    children: [
+                      ListTile(
+                        title: Text('Have a Voucher?', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize)),
+                        subtitle: Text('If you have a valid discount voucher code you can enter it below and we\'ll apply it to your fee before you hit submit!', style: TextStyle(color: widget.model.paletteColor)),
+                      ),
+                      /// show checkmark or x depending on valid or invalid code
+                      Container(
+                        width: 250,
+                        child: TextFormField(
+                          style: TextStyle(color: widget.model.paletteColor),
+                          initialValue: discountCode,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(5),
+                          ],
+                          decoration: InputDecoration(
+                            suffixIcon: isDiscountCodeValid(widget.vendorForm, discountCode) ? Icon(Icons.check_circle, color: Colors.green) : Icon(Icons.cancel, color: widget.model.disabledTextColor),
+                            hintStyle: TextStyle(color: widget.model.disabledTextColor),
+                            hintText: 'Enter Code Here',
+                            errorStyle: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: widget.model.paletteColor,
+                            ),
+                            filled: true,
+                            fillColor: widget.model.accentColor,
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(25.0),
+                              borderSide: BorderSide(
+                                width: 2,
+                                color: widget.model.paletteColor,
+                              ),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(25.0),
+                              borderSide: isDiscountCodeValid(widget.vendorForm, discountCode) ?
+                              BorderSide(
+                                color: Colors.green,
+                                width: 2,
+                              ) : BorderSide.none, // Remove border when not focused
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(25.0),
+                              borderSide: BorderSide.none, // Remove border when not focused
+                            ),
+                            focusedBorder:  OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(25.0),
+                              borderSide: BorderSide(
+                                color: widget.model.paletteColor,
+                                width: 0,
+                              ),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(25.0),
+                              borderSide: const BorderSide(
+                                width: 0,
+                              ),
+                            ),
+                          ),
+                          autocorrect: false,
+                          onChanged: (value) {
+                            setState(() {
+                              discountCode = value;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (isDiscountCodeValid(widget.vendorForm, discountCode)) Text('${(widget.vendorForm?.discountOptions ?? []).where((e) => e.codeId == discountCode).first.discountAmount}% OFF Applied!', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize))
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   if (user != null) PaymentMethodsWidget(
                     isPushedView: false,
                     model: widget.model,
@@ -851,12 +925,14 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                     },
                   ),
                   const SizedBox(height: 10),
-                  Text('All Payment Info and Transactions are Handled by Stripe', style: TextStyle(color: widget.model.disabledTextColor)),
+                  Text('All Payment Info and Transactions are handled by Stripe', style: TextStyle(color: widget.model.disabledTextColor)),
                   const SizedBox(height: 110),
                 ]
             )
         )
     ),
+
+
     NewAttendeeContainerModel(
       markerItem: NewAttendeeStepsMarker.getStarted,
       subVendorMarkerItem: AttendeeVendorMarker.review,
@@ -950,7 +1026,16 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                       Text('We will need your payment info before applying - however, you wont be charged until a confirmation has been made by ${widget.activityForm.profileService.activityBackground.activityTitle.value.fold((l) => 'the Organizer', (r) => r)} - if a confirmation cannot be made you still won\'t be charged but you\'ll receive an update on your applications status and possible reason.',),
                       const SizedBox(height: 24),
                       /// pricing breakdown
-                      getPricingPreviewWidget(widget.model, 'Purchasing ${(state.attendeeItem.vendorForm?.boothPaymentOptions ?? []).length} Booth(s)', (attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? [])).toDouble(), retrieveDoubleTaxNumber((taxCalculation?.taxBreakdown.isNotEmpty == true) ? taxCalculation!.taxBreakdown[0].stripeTaxRateDetails.percentageDecimal ?? '0.13' : '0.13'), (taxCalculation?.taxBreakdown.isNotEmpty == true) ? taxCalculation!.taxBreakdown[0] : null, widget.listingForm.listingProfileService.listingLocationSetting.provinceState.getOrCrash(), widget.activityForm.rulesService.currency)
+                      getPricingPreviewWidget(
+                          widget.model,
+                          'Purchasing ${(state.attendeeItem.vendorForm?.boothPaymentOptions ?? []).length} Booth(s)',
+                          (attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? [])).toDouble(),
+                          retrieveDoubleTaxNumber((taxCalculation?.taxBreakdown.isNotEmpty == true) ? taxCalculation!.taxBreakdown[0].stripeTaxRateDetails.percentageDecimal : '0.13'),
+                          isDiscountCodeValid(widget.vendorForm, discountCode) ? (widget.vendorForm?.discountOptions ?? []).firstWhereOrNull((e) => e.codeId == discountCode) : null,
+                          (taxCalculation?.taxBreakdown.isNotEmpty == true) ? taxCalculation!.taxBreakdown[0] : null,
+                          widget.listingForm.listingProfileService.listingLocationSetting.provinceState.getOrCrash(),
+                          widget.activityForm.rulesService.currency
+                      )
                     ]
                   ),
                 )
@@ -1044,6 +1129,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                     final snackBar = SnackBar(
                         backgroundColor: Colors.red.shade100,
                         content: failure.maybeMap(
+                          ownerDoesNotHaveAccount: (_) => Text('${widget.resOwner.legalName.getOrCrash()} is unable to accept payments. Please Contact Owner', style: TextStyle(color: Colors.red)),
                           paymentServerError: (e) => Text(e.failedValue ?? AppLocalizations.of(context)!.serverError, style: TextStyle(color: Colors.red)),
                           orElse: () => Text('A Problem Happened', style: TextStyle(color: Colors.red)),
                         ));
@@ -1226,10 +1312,15 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
   Widget getMainContainer(BuildContext context, AttendeeFormState state, UserProfileModel currentUser, List<EventMerchantVendorProfile> profiles) {
 
     // late int initialVendorIndex = e.markerItem == currentMarkerItem;
+    late DiscountCode? discount = null;
 
     /// TODO: do i exists (from the current selected available options) in the current provided available options - if no then re-update selecetedAvailability?
     if (selectedBoothAvailability == null && state.attendeeItem.vendorForm?.availableTimeSlots != null && state.attendeeItem.vendorForm?.availableTimeSlots?.isNotEmpty == true) {
       selectedBoothAvailability = state.attendeeItem.vendorForm?.availableTimeSlots?.first;
+    }
+
+    if (isDiscountCodeValid(widget.vendorForm, discountCode)) {
+      discount = (widget.vendorForm?.discountOptions ?? []).firstWhereOrNull((e) => e.codeId == discountCode);
     }
 
     pageController = PageController(initialPage: 0);
@@ -1279,6 +1370,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                     widget.model,
                     widget.isPreview,
                     currentMarkerItem,
+                    discount,
                     selectedCardItem,
                     currentVendorMarkerItem,
                     widget.activityForm,
@@ -1326,8 +1418,6 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
 
                       setState(() {
                         // check current index in array
-
-
                         final currentIndex = attendeeMainContainer(context, currentUser, profiles, state).indexWhere((element) => element.markerItem == currentMarkerItem && element.subVendorMarkerItem == currentVendorMarkerItem);
                         bool isLastIndex = currentIndex == (attendeeMainContainer(context, currentUser, profiles, state).length - 1);
                         bool isSecondLastIndex = currentIndex == (attendeeMainContainer(context, currentUser, profiles, state).length) - 2;
@@ -1360,7 +1450,8 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                           context.read<AttendeeFormBloc>().add(AttendeeFormEvent.isFinishedCreatingVendorAttendee(
                             currentUser,
                             widget.activityForm.rulesService.currency,
-                            selectedCardItem?.paymentId,
+                            selectedCardItem,
+                            discount,
                             (taxCalculation?.taxBreakdown.isNotEmpty == true) ? taxCalculation!.taxBreakdown[0].stripeTaxRateDetails : null,
                             taxCalculation?.id
                           ));

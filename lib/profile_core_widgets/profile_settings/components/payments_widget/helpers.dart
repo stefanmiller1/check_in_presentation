@@ -1,8 +1,38 @@
 import 'package:check_in_domain/check_in_domain.dart';
 import 'package:check_in_presentation/check_in_presentation.dart';
 import 'package:flutter/material.dart';
+import 'package:check_in_application/check_in_application.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+
+enum PayoutMethodMarker {intro, companyInfo, details, taxInfo, review, payoutAccount}
+
+class PayoutMethodWidget {
+
+  final PayoutMethodMarker marker;
+  final bool isDarkMode;
+  final Widget mainWidget;
+
+  PayoutMethodWidget({required this.marker, required this.isDarkMode, required this.mainWidget});
+
+}
+
+String? getTitleForNextPayoutButton(PayoutMethodMarker marker, PaymentServicesState state) {
+  switch (marker) {
+    case PayoutMethodMarker.intro:
+      return 'Next';
+    case PayoutMethodMarker.companyInfo:
+      return (state.userProfile?.stripeCompanyName != null && state.userProfile?.stripeBusinessAddress != null) ? 'Next' : 'Skip';
+    case PayoutMethodMarker.details:
+      return 'Next';
+    case PayoutMethodMarker.taxInfo:
+      return ((state.userProfile?.stripeBusinessID != null) || (state.userProfile?.stripeHSTRegistrationNumber != null)) ? 'Next' : 'Skip';
+    case PayoutMethodMarker.review:
+      return 'Next';
+    case PayoutMethodMarker.payoutAccount:
+      return null;
+  }
+}
 
 
 Widget getPaymentHistoryItemWidget(BuildContext context, DashboardModel model, PaymentIntent paymentIntent, ListingManagerForm listing, ReservationItem reservationItem, {required Function(PaymentIntent) didSelectPayment}) {

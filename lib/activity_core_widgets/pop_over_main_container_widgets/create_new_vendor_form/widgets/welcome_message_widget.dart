@@ -2,24 +2,24 @@ import 'package:flutter/material.dart';
 import '../../../../check_in_presentation.dart';
 import 'package:check_in_domain/check_in_domain.dart';
 
-Widget welcomeMessage(BuildContext context, DashboardModel model, VendorMerchantForm form, {required Function(String) onChanged}) {
+Widget vendorFormTextField(BuildContext context, DashboardModel model, int lineCount, String? initialValue, String? headerText, String? hintMessage, {required Function(String) onChanged}) {
   return Padding(
     padding: const EdgeInsets.all(8.0),
     child: Column(
       children: [
         const SizedBox(height: 8),
-        Expanded(
-            child: Text('Greet potential applicants with a welcome message - let them get a feel for the market they are applying for. adawd awd', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize, overflow: TextOverflow.fade), maxLines: 2,
+        if (headerText != null) Expanded(
+            child: Text(headerText, style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize, overflow: TextOverflow.fade), maxLines: 2,
             ),
         ),
         const SizedBox(height: 18),
         TextFormField(
           style: TextStyle(color: model.paletteColor),
-          maxLines: 3,
-          initialValue: form.welcomeMessage,
+          maxLines: lineCount,
+          initialValue: initialValue,
           decoration: InputDecoration(
             hintStyle: TextStyle(color: model.disabledTextColor),
-            hintText: 'Just so you know...',
+            hintText: hintMessage,
             errorStyle: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,

@@ -53,7 +53,7 @@ class BasicWebFooter extends StatelessWidget {
             context,
             model,
             ['Info', 'Instagram', 'Host my Space - coming soon'],
-            ['https://cincout.wixstudio.io/circle', instagramLink, ''],
+            ['https://cincout.wixstudio.io/circle', instagram_Link, ''],
           ),
           _buildTextColumn(
             context,

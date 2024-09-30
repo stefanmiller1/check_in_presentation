@@ -66,7 +66,7 @@ class _SearchProfilesState extends State<SearchProfiles> with SingleTickerProvid
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -122,7 +122,6 @@ class _SearchProfilesState extends State<SearchProfiles> with SingleTickerProvid
                   didEditQuery = false;
                   querySearch = query;
                 });
-
                 Future.delayed(Duration(seconds: 2), () {
                   setState(() {
                     didEditQuery = true;
@@ -298,8 +297,6 @@ class _SearchProfilesState extends State<SearchProfiles> with SingleTickerProvid
             }
           ),
         ),
-
-
 
         const SizedBox(height: 15),
 

@@ -120,6 +120,7 @@ class _ActivityApplicationSettingsWidgetState extends State<ActivityApplicationS
                       final snackBar = SnackBar(
                           backgroundColor: Colors.red.shade100,
                           content: failure.maybeMap(
+                            ownerDoesNotHaveAccount: (_) => Text('${widget.activityOwnerProfile.legalName.getOrCrash()} is unable to accept payments. Please Contact Owner', style: TextStyle(color: Colors.red)),
                             paymentServerError: (e) => Text(e.failedValue ?? AppLocalizations.of(context)!.serverError, style: TextStyle(color: Colors.red)),
                             orElse: () => Text('A Problem Happened', style: TextStyle(color: Colors.red)),
                           ));

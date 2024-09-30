@@ -64,6 +64,7 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
     );
   }
 
+
   Widget retrieveAuthenticationState(BuildContext context, bool isBrowser) {
     return BlocProvider(create: (_) => getIt<UserProfileWatcherBloc>()..add(const UserProfileWatcherEvent.watchUserProfileStarted()),
       child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
@@ -180,8 +181,8 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                           widget.didSelectReservation(item.listing!, item.reservation!, currentUser, item.activityManagerForm ?? ActivityManagerForm.empty(), attendeeItem, []);
                         }
                       },
-                      reservations: e.attending.map((f) => f.reservationId).toList(),
-                    )
+                    reservations: e.attending.map((f) => f.reservationId).toList(),
+                  )
                 );
               },
           orElse: () => Container()

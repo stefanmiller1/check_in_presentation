@@ -188,7 +188,7 @@ class _PersonalInformationProfileState extends State<PersonalInformationProfile>
                     autovalidateMode: context.read<UpdateUserProfileAccountBloc>().state.showErrorMessages,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                        child: (kIsWeb) ? Row(
+                        child: (kIsWeb && Responsive.isMobile(context) == false) ? Row(
                           children: [
                             Container(
                               width: Responsive.isDesktop(context) ? 600 : null,

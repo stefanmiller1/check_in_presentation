@@ -459,7 +459,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   decoration: TextDecoration.underline),),
             ),
             const SizedBox(height: 32),
-            Text('V. 1.0.8', style: TextStyle(color: model.disabledTextColor)),
+            Text('V. 1.0.9', style: TextStyle(color: model.disabledTextColor)),
             const SizedBox(height: 32),
           ],
         ),

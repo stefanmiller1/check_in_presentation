@@ -62,6 +62,65 @@ void didDeActivateSection(BuildContext context, DashboardModel model, String tit
   // present
 }
 
+
+void presentPrivateInviteDialog(BuildContext context, DashboardModel model, List<String> currentList, {required Function() selectedProfilesToSave}) {
+  if (kIsWeb) {
+    showGeneralDialog(
+        context: context,
+        barrierDismissible: false,
+        barrierLabel: '',
+        transitionDuration: const Duration(milliseconds: 350),
+        pageBuilder: (BuildContext contexts, anim1, anim2) {
+          return Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(25),
+                child: Container(
+                    height: 630,
+                    width: 400,
+                    decoration: BoxDecoration(
+                        color: model.accentColor,
+                        borderRadius: BorderRadius.all(Radius.circular(25))
+                    ),
+                    child: SearchProfiles(
+                      model: model,
+                      showAddProfile: false,
+                      selectedProfilesToSave: (profile) {
+                        selectedProfilesToSave();
+                    },
+                  )
+                ),
+              ),
+            ),
+          );
+        },
+        transitionBuilder: (context, anim1, anim2, child) {
+          return Transform.scale(
+              scale: anim1.value,
+              child: Opacity(
+                  opacity: anim1.value,
+                  child: child
+              )
+          );
+        }
+    );
+  } else {
+    Navigator.push(context, MaterialPageRoute(
+        builder: (_) {
+          return SearchProfiles(
+            model: model,
+            showAddProfile: false,
+            selectedProfilesToSave: (profile) {
+              selectedProfilesToSave();
+            },
+          );
+        }
+    )
+    );
+  }
+}
+
 // Widget createNew
 // Widget createNewOptionSubContainer() {
 //
@@ -80,7 +139,6 @@ bool isSelectedAvailabilitySlot(ReservationSlotItem item, VendorMerchantForm for
 
 
 Widget pagingControllerForForm(BuildContext context, DashboardModel model, PageController? pageController, bool showDelete, bool showAdd, double height, bool isHovering, Widget newItem, List<Widget> widgets, {required Function(bool show) didStartHover, required Function(bool nextOrBack) didSelectArrow, required Function(int index) didSelectRemove}) {
-
 
   return MouseRegion(
     onEnter: (event) {

@@ -24,7 +24,6 @@ class _ActivityBackgroundImagePreviewState extends State<ActivityBackgroundImage
 
     _animationController = AnimationController(vsync: this, duration: Duration(seconds: 5));
 
-
     //Add listener to AnimationController for know when end the count and change to the next page
     _animationController.addListener(() {
       if (_animationController.status == AnimationStatus.completed) {
@@ -50,8 +49,6 @@ class _ActivityBackgroundImagePreviewState extends State<ActivityBackgroundImage
     });
     super.initState();
   }
-
-
 
   @override
   void dispose() {
@@ -146,6 +143,71 @@ class _ActivityBackgroundImagePreviewState extends State<ActivityBackgroundImage
   }
 }
 
+
+class ActivityBackgroundImagePreviewMobileWeb extends StatefulWidget {
+
+  final ActivityManagerForm activityForm;
+  final DashboardModel model;
+  final ReservationItem reservation;
+
+  const ActivityBackgroundImagePreviewMobileWeb({super.key, required this.activityForm, required this.model, required this.reservation});
+
+  @override
+  State<ActivityBackgroundImagePreviewMobileWeb> createState() => _ActivityBackgroundImagePreviewMobileWebState();
+}
+
+class _ActivityBackgroundImagePreviewMobileWebState extends State<ActivityBackgroundImagePreviewMobileWeb> {
+
+  int _currentPage = 0;
+  late final PageController _activityPageController = PageController(initialPage: 0);
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(25),
+      child: Stack(
+        children: [
+          SizedBox(
+            height: 285,
+            child: PageView.builder(
+                controller: _activityPageController,
+                itemCount: widget.activityForm.profileService.activityBackground.activityProfileImages?.length ?? 1,
+                onPageChanged: (page) {
+                  setState(() {
+                    _currentPage = page;
+                  });
+                },
+                itemBuilder: (context, index) {
+
+                  final Uint8List? activityImageMemory = widget.activityForm.profileService.activityBackground.activityProfileImages?[index].imageToUpload;
+                  final String? activityImage = widget.activityForm.profileService.activityBackground.activityProfileImages?[index].uriPath;
+                  if (activityImage != null || activityImageMemory != null) {
+                    return SizedBox(
+                      height: 205,
+                      width: MediaQuery.of(context).size.width,
+                      child:  (activityImageMemory != null) ? Image.memory(activityImageMemory, fit: BoxFit.cover) : Image.network(activityImage!, fit: BoxFit.cover, scale: 0.03),
+                    );
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: getActivityTypeTabOption(
+                        context,
+                        widget.model,
+                        200,
+                        false,
+                        getActivityOptions().firstWhere((element) => element.activityId == widget.reservation.reservationSlotItem.first.selectedActivityType)
+                  ),
+                );
+              }
+            ),
+          ),
+          getImageItemSelectionTabWidget(context, widget.model, widget.activityForm.profileService.activityBackground.activityProfileImages?.length ?? 1, _currentPage),
+          // Text('DEV', style: TextStyle(color: widget.model.accentColor)),
+        ]
+      )
+    );
+  }
+}
 
 class ImageWithProgressIndicator extends StatefulWidget {
 

@@ -43,21 +43,27 @@ class _DiscoverySearchComponentState extends State<DiscoverySearchComponent> {
           ),
 
           SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 85),
-                getWeeklyDiscoveryMainContainer(),
-                // const SizedBox(height: 12),
-                // getDiscoveryFeedNearYou(),
-                // const SizedBox(height: 12),
-                // getDiscoveryFeedCommunities(),
-                const SizedBox(height: 12),
-                getNextFewHoursMainContainer(),
-                const SizedBox(height: 12),
-                getListingsBasedOnTypeMainContainer(),
-                const SizedBox(height: 12),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 85),
+                  getWeeklyDiscoveryMainContainer(),
+                  // const SizedBox(height: 12),
+                  // getDiscoveryFeedNearYou(),
+                  // const SizedBox(height: 12),
+                  // getDiscoveryFeedCommunities(),
+                  const SizedBox(height: 12),
+                  getNextFewHoursMainContainer(),
+                  const SizedBox(height: 12),
+                  Visibility(
+                      visible: (!(kIsWeb) && Responsive.isMobile(context)),
+                      child: getListingsBasedOnTypeMainContainer()
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
             ),
           ),
 
@@ -100,7 +106,9 @@ class _DiscoverySearchComponentState extends State<DiscoverySearchComponent> {
                         const SizedBox(width: 8),
                         Icon(Icons.search_rounded, color: widget.model.disabledTextColor),
                         const SizedBox(width: 8),
-                        Text('Search Communities or People', style: TextStyle(fontSize: widget.model.secondaryQuestionTitleFontSize, color: widget.model.disabledTextColor)
+                        Expanded(
+                          child: Text('Search Communities or People - Coming Soon', style: TextStyle(fontSize: widget.model.secondaryQuestionTitleFontSize, color: widget.model.disabledTextColor,  overflow: TextOverflow.ellipsis),
+                          ),
                         )
                       ],
                     ),

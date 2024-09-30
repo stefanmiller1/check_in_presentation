@@ -364,6 +364,11 @@ bool antendeeDocumentFormsIsValid(List<DocumentFormOption> list1, List<DocumentF
   return keys1.difference(keys2).isEmpty && keys2.difference(keys1).isEmpty;
 }
 
+
+bool antendeeDiscountCodeIsValid() {
+  return false;
+}
+
 bool showNextButton(NewAttendeeStepsMarker marker, CardItem? cardItem, AttendeeVendorMarker? vendorAttendeeMarker, ActivityManagerForm activityForm, VendorMerchantForm? refVendor, AttendeeFormState state) {
   switch (marker) {
     case NewAttendeeStepsMarker.chooseAttendingType:
@@ -395,6 +400,9 @@ bool showNextButton(NewAttendeeStepsMarker marker, CardItem? cardItem, AttendeeV
               return state.attendeeItem.eventMerchantVendorProfile != null;
             case AttendeeVendorMarker.selectPaymentMethod:
               return cardItem != null;
+            case null:
+              // TODO: Handle this case.
+              break;
           }
           return false;
         default:
@@ -408,7 +416,6 @@ bool showNextButton(NewAttendeeStepsMarker marker, CardItem? cardItem, AttendeeV
       return false;
     case NewAttendeeStepsMarker.joinComplete:
       return false;
-
   }
 }
 
@@ -431,7 +438,26 @@ String getTitleForNextButton(NewAttendeeStepsMarker marker) {
 }
 
 
-Widget footerWidgetForNewAttendee(BuildContext context, DashboardModel model, bool isPreview, NewAttendeeStepsMarker marker, CardItem? cardItem, AttendeeVendorMarker? vendorAttendeeMarker, ActivityManagerForm activityForm, AttendeeFormState state, VendorMerchantForm? refVendor,  bool isLast, {required Function() didSelectBack, required Function() didSelectNext}) {
+Widget footerWidgetForNewAttendee(
+    BuildContext context,
+    DashboardModel model,
+    bool isPreview,
+    NewAttendeeStepsMarker marker,
+    DiscountCode? discountCode,
+    CardItem? cardItem,
+    AttendeeVendorMarker? vendorAttendeeMarker,
+    ActivityManagerForm activityForm,
+    AttendeeFormState state,
+    VendorMerchantForm? vendorForm,
+    bool isLast, {required Function() didSelectBack, required Function() didSelectNext}) {
+
+
+    final double discountPercentage = (discountCode?.discountAmount ?? 1).toDouble();
+    final double totalFee = ((attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? [])).toDouble() + (attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? [])*CICOBuyerPercentageFee).toDouble());
+    double discountedTotal = totalFee * (1 - (discountPercentage / 100));
+
+    final bool validDiscountCode = isDiscountCodeValid(vendorForm, discountCode?.codeId);
+
     return Padding(
       padding: const EdgeInsets.all(18.0),
       child: Row(
@@ -455,8 +481,9 @@ Widget footerWidgetForNewAttendee(BuildContext context, DashboardModel model, bo
                 visible: (state.attendeeItem.ticketItems ?? []).isNotEmpty && state.attendeeItem.attendeeType == AttendeeType.tickets,
                 child: getFooterTotalTicketPricing(model, state.attendeeItem.ticketItems ?? [], activityForm.rulesService.currency),
               ),
+              /// show pricing without discount
               Visibility(
-                visible: activityRequiresVendorFee(state.attendeeItem.vendorForm) && state.attendeeItem.attendeeType == AttendeeType.vendor,
+                visible: activityRequiresVendorFee(state.attendeeItem.vendorForm) && state.attendeeItem.attendeeType == AttendeeType.vendor && validDiscountCode == false,
                 child: Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,13 +491,32 @@ Widget footerWidgetForNewAttendee(BuildContext context, DashboardModel model, bo
                       children: [
                         Text('Vendor Fee', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,), maxLines: 1,),
                         Expanded(
-                          child: Text(completeTotalPriceWithCurrency(
-                                (attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? [])).toDouble() +
-                                (attendeeVendorFee(state.attendeeItem.vendorForm?.boothPaymentOptions ?? [])).toDouble()*CICOBuyerPercentageFee, activityForm.rulesService.currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis, fontWeight: FontWeight.bold), maxLines: 1),
+                          child: Text(completeTotalPriceWithCurrency(totalFee,
+                              activityForm.rulesService.currency), style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis, fontWeight: FontWeight.bold), maxLines: 1),
                         ),
                       ],
                     ),
                   ),
+                ),
+                /// show pricing with discount
+                Visibility(
+                  visible: activityRequiresVendorFee(state.attendeeItem.vendorForm) && state.attendeeItem.attendeeType == AttendeeType.vendor && validDiscountCode == true,
+                  child: Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                          Expanded(
+                            child: Text(completeTotalPriceWithCurrency(totalFee,
+                                activityForm.rulesService.currency), style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize,  decoration: TextDecoration.lineThrough, overflow: TextOverflow.ellipsis, fontWeight: FontWeight.bold), maxLines: 1),
+                          ),
+                          Expanded(
+                            child: Text(completeTotalPriceWithCurrency(discountedTotal,
+                                activityForm.rulesService.currency), style: TextStyle(color: Colors.green, fontSize: model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis, fontWeight: FontWeight.bold), maxLines: 1),
+                        ),
+                      ]
+                    )
+                  )
                 ),
               const SizedBox(width: 6),
               ],
@@ -478,7 +524,7 @@ Widget footerWidgetForNewAttendee(BuildContext context, DashboardModel model, bo
           ),
 
           Visibility(
-            visible: isPreview || showNextButton(marker, cardItem, vendorAttendeeMarker, activityForm, refVendor, state),
+            visible: isPreview || showNextButton(marker, cardItem, vendorAttendeeMarker, activityForm, vendorForm, state),
             child:  Visibility(
               visible: state.isSubmitting == false,
               child: InkWell(

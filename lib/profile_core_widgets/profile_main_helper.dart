@@ -1,6 +1,6 @@
 part of check_in_presentation;
 
-String getUrlForUserProfile(String userId) => 'https://cincout.ca/${DashboardMarker.home.name.toString()}/${SearchExploreHelperMarker.map.name}/profile/${userId}';
+String getUrlForUserProfile(String userId) => 'https://cincout.ca/${DashboardMarker.search.name.toString()}/${SearchExploreHelperMarker.map.name}/profile/${userId}';
 
 Widget reportProfileWidget(DashboardModel model, String profileId) {
   return Row(
@@ -153,9 +153,15 @@ void didSelectReviewApplicationsWeb(BuildContext context, UserProfileModel profi
 
 void didSelectReservationPreview(BuildContext context, DashboardModel model, ReservationPreviewer item) async {
   if (item.listing != null && item.reservation != null) {
+    Beamer.of(context).update(
+        configuration: RouteInformation(
+          location: searchedReservationRoute(item.reservation!.instanceId.getOrCrash(), item.reservation!.reservationId.getOrCrash()),
+        ),
+        rebuild: false
+    );
     final newUrl = getUrlForActivity(item.reservation!.instanceId.getOrCrash(), item.reservation!.reservationId.getOrCrash());
     final canLaunch = await canLaunchUrlString(newUrl);
-    if (kIsWeb) {
+    if (kIsWeb && (Responsive.isMobile(context) == false)) {
       if (canLaunch) {
         await launchUrlString(newUrl);
       } else {

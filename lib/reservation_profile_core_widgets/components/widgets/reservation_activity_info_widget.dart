@@ -5,11 +5,13 @@ class ReservationActivityInfoWidget extends StatelessWidget {
   final bool showSuggestions;
   final bool isOwner;
   final bool activitySetupComplete;
+  final bool isLoading;
   final ListingManagerForm listingForm;
   final ActivityManagerForm activityForm;
   final ReservationItem reservation;
   final UserProfileModel? activityOwner;
   final List<AttendeeItem> allAttendees;
+  final List<EventMerchantVendorProfile> allVendors;
   final List<UniqueId> linkedCommunities;
   final Function(ActivityTicketOption) didSelectActivityTicket;
   final Function() didSelectShowReservation;
@@ -32,13 +34,15 @@ class ReservationActivityInfoWidget extends StatelessWidget {
     required this.didSelectShowReservation,
     required this.didSelectSeeMoreReservations,
     required this.didSelectSimilarRes,
+    required this.isLoading,
+    required this.allVendors,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isWebMobile = kIsWeb && Responsive.isMobile(context);
     final String? currentUser = facade.FirebaseChatCore.instance.firebaseUser?.uid;
-    final AttendeeItem? currentAttendee = allAttendees.firstWhereOrNull(
-            (element) => element.attendeeOwnerId.getOrCrash() == currentUser);
+    final AttendeeItem? currentAttendee = allAttendees.firstWhereOrNull((element) => element.attendeeOwnerId.getOrCrash() == currentUser);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -58,17 +62,16 @@ class ReservationActivityInfoWidget extends StatelessWidget {
         const SizedBox(height: 5),
         if (_shouldShowHostColumn(context)) _buildHostColumn(context),
         if (_shouldShowPostedOnBehalfColumn(context)) _buildPostedOnBehalfColumn(context),
+
         _buildActivityRequirementsColumn(context),
-        if (activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true)
-          _buildMerchantSupportColumn(context, listingForm, currentAttendee),
-        if (activityForm.activityAttendance.isTicketBased == true)
-          _buildTicketOptionsColumn(context),
+        if (activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true) _buildMerchantSupportColumn(context, listingForm, currentAttendee),
+        if (activityForm.activityAttendance.isTicketBased == true) _buildTicketOptionsColumn(context),
         const SizedBox(height: 5),
         Divider(color: model.paletteColor.withOpacity(0.1)),
         const SizedBox(height: 5),
         _buildReportActivityColumn(reservation.reservationId.getOrCrash()),
         const SizedBox(height: 10),
-        _buildSimilarActivitiesColumn(context, reservation),
+        if (!isWebMobile) _buildSimilarActivitiesColumn(context, reservation),
         if (MediaQuery.of(context).size.width <= 1600) Container(
             width: MediaQuery.of(context).size.width,
             child: BasicWebFooter(model: model)
@@ -79,73 +82,87 @@ class ReservationActivityInfoWidget extends StatelessWidget {
   }
 
   Widget _buildActivitySetupStack(BuildContext context) {
-    return Stack(
-      children: [
-        Visibility(
-          visible: !activitySetupComplete,
-          child: InkWell(
-            onTap: () {},
-            child: Container(
-              height: 285,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: model.disabledTextColor.withOpacity(0.25),
-                border: Border.all(color: model.disabledTextColor),
-              ),
-              child: Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: model.disabledTextColor),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Icon(Icons.add_a_photo_outlined, color: model.disabledTextColor),
-                              const SizedBox(height: 8),
-                              Text('Add Photos', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
-                            ],
+    // final isWebMobile = kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
+    final isWebMobile = kIsWeb && Responsive.isMobile(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Stack(
+        children: [
+          Visibility(
+            visible: !activitySetupComplete,
+            child: InkWell(
+              onTap: () {},
+              child: Container(
+                height: 285,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: model.disabledTextColor.withOpacity(0.25),
+                  border: Border.all(color: model.disabledTextColor),
+                ),
+                child: Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: model.disabledTextColor),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_a_photo_outlined, color: model.disabledTextColor),
+                                const SizedBox(height: 8),
+                                Text('Add Photos', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        Visibility(
-          visible: activitySetupComplete,
-          child: ActivityBackgroundImagePreview(
-            activityForm: activityForm,
-            model: model,
-            reservation: reservation,
-          ),
-        ),
-        Positioned(
-          left: 20,
-          bottom: 20,
-          child: AnimatedOpacity(
-            duration: Duration(milliseconds: 300),
-            opacity: showSuggestions ? 1 : 0,
-            child: Chip(
-              side: BorderSide.none,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              backgroundColor: model.mobileBackgroundColor,
-              avatar: Icon(Icons.photo_camera_outlined, color: model.disabledTextColor),
-              label: Text('Add Photos (a max. of 6)', style: TextStyle(color: model.disabledTextColor)),
+          if (!isWebMobile) Visibility(
+            visible: activitySetupComplete,
+            child: ActivityBackgroundImagePreview(
+              activityForm: activityForm,
+              model: model,
+              reservation: reservation,
             ),
           ),
-        ),
-      ],
+          if (isWebMobile) Visibility(
+            visible: activitySetupComplete,
+            child: ActivityBackgroundImagePreviewMobileWeb(
+              activityForm: activityForm,
+              model: model,
+              reservation: reservation,
+            ),
+          ),
+          Positioned(
+            left: 20,
+            bottom: 20,
+            child: AnimatedOpacity(
+              duration: Duration(milliseconds: 300),
+              opacity: showSuggestions ? 1 : 0,
+              child: Chip(
+                side: BorderSide.none,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                backgroundColor: model.mobileBackgroundColor,
+                avatar: Icon(Icons.photo_camera_outlined, color: model.disabledTextColor),
+                label: Text('Add Photos (a max. of 6)', style: TextStyle(color: model.disabledTextColor)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -232,45 +249,116 @@ class ReservationActivityInfoWidget extends StatelessWidget {
     return getActivityRequirementsColumn(
       context,
       model,
+      isLoading,
       showSuggestions,
       Responsive.isDesktop(context),
       activityOwner,
       activityForm,
       reservation,
-      _getVendorAttendees(),
+      allAttendees,
+      allVendors,
       facade.FirebaseChatCore.instance.firebaseUser?.uid,
       didSelectAttendees: () {
-        if (kIsWeb) {
-          // Handle web-specific logic if any
+        if (kIsWeb && (Responsive.isMobile(context) == false)) {
+          showGeneralDialog(
+            context: context,
+            barrierDismissible: true,
+            barrierLabel: 'Attendees',
+            barrierColor: model.disabledTextColor.withOpacity(0.34),
+            transitionDuration: Duration(milliseconds: 350),
+            pageBuilder: (BuildContext contexts, anim1, anim2) {
+              return Scaffold(
+                  backgroundColor: Colors.transparent,
+                  body: Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                      decoration: BoxDecoration(
+                          color: model.webBackgroundColor,
+                          borderRadius: BorderRadius.all(Radius.circular(17.5))
+                      ),
+                      width: 750,
+                      height: 900,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.all(Radius.circular(17.5)),
+                        child: Stack(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 85.0),
+                              child: ActivityAttendeesListScreen(
+                                model: model,
+                                reservationItem: reservation,
+                                activityManagerForm: activityForm,
+                                attendeeTypeTab: AttendeeType.vendor,
+                                attendeeList: _getVendorAttendees(),
+                                currentUser: facade.FirebaseChatCore.instance.firebaseUser?.uid,
+                                didSelectAttendee: (AttendeeItem attendee, UserProfileModel user) {
+                                },
+                              ),
+                            ),
+                            Container(
+                              height: 70,
+                              width: 750,
+                              child: AppBar(
+                                backgroundColor: model.paletteColor,
+                                elevation: 0,
+                                automaticallyImplyLeading: false,
+                                centerTitle: true,
+                                toolbarHeight: 80,
+                                title: Text('Attendees'),
+                                titleTextStyle: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
+                                actions: [
+                                  IconButton(onPressed: () => Navigator.of(context).pop(), icon: Icon(Icons.cancel, size: 40, color: model.accentColor), padding: EdgeInsets.zero),
+                                  const SizedBox(width: 10),
+                                ],
+                              ),
+                            ),
+
+                          ],
+                        ),
+                      ),
+                  ),
+                )
+              );
+            },
+            transitionBuilder: (context, anim1, anim2, child) {
+              return Transform.scale(
+                  scale: anim1.value,
+                  child: Opacity(
+                  opacity: anim1.value,
+                  child: child
+                )
+              );
+            },
+          );
         } else {
-          // Navigator.of(context).push(MaterialPageRoute(builder: (newContext) {
-          //   return ActivityAttendeesListScreen(
-          //     model: model,
-          //     reservationItem: reservation,
-          //     activityManagerForm: activityForm,
-          //     currentUser: facade.FirebaseChatCore.instance.firebaseUser?.uid,
-          //     didSelectAttendee: (AttendeeItem attendee, UserProfileModel user) {
-          //
-          //       Navigator.of(newContext).push(MaterialPageRoute(builder: (_) {
-          //         return Scaffold(
-          //           resizeToAvoidBottomInset: false,
-          //           appBar: AppBar(
-          //             backgroundColor: model.mobileBackgroundColor,
-          //             elevation: 0,
-          //             title: const Text('Profile'),
-          //             titleTextStyle: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold),
-          //             centerTitle: true,
-          //           ),
-          //           body: ProfileMainContainer(
-          //             model: model,
-          //             currentUserProfile: user,
-          //             didSelectReviewApplications: () {},
-          //           ),
-          //         );
-          //       }));
-          //     },
-          //   );
-          // }));
+        Navigator.of(context).push(MaterialPageRoute(builder: (newContext) {
+            return Scaffold(
+              appBar: AppBar(
+                backgroundColor: model.paletteColor,
+                elevation: 0,
+                automaticallyImplyLeading: false,
+                centerTitle: true,
+                toolbarHeight: 80,
+                title: Text('Attendees'),
+                titleTextStyle: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
+                actions: [
+                IconButton(onPressed: () => Navigator.of(context).pop(), icon: Icon(Icons.cancel, size: 40, color: model.accentColor), padding: EdgeInsets.zero),
+                const SizedBox(width: 10),
+                ],
+              ),
+              body: ActivityAttendeesListScreen(
+                model: model,
+                reservationItem: reservation,
+                activityManagerForm: activityForm,
+                attendeeTypeTab: AttendeeType.vendor,
+                attendeeList: _getVendorAttendees(),
+                currentUser: facade.FirebaseChatCore.instance.firebaseUser?.uid,
+                didSelectAttendee: (AttendeeItem attendee, UserProfileModel user) {
+
+                },
+              ),
+            );
+          }));
         }
       },
     );

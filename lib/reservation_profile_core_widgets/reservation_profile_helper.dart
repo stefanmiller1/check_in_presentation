@@ -324,7 +324,7 @@ Widget getPostedOnBehalfColumn(BuildContext context, DashboardModel model, UserP
 }
 
 void presentNewAttendeeJoin(BuildContext context, DashboardModel model, ListingManagerForm listingForm, ReservationItem reservation, ActivityManagerForm activity, UserProfileModel reservationOwner) {
-  if (kIsWeb) {
+  if (kIsWeb && (Responsive.isMobile(context) == false)) {
     showGeneralDialog(
         context: context,
         barrierDismissible: false,
@@ -442,7 +442,7 @@ void presentNewTicketAttendeeJoin(BuildContext context, DashboardModel model, Re
 
 
 void presentPartnershipRequestAttendee(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activity, UserProfileModel reservationOwner) {
-  if (kIsWeb) {
+  if (kIsWeb && (Responsive.isMobile(context) == false)) {
     showGeneralDialog(
         context: context,
         barrierDismissible: false,
@@ -502,7 +502,7 @@ void presentPartnershipRequestAttendee(BuildContext context, DashboardModel mode
 
 
 void presentNewInstructorAttendee(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activity, UserProfileModel reservationOwner) {
-  if (kIsWeb) {
+  if (kIsWeb && (Responsive.isMobile(context) == false)) {
     showGeneralDialog(
         context: context,
         barrierDismissible: false,
@@ -561,12 +561,12 @@ void presentNewInstructorAttendee(BuildContext context, DashboardModel model, Re
 
 
 void presentNewVendorAttendee(BuildContext context, DashboardModel model, VendorMerchantForm? vendorForm, ListingManagerForm listingForm, ReservationItem reservation, ActivityManagerForm activity, UserProfileModel reservationOwner) {
-  if (kIsWeb) {
+  if (kIsWeb && (Responsive.isMobile(context) == false)) {
     showGeneralDialog(
         context: context,
         barrierDismissible: false,
         barrierLabel: '',
-        transitionDuration: const Duration(milliseconds: 350),
+        transitionDuration: Duration(milliseconds: 350),
         pageBuilder: (BuildContext contexts, anim1, anim2) {
           return Scaffold(
             backgroundColor: Colors.transparent,
@@ -618,7 +618,8 @@ void presentNewVendorAttendee(BuildContext context, DashboardModel model, Vendor
             isPreview: false,
             vendorForm: vendorForm,
           );
-        }
+        },
+        fullscreenDialog: true
       )
     );
   }
