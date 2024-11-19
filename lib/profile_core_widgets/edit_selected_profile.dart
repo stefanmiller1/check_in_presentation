@@ -25,8 +25,9 @@ class _EditCurrentProfileState extends State<EditCurrentProfile> {
   @override
   void initState() {
    
-    if (widget.profile.profileImage != null) {
-      _currentNetworkSpaceImage  = Image(image: widget.profile.profileImage!.image, fit: BoxFit.cover, width: 500, height: 500);
+    if (widget.profile.photoUri != null) {
+      _currentNetworkSpaceImage = Image.network(widget.profile.photoUri!, fit: BoxFit.cover, width: 500, height: 500);
+      // _currentNetworkSpaceImage =  Image(image: widget.profile.profileImage!.image, fit: BoxFit.cover, width: 500, height: 500);
     }
     super.initState();
   }

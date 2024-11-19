@@ -56,6 +56,7 @@ class _VendorMerchantProfileWidgetState extends State<VendorMerchantProfileWidge
       });
     });
   }
+
   @override
   Widget build(BuildContext context) {
 
@@ -109,9 +110,8 @@ class _VendorMerchantProfileWidgetState extends State<VendorMerchantProfileWidge
           emptyMainSectionWidget: _buildNoSetup(),
           onEditPressed: () {
 
-          }
+        }
       ),
-
     ];
 
     return CustomProfileLayout(
@@ -189,7 +189,7 @@ class _VendorMerchantProfileWidgetState extends State<VendorMerchantProfileWidge
           children: [
             const SizedBox(height: 50),
             ...sectionList.map((e) => ProfileSectionWidget(model: widget.model, profileSectionObject: e)
-            ).toList()
+            )
           ]
       ),
     );

@@ -179,17 +179,15 @@ Widget getMessengerReservationHeader(BuildContext context, ListingManagerForm li
             width: 55,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(30),
-              child: Image(
-                  image: retrieveReservationSpacesFromListing(reservationItem, listing).firstWhere((element) => element.spacePhoto != null).spacePhoto!.image,
-                  errorBuilder: (context, err, stack) {
-                    return getActivityTypeTabOption(
-                        context, model,
-                        55,
-                        false,
-                        getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
-                    );
-                  },
-                  fit: BoxFit.cover
+              child: CachedNetworkImage(
+                imageUrl: retrieveReservationSpacesFromListing(reservationItem, listing).firstWhereOrNull((element) => element.photoUri != null)?.photoUri ?? '',
+                imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.cover),
+                errorWidget: (context, url, error) => getActivityTypeTabOption(
+                    context, model,
+                    55,
+                    false,
+                    getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
+                ),
               ),
             ),
           ),
@@ -449,40 +447,36 @@ Widget getReservationMediaFrame(BuildContext context, DashboardModel model, doub
           width: width,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
-            child: Image.network(
-                activity?.profileService.activityBackground.activityProfileImages?.first.uriPath ?? '',
-                errorBuilder: (context, err, stack) {
-                  return getActivityTypeTabOption(
-                      context,
-                      model,
-                      height,
-                      false,
-                      getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
-                  );
-                },
-                fit: BoxFit.cover
-            ),
+            child: CachedNetworkImage(
+              imageUrl: activity?.profileService.activityBackground.activityProfileImages?.first.uriPath ?? '',
+              imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit:BoxFit.cover),
+              errorWidget: (context, url, error) => getActivityTypeTabOption(
+                  context,
+                  model,
+                  height,
+                  false,
+                  getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
+              )
+            )
           ),
         ) else if (listing != null && retrieveReservationSpacesFromListing(reservationItem, listing).where((element) => element.photoUri != null).isNotEmpty) SizedBox(
           height: height,
           width: width,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
-            child: Image(
-                image: retrieveReservationSpacesFromListing(reservationItem, listing).firstWhere((element) => element.spacePhoto != null).spacePhoto!.image,
-                errorBuilder: (context, err, stack) {
-                  return getActivityTypeTabOption(
-                      context,
-                      model,
-                      height,
-                      false,
-                      getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
-                  );
-                },
-                fit: BoxFit.cover
+            child: CachedNetworkImage(
+                  imageUrl: retrieveReservationSpacesFromListing(reservationItem, listing).firstWhereOrNull((element) => element.photoUri != null)?.photoUri ?? '',
+                  imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.cover),
+                  errorWidget: (context, url, error) => getActivityTypeTabOption(
+                    context,
+                    model,
+                    height,
+                    false,
+                    getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
+                )
+              )
             ),
-          ),
-        ) else getActivityTypeTabOption(
+          ) else getActivityTypeTabOption(
             context, model,
             height,
             false,
@@ -513,40 +507,38 @@ Widget getReservationMediaFrameFlexible(
             width: width,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(15),
-              child: Image.network(
-                  activity?.profileService.activityBackground.activityProfileImages?.first.uriPath ?? '',
-                  errorBuilder: (context, err, stack) {
-                    return getActivityTypeTabOption(
-                        context,
-                        model,
-                        height,
-                        false,
-                        getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
-                    );
-                  },
-                  fit: BoxFit.cover
-                ),
+              child: CachedNetworkImage(
+                imageUrl: activity?.profileService.activityBackground.activityProfileImages?.first.uriPath ?? '',
+                imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.cover),
+                errorWidget: (context, url, error) => getActivityTypeTabOption(
+                    context,
+                    model,
+                    height,
+                    false,
+                    getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
+                )
               ),
             )
+          )
         ) else if (listing != null && retrieveReservationSpacesFromListing(reservationItem, listing).where((element) => element.photoUri != null).isNotEmpty) Flexible(
           child: SizedBox(
             height: height,
             width: width,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(15),
-              child: Image(
-                  image: retrieveReservationSpacesFromListing(reservationItem, listing).firstWhere((element) => element.spacePhoto != null).spacePhoto!.image,
-                  errorBuilder: (context, err, stack) {
-                    return getActivityTypeTabOption(
-                        context,
-                        model,
-                        height,
-                        false,
-                        getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
-                    );
-                  },
-                  fit: BoxFit.cover
-              ),
+              child: CachedNetworkImage(
+              imageUrl: retrieveReservationSpacesFromListing(reservationItem, listing).firstWhereOrNull((element) => element.photoUri != null)?.photoUri ?? '',
+              imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.cover),
+              errorWidget: (context, url, error) {
+                  return getActivityTypeTabOption(
+                    context,
+                    model,
+                    height,
+                    false,
+                    getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
+                  );
+                },
+              )
             ),
           ),
         ) else Flexible(
@@ -625,10 +617,13 @@ Widget getSearchFooterWidget(BuildContext context, DashboardModel model, UniqueI
                             border: Border.all(color: textColor),
                             borderRadius: BorderRadius.all(Radius.circular(30))
                         ),
-                        child: (resPreviewer.reservationOwnerProfile?.profileImage != null && resPreviewer.reservationOwnerProfile?.profileImage?.image != null) ? CircleAvatar(
-                          backgroundImage: resPreviewer.reservationOwnerProfile?.profileImage?.image ?? Image.asset('assets/profile-avatar.png').image,
-                          ) : Center(child: Text((resPreviewer.reservationOwnerProfile?.legalName.isValid() == true) ? resPreviewer.reservationOwnerProfile!.legalName.value.fold((l) => resPreviewer.reservationOwnerProfile?.emailAddress.value.fold((l) => '..', (r) => r)[0] ?? '..', (r) => r)[0] : resPreviewer.reservationOwnerProfile?.emailAddress.value.fold((l) => '..', (r) => r)[0] ?? '..', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15))),
-                        )
+                        child: CachedNetworkImage(
+                          imageUrl: resPreviewer.reservationOwnerProfile?.photoUri ?? '',
+                          imageBuilder: (context, imageProvider) => CircleAvatar(backgroundImage: imageProvider),
+                          placeholder: (context, url) => CircleAvatar(backgroundImage: Image.asset('assets/profile-avatar.png').image),
+                          errorWidget: (context, url, error) => Center(child: Text((resPreviewer.reservationOwnerProfile?.legalName.isValid() == true) ? resPreviewer.reservationOwnerProfile!.legalName.value.fold((l) => resPreviewer.reservationOwnerProfile?.emailAddress.value.fold((l) => '..', (r) => r)[0] ?? '..', (r) => r)[0] : resPreviewer.reservationOwnerProfile?.emailAddress.value.fold((l) => '..', (r) => r)[0] ?? '..', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15))),
+                          )
+                        ),
                       ),
                     ),
                     const SizedBox(

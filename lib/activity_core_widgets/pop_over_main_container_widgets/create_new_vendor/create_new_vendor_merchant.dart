@@ -708,7 +708,9 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
               if (profiles.isNotEmpty) Column(
                 children: [
                   ...profiles.map(
-                    (e) => InkWell(
+                    (e) {
+
+                    return InkWell(
                       onTap: () {
                         if (state.attendeeItem.eventMerchantVendorProfile == e.profileId) {
                           context.read<AttendeeFormBloc>().add(AttendeeFormEvent.updateMerchantVendorProfileId(null));
@@ -744,7 +746,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
 
                                   },
                                   didSelectEdit: () {
-
+                                    didSelectEditVendorProfile(context, widget.model, e);
                                   },
                                 ),
                               )
@@ -752,7 +754,8 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                           )
                         ),
                       ),
-                    )
+                    );
+                    }
                   ).toList(),
                   const SizedBox(height: 8),
                   InkWell(
@@ -1323,6 +1326,12 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
       discount = (widget.vendorForm?.discountOptions ?? []).firstWhereOrNull((e) => e.codeId == discountCode);
     }
 
+    // ///auto select vendor profile
+    if (state.attendeeItem.eventMerchantVendorProfile == null && profiles.isNotEmpty) {
+      context.read<AttendeeFormBloc>().add(AttendeeFormEvent.updateMerchantVendorProfileId(profiles[0].profileId));
+    }
+
+
     pageController = PageController(initialPage: 0);
 
 
@@ -1458,7 +1467,23 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
 
                         }
                       });
-                },
+                    },
+                    didSelectDisabledNext: () {
+                    setState(() {
+                      final snackBar = SnackBar(
+                          behavior: (kIsWeb) ? SnackBarBehavior.floating : null, // Makes the snackbar float
+                          backgroundColor: Colors.red.shade100,
+                          elevation: 22,
+                          margin: (kIsWeb) ? EdgeInsets.symmetric(horizontal: 20, vertical: 10) : null, // Inset from screen edges
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15), // Rounded corners// Border with color and width
+                          ),
+                          content: Text(getTitleForError(currentMarkerItem, currentVendorMarkerItem, state) ?? '', style: TextStyle(color: Colors.red),
+                        )
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                    });
+                    },
               ),
             )
           )

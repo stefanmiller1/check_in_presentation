@@ -28,7 +28,11 @@ Widget multiSelectionHeader(BuildContext context, DashboardModel model, List<Uni
                             height: 85,
                             width: 65,
                             color: model.webBackgroundColor,
-                            child: (valueQ.spacePhoto != null) ? Image(image: valueQ.spacePhoto!.image, fit: BoxFit.fill) : Container()
+                            child: CachedNetworkImage(
+                              imageUrl: valueQ.photoUri ?? '',
+                              imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.fill),
+                              errorWidget: (context, url, error) => Container()
+                            )
                         ),
                       ),
                     )
@@ -136,13 +140,24 @@ Widget getSpaceOptionFrameContainer(bool isSelected, SpaceOptionSizeDetail space
               height: 85,
               width: 65,
               color: model.webBackgroundColor,
-              child: (spaceOptionSize.spacePhoto != null) ? Image(image: spaceOptionSize.spacePhoto!.image, fit: BoxFit.fill) :
-              (spaceOptionSize.photoUri != null) ? Shimmer.fromColors(
-                enabled: (spaceOptionSize.photoUri != null),
-                baseColor: model.accentColor,
-                highlightColor: Colors.grey.shade100,
-                child: Container(),
-              ) : Container()
+              child: CachedNetworkImage(
+                imageUrl: spaceOptionSize.photoUri ?? '',
+                imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.fill),
+                placeholder: (context, url) => Shimmer.fromColors(
+                    enabled: (spaceOptionSize.photoUri != null),
+                    baseColor: model.accentColor,
+                    highlightColor: Colors.grey.shade100,
+                      child: Container(
+                        height: 85,
+                        width: 65,
+                        decoration: BoxDecoration(
+                          color: model.webBackgroundColor
+                        )
+                      ),
+                ),
+                errorWidget: (context, url, error) => Container()
+              ),
+
           ),
         ),
       )
@@ -156,14 +171,17 @@ Widget getSelectedSpaces(BuildContext context, SpaceOptionSizeDetail spaceDetail
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-       if (spaceDetailOptions.spacePhoto != null) Padding(
+       if (spaceDetailOptions.photoUri != null) Padding(
          padding: const EdgeInsets.symmetric(horizontal: 8.0),
          child: ClipRRect(
           borderRadius: BorderRadius.circular(15),
            child: Container(
              height: 120,
               width: 120,
-              child: Image(image: spaceDetailOptions.spacePhoto!.image, fit: BoxFit.cover)
+              child: CachedNetworkImage(
+                imageUrl: spaceDetailOptions.photoUri ?? '',
+                imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.cover),
+             )
            )
          ),
        ),

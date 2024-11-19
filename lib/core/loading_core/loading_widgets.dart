@@ -41,12 +41,14 @@ Widget emptyLargeListView(BuildContext context, int count, Axis axis, bool isBro
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Container(
-                          height: 300,
-                          width: MediaQuery.of(context).size.width,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Colors.grey.withOpacity(0.15),
+                        Expanded(
+                          child: Container(
+                            height: 300,
+                            width: MediaQuery.of(context).size.width,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: Colors.grey.withOpacity(0.15),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 10),

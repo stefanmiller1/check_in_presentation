@@ -6,7 +6,7 @@ class Indicator extends StatelessWidget {
     this.normalColor  = Colors.black,
     this.selectedColor = Colors.white,
     required this.controller,
-    this.itemCount: 0,
+    this.itemCount = 0,
   });
 
   final PageController controller;

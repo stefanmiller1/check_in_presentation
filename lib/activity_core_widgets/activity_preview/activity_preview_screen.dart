@@ -34,6 +34,8 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
     dashboardModel = DashboardModel.instance;
     _scrollController = ScrollController();
     _tabController = TabController(initialIndex: 0, length: ActivityPreviewTabs.values.length, vsync: this);
+
+    facade.ActivityFormUpdateFacade.instance.updateViewCount(activityResId: widget.currentReservationId.getOrCrash());
     // updateStateSafely();
     super.initState();
   }
@@ -163,6 +165,18 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                 case null:
                 // TODO: Handle this case.
                   break;
+                case AttendeeType.tickets:
+                  // TODO: Handle this case.
+                case AttendeeType.pass:
+                  // TODO: Handle this case.
+                case AttendeeType.instructor:
+                  // TODO: Handle this case.
+                case AttendeeType.partner:
+                  // TODO: Handle this case.
+                case AttendeeType.organization:
+                  // TODO: Handle this case.
+                case AttendeeType.interested:
+                  // TODO: Handle this case.
               }
             });
           },
@@ -467,33 +481,36 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
 
   Widget mainContainerHeaderTabWeb(DashboardModel model) {
 
-    Widget main = Container(
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(25.0),
-          color: (kIsWeb && (Responsive.isMobile(context))) ? model.accentColor : model.accentColor.withOpacity(0.35)
-      ),
-      child: TabBar(
-        indicatorSize: TabBarIndicatorSize.tab,
-        controller: _tabController,
-        onTap: (index) {
-          setState(() {
-            activityOverviewMarker = ActivityPreviewTabs.values[index];
-            _pageController.jumpToPage(index);
-          });
-        },
-        indicator: BoxDecoration(
+    Widget main = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Container(
+        decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25.0),
-            color: model.paletteColor
+            color: model.accentColor.withOpacity(0.35)
         ),
-        labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-        labelColor: model.accentColor,
-        unselectedLabelColor: model.paletteColor,
-        tabs: ActivityPreviewTabs.values.map(
-                (e) => ClipRRect(
-              borderRadius: BorderRadius.circular(25),
-              child: Tab(text: e.name.toUpperCase()),
-            )
-        ).toList(),
+        child: TabBar(
+          indicatorSize: TabBarIndicatorSize.tab,
+          controller: _tabController,
+          onTap: (index) {
+            setState(() {
+              activityOverviewMarker = ActivityPreviewTabs.values[index];
+              _pageController.jumpToPage(index);
+            });
+          },
+          indicator: BoxDecoration(
+              borderRadius: BorderRadius.circular(25.0),
+              color: model.paletteColor
+          ),
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          labelColor: model.accentColor,
+          unselectedLabelColor: model.paletteColor,
+          tabs: ActivityPreviewTabs.values.map(
+                  (e) => ClipRRect(
+                borderRadius: BorderRadius.circular(25),
+                child: Tab(text: e.name.toUpperCase()),
+              )
+          ).toList(),
+        ),
       ),
     );
 
@@ -507,7 +524,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                   padding: const EdgeInsets.only(top: 18.0),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(25.0),
-                    child: (kIsWeb && (Responsive.isMobile(context))) ? main : BackdropFilter(
+                    child: BackdropFilter(
                       filter: UI.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
                       child: main
                 )

@@ -227,6 +227,9 @@ class _ReservationRequestPartnershipAttendeeState extends State<ReservationReque
 
                                   });
                                 },
+                                didSelectDisabledNext: () {
+
+                                },
                               ),
                             )
                         )

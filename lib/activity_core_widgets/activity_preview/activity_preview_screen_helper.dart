@@ -1224,7 +1224,7 @@ Widget getVendorAttendees(BuildContext context, DashboardModel model, bool isLoa
             if (attendeeImages.length > 10)
               ..._buildAvatarStack(model, isLoading, attendeeImages.sublist(0, 9)),
             if (attendeeImages.length > 10)
-              _buildRemainingAvatar(model, attendeeImages.sublist(9)),
+              _buildRemainingAvatar(model, 9, attendeeImages.sublist(9)),
         ],
             ),
       )
@@ -1247,12 +1247,34 @@ List<Widget> _buildAvatarStack(DashboardModel model, bool isLoading, List<String
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(1.25),
-                      child: CircleAvatar(
-                      foregroundImage:  Image.network(attendeeProfile[index], scale: 0.1).image,
-                      backgroundImage:  Image.asset('assets/profile-avatar.png').image,
-                      radius: 35, // Adjust radius as needed
-          ),
-        ),
+                      child:  CachedNetworkImage(
+                        imageUrl: attendeeProfile[index],
+                        imageBuilder: (context, imageProvider) => CircleAvatar(
+                          radius: 35,
+                          backgroundColor: Colors.grey.shade100,
+                          backgroundImage: imageProvider, // Cached image as the background
+                        ),
+                        placeholder: (context, url) => Shimmer.fromColors(
+                            baseColor: Colors.grey.shade200,
+                            highlightColor: Colors.grey.shade100,
+                             child: CircleAvatar(
+                                 radius: 35,
+                                 backgroundColor: Colors.grey.shade100,
+                           )
+                        ),
+                        errorWidget: (context, url, error) => CircleAvatar(
+                          radius: 35, // Error color
+                          backgroundImage: Image.asset('assets/profile-avatar.png').image,
+                        ),
+                      ),
+                    ),
+            // CircleAvatar(
+            //           foregroundImage:  Image.network(attendeeProfile[index], scale: 0.1).image,
+            //           backgroundImage:  Image.asset('assets/profile-avatar.png').image,
+            //           radius: 35, // Adjust radius as needed
+
+
+
       )
     ),
   );
@@ -1275,9 +1297,9 @@ List<Widget> _buildAvatarStack(DashboardModel model, bool isLoading, List<String
 // ),
 // ),
 
-Widget _buildRemainingAvatar(DashboardModel model, List<String> remainingAttendees) {
+Widget _buildRemainingAvatar(DashboardModel model, int limit, List<String> remainingAttendees) {
   return Positioned(
-    left: 9 * 25.0, // Position it after the 9th avatar
+    left: limit * 25.0, // Position it after the 9th avatar
     child: Container(
       width: 70,
       height: 70,

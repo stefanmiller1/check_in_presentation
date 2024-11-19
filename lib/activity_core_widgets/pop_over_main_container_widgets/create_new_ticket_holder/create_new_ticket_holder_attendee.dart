@@ -528,6 +528,7 @@ class _ReservationCreateTicketAttendeeState extends State<ReservationCreateTicke
                               state,
                               null,
                               attendeeMainContainer(context, null, state).last.markerItem == currentMarkerItem,
+
                               didSelectBack: () {
 
                                 setState(() {
@@ -561,6 +562,9 @@ class _ReservationCreateTicketAttendeeState extends State<ReservationCreateTicke
                                     currentMarkerItem = nextIndexItem;
                                   }
                                 });
+                              },
+                              didSelectDisabledNext: () {
+
                               },
                             ),
                           ),

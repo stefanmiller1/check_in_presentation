@@ -147,10 +147,25 @@ Widget getVendorMerchProfileHeader(DashboardModel model, bool isOwner, EventMerc
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              CircleAvatar(
-                radius: 40,
-                foregroundImage: (profile.uriImage?.uriPath != null) ? Image.network(profile.uriImage!.uriPath!).image : null,
-                backgroundColor: model.accentColor,
+              CachedNetworkImage(
+                imageUrl: profile.uriImage?.uriPath ?? '',
+                imageBuilder: (context, imageProvider) => CircleAvatar(
+                  radius: 40,
+                  backgroundColor: model.accentColor,
+                  backgroundImage: imageProvider, // Cached image as the background
+                ),
+                errorWidget: (context, url, error) => Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                      color: model.accentColor,
+                      borderRadius: BorderRadius.circular(40),
+                      border: Border.all(color: model.paletteColor)
+                  ),
+                  child: Center(
+                    child: Text(profile.brandName.getOrCrash()[0], style: TextStyle(color: model.paletteColor, fontSize: model.questionTitleFontSize)),
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               Row(

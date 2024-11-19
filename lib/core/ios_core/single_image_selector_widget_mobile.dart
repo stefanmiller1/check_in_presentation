@@ -65,6 +65,35 @@ class _ProfileImageUploadPreviewState extends State<ProfileImageUploadPreview> {
 
   @override
   Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        _handleSingleImageSelection();
+      },
+      child: Column(
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                height: 120,
+                width: 120,
+              ),
+              CircleAvatar(
+                radius: 60,
+                backgroundColor: widget.model.accentColor,
+                backgroundImage: (selectedImage?.uriPath != null) ? Image.network(selectedImage!.uriPath!, fit: BoxFit.cover).image : null,
+                foregroundImage: (selectedImage?.imageToUpload != null) ? Image.memory(selectedImage!.imageToUpload!, fit: BoxFit.cover).image : null,
+              ),
+              Icon(Icons.camera_alt, size: 40, color: widget.model.disabledTextColor),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text('${widget.title}*', style: TextStyle(color: widget.model.disabledTextColor, fontSize: widget.model.secondaryQuestionTitleFontSize)),
+          Text(widget.subTitle, style: TextStyle(color: widget.model.disabledTextColor)),
+          const SizedBox(height: 10),
+        ],
+      ),
+    );
     return ListTile(
       onTap: () {
         _handleSingleImageSelection();

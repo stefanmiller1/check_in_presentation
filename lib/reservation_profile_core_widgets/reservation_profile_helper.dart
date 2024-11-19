@@ -89,18 +89,24 @@ Widget getHostColumn(BuildContext context, UserProfileModel resOwnerProfile, boo
               ],
             ),
           ),
-          if (resOwnerProfile.profileImage != null) CircleAvatar(radius: 30, foregroundImage: (resOwnerProfile.profileImage?.image ?? Image.asset('assets/profile-avatar.png').image)),
-          if (resOwnerProfile.profileImage == null) Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(40),
-                border: Border.all(color: model.paletteColor)
+
+          CachedNetworkImage(
+              imageUrl: resOwnerProfile.photoUri ?? '',
+              imageBuilder: (context, imageProvider) => CircleAvatar(radius: 30, backgroundImage: imageProvider),
+              placeholder: (context, url) => CircleAvatar(radius: 30, foregroundImage: Image.asset('assets/profile-avatar.png').image),
+              errorWidget: (context, url, error) => Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(40),
+                      border: Border.all(color: model.paletteColor)
+                  ),
+                  child: Center(
+                    child: Text(resOwnerProfile.legalName.getOrCrash()[0], style: TextStyle(color: model.paletteColor, fontSize: model.questionTitleFontSize)),
+                ),
+              ),
             ),
-            child: Center(
-              child: Text(resOwnerProfile.legalName.getOrCrash()[0], style: TextStyle(color: model.paletteColor, fontSize: model.questionTitleFontSize)),
-            ),
-          ),
+
         ],
       ),
       /// include organization if exists, and all listing owners
@@ -433,7 +439,7 @@ void presentNewTicketAttendeeJoin(BuildContext context, DashboardModel model, Re
             resOwner: reservationOwner,
           );
         }
-    )
+      )
     );
   }
 }
@@ -619,7 +625,6 @@ void presentNewVendorAttendee(BuildContext context, DashboardModel model, Vendor
             vendorForm: vendorForm,
           );
         },
-        fullscreenDialog: true
       )
     );
   }

@@ -123,6 +123,54 @@ class _ManageAttendeeSettingsSubContainerState extends State<ManageAttendeeSetti
                                                 );
                                               }
                                               break;
+                                            case SettingNavMarker.backgroundInfo:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.requirementsInfo:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.locationInfo:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.spaces:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.reservations:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.reports:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.spaceOption:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.activity:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.hoursAndAvailability:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.accessAndVisibility:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.cancellations:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.customFields:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.spaceRules:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.activityRules:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.payments:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.checkIns:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.guides:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.uploads:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.reservationConditions:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.pricingRules:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.quotas:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.attendanceType:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.ticketBased:
+                                              // TODO: Handle this case.
+                                            case SettingNavMarker.passesBased:
+                                              // TODO: Handle this case.
                                           }
                                         }
                                       });

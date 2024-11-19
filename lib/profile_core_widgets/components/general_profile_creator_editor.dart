@@ -66,6 +66,7 @@ class _GeneralProfileCreatorEditorState extends State<GeneralProfileCreatorEdito
              child: Column(
                children: [
 
+                 const SizedBox(height: 8),
                  ProfileImageUploadPreview(
                      model: widget.model,
                      title: 'Update or Edit Image',
@@ -116,22 +117,25 @@ class _GeneralProfileCreatorEditorState extends State<GeneralProfileCreatorEdito
                  /// birthday ...
 
                  const SizedBox(height: 8),
-                 saveCancelFooter(
-                     context,
-                     widget.model,
-                     state.isSubmitting,
-                     widget.currentUser != state.profile.profileUser || state.isEditingProfile,
-                     isProfileItemValid(state.profile),
-                     false,
-                     didSelectSave: () {
-                       context.read<UpdateUserProfileAccountBloc>()..add(const UpdateUserProfileAccountEvent.finishedUpdatingUserProfile());
-                     },
-                     didSelectCancel: () {
-                        widget.didCancel();
-                     },
-                     didSelectDelete: () {
+                 Padding(
+                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                   child: saveCancelFooter(
+                       context,
+                       widget.model,
+                       state.isSubmitting,
+                       widget.currentUser != state.profile.profileUser || state.isEditingProfile,
+                       isProfileItemValid(state.profile),
+                       false,
+                       didSelectSave: () {
+                         context.read<UpdateUserProfileAccountBloc>()..add(const UpdateUserProfileAccountEvent.finishedUpdatingUserProfile());
+                       },
+                       didSelectCancel: () {
+                          widget.didCancel();
+                       },
+                       didSelectDelete: () {
 
-                   }
+                     }
+                   ),
                  ),
 
                ],

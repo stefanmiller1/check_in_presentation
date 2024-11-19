@@ -40,7 +40,7 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
         },
         profileType: ProfileTypeMarker.generalProfile,
         profileMainEditor: ProfileEditorWidgetModel(
-          height: 165,
+          height: 195,
           editorItem: GeneralProfileCreatorEditor(
             model: widget.model,
             currentUser: userProfile,

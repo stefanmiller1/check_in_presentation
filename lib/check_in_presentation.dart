@@ -9,7 +9,10 @@ import 'dart:io';
 import 'dart:collection';
 
 import 'package:beamer/beamer.dart';
+import 'package:check_in_presentation/core/circle_clusters/circle_helper.dart';
+import 'package:check_in_presentation/core/circle_clusters/circle_previewer.dart';
 import 'package:check_in_presentation/core/voucher_widget.dart';
+import 'package:check_in_presentation/explore_core_widgets/components/discovery_components/discovery_section_header.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:alphabet_list_scroll_view/alphabet_list_scroll_view.dart';
 import 'package:check_in_application/misc/update_services/invitiation_services/invitation_service_bloc.dart';
@@ -328,6 +331,7 @@ part 'explore_core_widgets/discovery_search_helper.dart';
 part 'explore_core_widgets/components/discovery_components/discovery_community_widget.dart';
 part 'explore_core_widgets/components/discovery_components/discovery_hero_main_widget.dart';
 part 'explore_core_widgets/components/discovery_components/discovery_listigs_widget.dart';
+part 'explore_core_widgets/components/discovery_components/discovery_vendors_widget.dart';
 part 'explore_core_widgets/components/listing_components/listing_result_main_card.dart';
 part 'explore_core_widgets/components/listing_components/listing_result_main.dart';
 part 'explore_core_widgets/components/listing_components/listing_quick_preview.dart';

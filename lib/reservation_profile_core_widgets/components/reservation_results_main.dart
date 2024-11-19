@@ -1,35 +1,3 @@
-// import 'dart:io';
-// import 'dart:ui';
-// import 'package:badges/badges.dart' as badges;
-// import 'package:beamer/beamer.dart';
-// import 'package:check_in_application/auth/update_services/booked_reservation_services/booked_reservation_form_bloc.dart';
-// import 'package:check_in_application/check_in_application.dart';
-// import 'package:check_in_application/un_auth/watcher_services/attendee_watcher_service/attendee_manager_watcher_bloc.dart';
-// import 'package:check_in_domain/check_in_domain.dart';
-// import 'package:check_in_domain/domain/auth/reservation_manager/post.dart';
-// import 'package:check_in_domain/domain/auth/reservation_manager/reservation_post/image_post.dart';
-// import 'package:check_in_domain/domain/misc/attendee_services/attendee_item/attendee_item.dart';
-// import 'package:check_in_web_mobile_explore/presentation/core/posts/post_helper.dart';
-// import 'package:check_in_web_mobile_explore/presentation/core/posts/post_widget_builder.dart';
-// import 'package:dartz/dartz.dart' as bloc;
-// import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
-// import 'package:check_in_facade/check_in_facade.dart' as facade;
-// import 'package:check_in_presentation/check_in_presentation.dart';
-// import 'package:firebase_storage/firebase_storage.dart';
-// import 'package:flutter/foundation.dart';
-// import 'package:flutter/foundation.dart';
-// import 'package:flutter/material.dart';
-// import 'package:flutter/painting.dart';
-// import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:image_picker/image_picker.dart';
-// import 'package:jumping_dot/jumping_dot.dart';
-// import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-// import 'package:reservation_post/inputs/input.dart';
-// import 'package:reservation_post/inputs/media_attatchment_preview.dart';
-// import 'package:reservation_post/models/media_mode.dart';
-// import 'package:reservation_post/reservation_post.dart';
-// import 'package:share_plus/share_plus.dart';
-// import 'package:url_launcher/url_launcher_string.dart';
 part of check_in_presentation;
 
 
@@ -101,6 +69,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
     _resOnlyTabController = TabController(length: 1, vsync: this);
     _tabController = TabController(initialIndex: tabIndex, length: ResOverViewTabs.values.length, vsync: this);
     ReservationCoreHelper.pageController = PageController(initialPage: tabIndex, keepPage: true);
+    facade.ActivityFormUpdateFacade.instance.updateViewCount(activityResId: widget.reservationId);
 
     super.initState();
   }

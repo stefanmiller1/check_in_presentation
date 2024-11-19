@@ -494,7 +494,11 @@ class _SendInvitationRequestState extends State<SendInvitationRequest> {
                             }
                           });
                         },
-                        leading: CircleAvatar(backgroundImage: (users.firstWhere((profileUser) => profileUser.userId == user.contactId).profileImage != null) ? users.firstWhere((profileUser) => profileUser.userId == user.contactId).profileImage!.image : Image.asset('assets/profile-avatar.png').image),
+                        leading: CachedNetworkImage(
+                            imageUrl: users.firstWhereOrNull((profileUser) => profileUser.userId == user.contactId)?.photoUri ?? '',
+                            imageBuilder: (context, imageProvider) => CircleAvatar(backgroundImage: imageProvider),
+                            errorWidget: (context, url, error) => CircleAvatar(backgroundImage: Image.asset('assets/profile-avatar.png').image)
+                      ),
                         title: Text(user.name.getOrCrash(), style: TextStyle(color: widget.model.paletteColor)),
                         trailing: (currentAttendees.map((e) => e.attendeeOwnerId).contains(user.contactId)) ? Container(
                           width: 200,

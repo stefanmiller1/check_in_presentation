@@ -369,7 +369,7 @@ bool antendeeDiscountCodeIsValid() {
   return false;
 }
 
-bool showNextButton(NewAttendeeStepsMarker marker, CardItem? cardItem, AttendeeVendorMarker? vendorAttendeeMarker, ActivityManagerForm activityForm, VendorMerchantForm? refVendor, AttendeeFormState state) {
+bool isNextEnabled(NewAttendeeStepsMarker marker, CardItem? cardItem, AttendeeVendorMarker? vendorAttendeeMarker, ActivityManagerForm activityForm, VendorMerchantForm? refVendor, AttendeeFormState state) {
   switch (marker) {
     case NewAttendeeStepsMarker.chooseAttendingType:
       return false;
@@ -437,6 +437,56 @@ String getTitleForNextButton(NewAttendeeStepsMarker marker) {
   }
 }
 
+String? getTitleForError(NewAttendeeStepsMarker marker, AttendeeVendorMarker? vendorAttendeeMarker, AttendeeFormState state) {
+  switch (marker) {
+    case NewAttendeeStepsMarker.chooseAttendingType:
+      // TODO: Handle this case.
+    case NewAttendeeStepsMarker.getStarted:
+    switch (state.attendeeItem.attendeeType) {
+      case (AttendeeType.tickets):
+        return null;
+      case (AttendeeType.vendor):
+        switch (vendorAttendeeMarker) {
+          case AttendeeVendorMarker.formMessage:
+            return null;
+          case AttendeeVendorMarker.welcomeMessage:
+            return null;
+          case AttendeeVendorMarker.availableTime:
+            return 'select a date in order to continue';
+          case AttendeeVendorMarker.boothType:
+            return 'select a booth type in order to continue';
+          case AttendeeVendorMarker.customDocuments:
+            return 'add a document then press Next to continue';
+          case AttendeeVendorMarker.customLists:
+          // TODO: Handle this case.
+            break;
+          case AttendeeVendorMarker.disclaimer:
+            return null;
+          case AttendeeVendorMarker.review:
+            return null;
+          case AttendeeVendorMarker.profileSelection:
+            return 'select or create a new profile above';
+          case AttendeeVendorMarker.selectPaymentMethod:
+            return 'select or add a new card above';
+          case null:
+          // TODO: Handle this case.
+            break;
+        }
+        return null;
+      default:
+        return null;
+    }
+    case NewAttendeeStepsMarker.addActivityRules:
+      // TODO: Handle this case.
+    case NewAttendeeStepsMarker.addActivityCustomRules:
+      // TODO: Handle this case.
+    case NewAttendeeStepsMarker.requestToJoinComplete:
+      // TODO: Handle this case.
+    case NewAttendeeStepsMarker.joinComplete:
+      // TODO: Handle this case.
+  }
+}
+
 
 Widget footerWidgetForNewAttendee(
     BuildContext context,
@@ -449,7 +499,11 @@ Widget footerWidgetForNewAttendee(
     ActivityManagerForm activityForm,
     AttendeeFormState state,
     VendorMerchantForm? vendorForm,
-    bool isLast, {required Function() didSelectBack, required Function() didSelectNext}) {
+    bool isLast, {
+      required Function() didSelectBack,
+      required Function() didSelectNext,
+      required Function() didSelectDisabledNext,
+    }) {
 
 
     final double discountPercentage = (discountCode?.discountAmount ?? 1).toDouble();
@@ -524,28 +578,34 @@ Widget footerWidgetForNewAttendee(
           ),
 
           Visibility(
-            visible: isPreview || showNextButton(marker, cardItem, vendorAttendeeMarker, activityForm, vendorForm, state),
-            child:  Visibility(
-              visible: state.isSubmitting == false,
-              child: InkWell(
-                onTap: () {
+            visible: state.isSubmitting == false,
+            child: InkWell(
+              onTap: () {
+                if (isNextEnabled(marker, cardItem, vendorAttendeeMarker, activityForm, vendorForm, state)) {
                   didSelectNext();
-                },
-                child: Container(
-                  constraints: BoxConstraints(
-                      maxWidth: 200
-                  ),
-                  height: 45,
-                  width: 185,
-                  decoration: BoxDecoration(
-                    color: model.paletteColor,
-                    borderRadius: const BorderRadius.all(Radius.circular(40)),
-                  ),
-                  child: Center(child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: Text(isLast ? (activityRequiresVendorFee(state.attendeeItem.vendorForm) && state.attendeeItem.attendeeType == AttendeeType.vendor) ? 'Check Out & Apply' : 'Apply' : getTitleForNextButton(marker), style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis, maxLines: 1),
-                    )
-                  ),
+                } else {
+                  didSelectDisabledNext();
+                }
+              },
+              child: Container(
+                constraints: BoxConstraints(
+                    maxWidth: 200
+                ),
+                height: 45,
+                width: 185,
+                decoration: BoxDecoration(
+                  color: (isNextEnabled(marker, cardItem, vendorAttendeeMarker, activityForm, vendorForm, state)) ? model.paletteColor : model.disabledTextColor.withOpacity(0.3),
+                  borderRadius: const BorderRadius.all(Radius.circular(40)),
+                ),
+                child: Center(child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Text(
+                      isLast ? (activityRequiresVendorFee(state.attendeeItem.vendorForm) && state.attendeeItem.attendeeType == AttendeeType.vendor) ? 'Check Out & Apply' : 'Apply' : getTitleForNextButton(marker),
+                      style: TextStyle(color: (isNextEnabled(marker, cardItem, vendorAttendeeMarker, activityForm, vendorForm, state)) ? model.accentColor : model.disabledTextColor,
+                          fontSize: model.secondaryQuestionTitleFontSize,
+                          fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis, maxLines: 1),
+                  )
                 ),
               ),
             ),

@@ -249,6 +249,9 @@ bool checkCompletion(ReservationStepsMarker page, ReservationFormState state) {
       break;
     case ReservationStepsMarker.selectFromPaymentMethods:
       return (state.cardItem != null);
+    case ReservationStepsMarker.listingDetails:
+      // TODO: Handle this case.
+      break;
   }
   return false;
 }

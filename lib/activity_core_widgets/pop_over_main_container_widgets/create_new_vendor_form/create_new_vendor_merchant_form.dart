@@ -794,7 +794,7 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
               customOptionHeight += ruleIdToHeight[(option.customRuleOption?.ruleId != null) ? option.customRuleOption!.ruleId.getOrCrash() : null] ?? 0;
           });
 
-          double disclaimerOptionHeight = 555;
+          double disclaimerOptionHeight = 618;
 
           state.vendorMerchantForm.disclaimerOptions?.where((e) => e.isActive == true).forEach((option) {
               disclaimerOptionHeight += ruleIdToHeight[(option.customRuleOption?.ruleId != null) ? option.customRuleOption!.ruleId.getOrCrash() : null] ?? 0;

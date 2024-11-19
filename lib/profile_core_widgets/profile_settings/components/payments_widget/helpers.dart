@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:check_in_domain/check_in_domain.dart';
 import 'package:check_in_presentation/check_in_presentation.dart';
 import 'package:flutter/material.dart';
@@ -59,21 +60,26 @@ Widget getPaymentHistoryItemWidget(BuildContext context, DashboardModel model, P
                     Expanded(
                       child: Row(
                         children: [
-                          if (listing.listingProfileService.spaceSetting.spaceTypes.getOrCrash().where((element) => element.quantity.where((element) => element.photoUri != null).isNotEmpty).first.quantity.first.spacePhoto?.image != null) Container(
+                    // if (listing.listingProfileService.spaceSetting.spaceTypes.getOrCrash().where((element) => element.quantity.where((element) => element.photoUri != null).isNotEmpty).first.quantity.first.spacePhoto?.image != null)
+                        Container(
                             height: 75,
                             width: 75,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(15),
-                              child: Image(image: listing.listingProfileService.spaceSetting.spaceTypes.getOrCrash().first.quantity.first.spacePhoto!.image, fit: BoxFit.cover),
+                              child: CachedNetworkImage(
+                                  imageUrl: listing.listingProfileService.spaceSetting.spaceTypes.getOrCrash().firstOrNull?.quantity.firstOrNull?.photoUri ?? '',
+                                  imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.cover),
+                                  errorWidget: (context, url, error) => getActivityTypeTabOption(
+                                      context,
+                                      model,
+                                      100,
+                                      false,
+                                      getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
+                                  ),
+                              )
                             ),
                           ),
-                          if (listing.listingProfileService.spaceSetting.spaceTypes.getOrCrash().where((element) => element.quantity.where((element) => element.photoUri != null).isEmpty).isNotEmpty) getActivityTypeTabOption(
-                              context,
-                              model,
-                              100,
-                              false,
-                              getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
-                          ),
+                          // if (listing.listingProfileService.spaceSetting.spaceTypes.getOrCrash().where((element) => element.quantity.where((element) => element.photoUri != null).isEmpty).isNotEmpty)
                           const SizedBox(width: 10),
                           if (paymentIntent.payment_method != null) Column(
                             mainAxisAlignment: MainAxisAlignment.start,

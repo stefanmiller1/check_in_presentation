@@ -7,7 +7,7 @@ Widget listingSpacesPagePreview(BuildContext context, DashboardModel model, doub
   for (SpaceOption space in spaces) {
     for (SpaceOptionSizeDetail spaceDetails in space.quantity) {
 
-      if (spaceDetails.spacePhoto != null) {
+      if (spaceDetails.photoUri != null) {
         spacesWithImage.add(spaceDetails);
       }
     }
@@ -29,16 +29,16 @@ Widget listingSpacesPagePreview(BuildContext context, DashboardModel model, doub
                 onPageChanged(page, currentSpaceDetail);
               },
               itemBuilder: (context, index) {
-                final Image spacePhoto = spacesWithImage[index].spacePhoto ?? Image.asset('assets/images/facility_creator/activity_subscription_get_started_bw.png');
+
+                final String? spacePhoto = spacesWithImage[index].photoUri;
 
                 return SizedBox(
                   width: MediaQuery.of(context).size.width,
-                  child: Image(
-                    errorBuilder: (context, err, stack) {
-                      return Container();
-                    },
-                    image: spacePhoto.image, fit: BoxFit.cover,
-                  ),
+                  child: CachedNetworkImage(
+                   imageUrl: spacePhoto ?? '',
+                    imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.cover),
+                    errorWidget: (context, url, error) => Image.asset('assets/images/facility_creator/activity_subscription_get_started_bw.png')
+                  )
                 );
               }
           ),
@@ -56,11 +56,12 @@ Widget retrieveListingPreviewFacility(BuildContext context, DashboardModel model
   for (SpaceOption space in spaces) {
     for (SpaceOptionSizeDetail spaceDetails in space.quantity) {
 
-      if (spaceDetails.spacePhoto != null) {
+      if (spaceDetails.photoUri != null) {
         spacesWithImage.add(spaceDetails);
       }
     }
   }
+
   late SpaceOptionSizeDetail? currentSpace = null;
 
   if (currentSpace == null && spacesWithImage.isNotEmpty) currentSpace = spacesWithImage[0];
@@ -181,7 +182,7 @@ Widget retrievedListingsFooter(BuildContext context, DashboardModel model, Listi
   for (SpaceOption space in spaces) {
     for (SpaceOptionSizeDetail spaceDetails in space.quantity) {
 
-      if (spaceDetails.spacePhoto != null) {
+      if (spaceDetails.photoUri != null) {
         spacesWithImage.add(spaceDetails);
       }
     }

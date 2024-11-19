@@ -79,7 +79,13 @@ class _ActivityBackgroundImagePreviewState extends State<ActivityBackgroundImage
                   if (activityImage != null || activityImageMemory != null) {
                     return ImageWithProgressIndicator(
                         showProgress: widget.activityForm.profileService.activityBackground.activityProfileImages?.length != 1,
-                        image: (activityImageMemory != null) ? Image.memory(activityImageMemory, fit: BoxFit.cover) : Image.network(activityImage!, fit: BoxFit.cover),
+                        image: (activityImageMemory != null) ?
+                        Image.memory(activityImageMemory, fit: BoxFit.cover) :
+                        CachedNetworkImage(
+                            imageUrl: activityImage!,
+                            fit: BoxFit.cover
+                        ),
+                        // Image.network(activityImage!, fit: BoxFit.cover),
                         model: widget.model);
                   }
                   return Padding(
@@ -181,11 +187,17 @@ class _ActivityBackgroundImagePreviewMobileWebState extends State<ActivityBackgr
 
                   final Uint8List? activityImageMemory = widget.activityForm.profileService.activityBackground.activityProfileImages?[index].imageToUpload;
                   final String? activityImage = widget.activityForm.profileService.activityBackground.activityProfileImages?[index].uriPath;
+
                   if (activityImage != null || activityImageMemory != null) {
                     return SizedBox(
                       height: 205,
                       width: MediaQuery.of(context).size.width,
-                      child:  (activityImageMemory != null) ? Image.memory(activityImageMemory, fit: BoxFit.cover) : Image.network(activityImage!, fit: BoxFit.cover, scale: 0.03),
+                      child:  (activityImageMemory != null) ?
+                      Image.memory(activityImageMemory, fit: BoxFit.cover) :
+                      CachedNetworkImage(
+                          imageUrl: activityImage!,
+                          fit: BoxFit.cover
+                      ),
                     );
                   }
                   return Padding(
@@ -211,7 +223,7 @@ class _ActivityBackgroundImagePreviewMobileWebState extends State<ActivityBackgr
 
 class ImageWithProgressIndicator extends StatefulWidget {
 
-  final Image image;
+  final Widget image;
   final bool showProgress;
   final DashboardModel model;
 
@@ -252,20 +264,16 @@ class _ImageWithProgressIndicatorState extends State<ImageWithProgressIndicator>
         if (widget.showProgress) SizedBox(
           height: 3,
           width: MediaQuery.of(context).size.width,
-          child: TweenAnimationBuilder<double>(
-            duration: _progressAnimationController.duration ?? Duration(seconds: 3),
-            curve: Curves.easeInOut,
-            tween: Tween<double>(
-              begin: _progressAnimationController.value,
-              end: 1,
-            ),
-            builder: (context, value, _) =>
-                LinearProgressIndicator(
-                  minHeight: 3,
-                  backgroundColor: widget.model.paletteColor,
-                  value: value,
-                  valueColor: AlwaysStoppedAnimation<Color>(widget.model.accentColor),
-                ),
+          child: AnimatedBuilder(
+            animation: _progressAnimationController,
+            builder: (context, child) {
+              return LinearProgressIndicator(
+                minHeight: 3,
+                backgroundColor: widget.model.paletteColor,
+                value: _progressAnimationController.value,
+                valueColor: AlwaysStoppedAnimation<Color>(widget.model.accentColor),
+              );
+            },
           ),
         )
 

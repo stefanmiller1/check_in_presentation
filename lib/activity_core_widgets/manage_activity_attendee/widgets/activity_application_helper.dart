@@ -109,8 +109,16 @@ Widget getRowForBoothOption(BuildContext context, DashboardModel model, bool isO
 
 
 Widget rowItems(BuildContext context, DashboardModel model, bool isOwner, String currency, VendorContactDetail vendorDetail, int index, MCCustomAvailability? availability) {
-  final totalFee = vendorDetail.boothItem.fee?.toDouble() ?? 0;
+  final bool hasDiscount = vendorDetail.boothItem.stripePaymentIntent?.discountCode != null;
   final taxPercentage = null;
+  final totalFeeDiscount = (((vendorDetail.boothItem.fee?.toDouble() ?? 0) * (1 - ((vendorDetail.boothItem.stripePaymentIntent?.discountCode?.discountAmount ?? 1) / 100)))).toInt();
+  final totalTaxAmountDiscount = totalFeeDiscount * (taxPercentage ?? CICOTaxesFee);
+  final sellerFeeDiscount = totalFeeDiscount * CICOSellerPercentageFee;
+  final sellerTaxAmountDiscount = sellerFeeDiscount * (taxPercentage ?? CICOTaxesFee);
+  final buyerFeeDiscount = totalFeeDiscount * CICOBuyerPercentageFee;
+  final totalBuyerTaxAmountDiscount = buyerFeeDiscount * (taxPercentage ?? CICOTaxesFee);
+
+  final totalFee = vendorDetail.boothItem.fee?.toDouble() ?? 0;
   final totalTaxAmount = totalFee * (taxPercentage ?? CICOTaxesFee);
   final sellerFee = totalFee * CICOSellerPercentageFee;
   final sellerTaxAmount = sellerFee * (taxPercentage ?? CICOTaxesFee);
@@ -182,7 +190,7 @@ Widget rowItems(BuildContext context, DashboardModel model, bool isOwner, String
         label: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
           child: Text((vendorDetail.boothItem.fee != null) ? completeTotalPriceWithCurrency(totalFee + totalTaxAmount + buyerFee + totalBuyerTaxAmount, currency) :
-          'Free', style: TextStyle(color: model.paletteColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+          'Free', style: TextStyle(color: model.paletteColor, decoration: (hasDiscount) ? TextDecoration.lineThrough : null, overflow: TextOverflow.ellipsis), maxLines: 1),
         ),
       ) else Chip(
         side: BorderSide.none,
@@ -193,9 +201,51 @@ Widget rowItems(BuildContext context, DashboardModel model, bool isOwner, String
         labelPadding: EdgeInsets.zero,
         label: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-          child: Text((vendorDetail.boothItem.fee != null) ? completeTotalPriceWithCurrency(
-              vendorDetail.boothItem.fee!.toDouble() - (sellerFee + sellerTaxAmount) + totalTaxAmount, currency) :
-          'Free', style: TextStyle(color: model.paletteColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+          child: Text((vendorDetail.boothItem.fee != null) ? completeTotalPriceWithCurrency(vendorDetail.boothItem.fee!.toDouble() - (sellerFee + sellerTaxAmount) + totalTaxAmount, currency) :
+          'Free', style: TextStyle(color: model.paletteColor, decoration: (hasDiscount) ? TextDecoration.lineThrough : null, overflow: TextOverflow.ellipsis), maxLines: 1),
+        ),
+      ),
+
+      const SizedBox(width: 8),
+      if (hasDiscount) Chip(
+        side: BorderSide.none,
+        backgroundColor: (isOwner) ? Colors.red.withOpacity(0.24) : Colors.lightGreen.withOpacity(0.24),
+        padding: EdgeInsets.zero,
+        avatar: Icon(Icons.discount_outlined, size: 25, color: (isOwner) ? Colors.red : Colors.green),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        labelPadding: EdgeInsets.zero,
+        label: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+          child: Text('${vendorDetail.boothItem.stripePaymentIntent?.discountCode?.discountAmount ?? 0}%', style: TextStyle(color: (isOwner) ? Colors.red : Colors.green, overflow: TextOverflow.ellipsis), maxLines: 1),
+        ),
+      ),
+      const SizedBox(width: 8),
+      ///has discount
+      if (isOwner == false && hasDiscount) Chip(
+        side: BorderSide.none,
+        backgroundColor: Colors.lightGreen.withOpacity(0.24),
+        padding: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        labelPadding: EdgeInsets.zero,
+        label: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+          child: Text((vendorDetail.boothItem.fee != null) ? completeTotalPriceWithCurrency(totalFeeDiscount + totalTaxAmountDiscount + buyerFeeDiscount + totalBuyerTaxAmountDiscount, currency) :
+          'Free', style: const TextStyle(color: Colors.green, overflow: TextOverflow.ellipsis), maxLines: 1),
+        ),
+      ),
+      if (isOwner && hasDiscount) Chip(
+        side: BorderSide.none,
+        backgroundColor:  Colors.red.withOpacity(0.24),
+        padding: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        labelPadding: EdgeInsets.zero,
+        label: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+          child: Text((vendorDetail.boothItem.fee != null) ? completeTotalPriceWithCurrency(totalFeeDiscount - (sellerFeeDiscount + sellerTaxAmountDiscount) + totalTaxAmountDiscount, currency) :
+          'Free', style: const TextStyle(color: Colors.red, overflow: TextOverflow.ellipsis), maxLines: 1),
         ),
       ),
 
@@ -280,6 +330,10 @@ Widget boothStatusButton(DashboardModel model, AvailabilityStatus? status) {
           child: Center(child: Text('Requested', style: TextStyle(color: model.disabledTextColor),)),
         ),
       );
+      case null:
+        // TODO: Handle this case.
+      case AvailabilityStatus.inProgress:
+        // TODO: Handle this case.
     }
   return Container();
 }
@@ -325,13 +379,21 @@ Widget vendorAttendeeApplicationHeaderBar(BuildContext context, DashboardModel m
                           // selectedItem(user);
                         },
                         leading: Container(
+                          height: 67,
+                          width: 67,
                             decoration: BoxDecoration(
                               color: Colors.transparent,
                               borderRadius: BorderRadius.circular(30),
                             ),
                             child: Padding(
                                 padding: const EdgeInsets.all(1.75),
-                                child: CircleAvatar(backgroundImage: userProfile.profileImage?.image ?? Image.asset('assets/profile-avatar.png').image))),
+                                child: CachedNetworkImage(
+                            imageUrl: userProfile.photoUri ?? '',
+                            imageBuilder: (context, imageProvider) => CircleAvatar(backgroundImage: imageProvider),
+                            errorWidget: (context, url, error) => CircleAvatar(backgroundImage: Image.asset('assets/profile-avatar.png').image)
+                            )
+                          )
+                        ),
                         title: Text('${userProfile.legalName.getOrCrash()} ${userProfile.legalSurname.value.fold((l) => '', (r) => r)}', style: TextStyle(color: model.paletteColor, overflow: TextOverflow.ellipsis), maxLines: 1),
                         subtitle: (vendorForm?.lastOpenedAt != null) ? Text('Submitted: ${DateFormat.MMMd().add_jm().format(DateTime.fromMillisecondsSinceEpoch(vendorForm!.lastOpenedAt))}', style: TextStyle(color: model.disabledTextColor)) : null,
                       )
@@ -465,13 +527,21 @@ Widget vendorAttendeeApplicationHeaderBar(BuildContext context, DashboardModel m
                         // selectedItem(user);
                       },
                       leading: Container(
+                        height: 67,
+                        width: 67,
                           decoration: BoxDecoration(
                             color: Colors.transparent,
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Padding(
                               padding: const EdgeInsets.all(1.75),
-                              child: CircleAvatar(backgroundImage: userProfile.profileImage?.image ?? Image.asset('assets/profile-avatar.png').image))),
+                              child: CachedNetworkImage(
+                                  imageUrl: userProfile.photoUri ?? '',
+                                  imageBuilder: (context, imageProvider) => CircleAvatar(backgroundImage: imageProvider),
+                                  errorWidget: (context, url, error) => CircleAvatar(backgroundImage: Image.asset('assets/profile-avatar.png').image)
+                              )
+                          )
+                      ),
                       title: Text('${userProfile.legalName.getOrCrash()} ${userProfile.legalSurname.value.fold((l) => '', (r) => r)}', style: TextStyle(color: model.paletteColor, overflow: TextOverflow.ellipsis), maxLines: 1),
                       subtitle: Text(profile.brandName.getOrCrash(), style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis), maxLines: 1,)
                   )

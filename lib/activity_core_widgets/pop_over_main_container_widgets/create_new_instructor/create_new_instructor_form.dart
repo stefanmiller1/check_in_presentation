@@ -337,6 +337,9 @@ class _CreateNewInstructorFormState extends State<CreateNewInstructorForm> {
 
                                   });
                                 },
+                                didSelectDisabledNext: () {
+
+                                },
                               ),
                             )
                         )

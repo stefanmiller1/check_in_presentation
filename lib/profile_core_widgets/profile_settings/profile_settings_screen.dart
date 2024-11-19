@@ -1,4 +1,5 @@
 import 'package:beamer/beamer.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:check_in_application/check_in_application.dart';
 import 'package:check_in_domain/check_in_domain.dart';
 import 'package:check_in_presentation/check_in_presentation.dart';
@@ -179,26 +180,41 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                            children: [
                              Row(
                                children: [
-                                 if (profile.profileImage != null) ClipRRect(
-                                   borderRadius: BorderRadius.circular(50),
-                                   child: Container(
-                                     height: 75,
-                                     width: 75,
-                                     child: Image(image: profile.profileImage!.image, fit: BoxFit.cover),
+                                 CachedNetworkImage(
+                                   imageUrl: profile.photoUri ?? '',
+                                   imageBuilder: (context, imageProvider) => CircleAvatar(radius: 37, backgroundImage: imageProvider),
+                                   placeholder: (context, url) => CircleAvatar(radius: 37, foregroundImage: Image.asset('assets/profile-avatar.png').image),
+                                   errorWidget: (context, url, error) => Container(
+                                     height: 50,
+                                     width: 50,
+                                     decoration: BoxDecoration(
+                                         color: model.accentColor,
+                                         borderRadius: BorderRadius.circular(25)
+                                     ),
+                                     child: Center(child: Text(profile.legalName.getOrCrash()[0], style: TextStyle(
+                                         color: model.paletteColor,
+                                         fontSize: model.questionTitleFontSize))),
                                    ),
                                  ),
-                                 if (profile.profileImage == null) Container(
-                                   height: 50,
-                                   width: 50,
-                                   decoration: BoxDecoration(
-                                       color: model.accentColor,
-                                       borderRadius: BorderRadius.circular(25)
-                                   ),
-                                   child: Center(child: Text(profile.legalName
-                                       .getOrCrash()[0], style: TextStyle(
-                                       color: model.paletteColor,
-                                       fontSize: model.questionTitleFontSize))),
-                                 ),
+                                 // if (profile.profileImage != null) ClipRRect(
+                                 //   borderRadius: BorderRadius.circular(50),
+                                 //   child: Container(
+                                 //     height: 75,
+                                 //     width: 75,
+                                 //     child: Image(image: profile.profileImage!.image, fit: BoxFit.cover),
+                                 //   ),
+                                 // ),
+                                 // if (profile.profileImage == null) Container(
+                                 //   height: 50,
+                                 //   width: 50,
+                                 //   decoration: BoxDecoration(
+                                 //       color: model.accentColor,
+                                 //       borderRadius: BorderRadius.circular(25)
+                                 //   ),
+                                 //   child: Center(child: Text(profile.legalName.getOrCrash()[0], style: TextStyle(
+                                 //       color: model.paletteColor,
+                                 //       fontSize: model.questionTitleFontSize))),
+                                 // ),
                                  const SizedBox(width: 16),
                                  Column(
                                    mainAxisAlignment: MainAxisAlignment.start,
@@ -405,10 +421,10 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                               break;
                             default:
                               break;
-                          }
-                        }
-                    )
-            ).toList(),
+                    }
+                  }
+                )
+              ).toList(),
             if (kIsWeb) Divider(color: model.disabledTextColor.withOpacity(0.4), height: 1),
 
             const SizedBox(height: 32),
@@ -459,7 +475,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   decoration: TextDecoration.underline),),
             ),
             const SizedBox(height: 32),
-            Text('V. 1.0.9', style: TextStyle(color: model.disabledTextColor)),
+            Text('V. 1.1.0', style: TextStyle(color: model.disabledTextColor)),
             const SizedBox(height: 32),
           ],
         ),

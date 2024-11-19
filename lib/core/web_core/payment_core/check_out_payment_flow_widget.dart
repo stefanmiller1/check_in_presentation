@@ -301,6 +301,9 @@ class _WebCheckOutPaymentWidgetState extends State<WebCheckOutPaymentWidget> {
                                    case CheckOutPaymentMarker.finishedPayment:
                                      Navigator.of(context).pop();
                                      break;
+                                   case CheckOutPaymentMarker.failedPayment:
+                                     break;
+                                     // TODO: Handle this case.
                              }
                           });
                         }

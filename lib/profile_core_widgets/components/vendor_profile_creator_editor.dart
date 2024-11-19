@@ -83,14 +83,16 @@ class _VendorProfileCreatorEditorState extends State<VendorProfileCreatorEditor>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             /// logo
-                            ProfileImageUploadPreview(
-                              model: widget.model,
-                              title: 'Update or Edit Logo',
-                              subTitle: 'Add Your Brands Latest Logo',
-                              currentNetworkImage: widget.selectedVendorProfile?.uriImage,
-                              imageToUpLoad: (currentImage) {
-                                context.read<UpdateVendorMerchProfileBloc>().add(UpdateVendorMerchProfileEvent.profileImageChanged(currentImage));
-                              }
+                            Center(
+                              child: ProfileImageUploadPreview(
+                                model: widget.model,
+                                title: 'Update or Edit Logo',
+                                subTitle: 'Add Your Brands Latest Lo',
+                                currentNetworkImage: widget.selectedVendorProfile?.uriImage,
+                                imageToUpLoad: (currentImage) {
+                                  context.read<UpdateVendorMerchProfileBloc>().add(UpdateVendorMerchProfileEvent.profileImageChanged(currentImage));
+                                }
+                              ),
                             ),
 
                             // profileImageEditor(
@@ -523,14 +525,13 @@ class _VendorProfileCreatorEditorState extends State<VendorProfileCreatorEditor>
                       ),
 
                       const SizedBox(height: 78),
-
-
                     ],
                   ),
                 ),
 
                 Positioned(
                   bottom: 8,
+                  right: 8,
                   child: saveCancelFooter(
                       context,
                       widget.model,

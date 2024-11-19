@@ -199,22 +199,26 @@ Widget mobileUserProfileWidget(DashboardModel model, {required UserProfileModel 
     },
     child: Stack(
     children: [
-      if (profile.profileImage != null) ClipRRect(
-        borderRadius: BorderRadius.circular(radius/2),
-        child: SizedBox(
+      CachedNetworkImage(
+        imageUrl: profile.photoUri ?? '',
+        imageBuilder: (context, imageProvider) => Container(
           height: radius,
           width: radius,
-          child: Image(image: profile.profileImage!.image, fit: BoxFit.cover),
+          decoration: BoxDecoration(
+              color: model.accentColor,
+              borderRadius: BorderRadius.circular(radius/2)
+          ),
+            child: CircleAvatar(backgroundImage: imageProvider, radius: radius),
         ),
-      ),
-      if (profile.profileImage == null) Container(
-        height: radius,
-        width: radius,
-        decoration: BoxDecoration(
-            color: model.accentColor,
-            borderRadius: BorderRadius.circular(radius/2)
+        errorWidget: (context, url, error) => Container(
+          height: radius,
+          width: radius,
+          decoration: BoxDecoration(
+              color: model.accentColor,
+              borderRadius: BorderRadius.circular(radius/2)
+          ),
+          child: Center(child: Text(profile.legalName.getOrCrash()[0], style: TextStyle(color: model.paletteColor, fontSize: model.questionTitleFontSize))),
         ),
-        child: Center(child: Text(profile.legalName.getOrCrash()[0], style: TextStyle(color: model.paletteColor, fontSize: model.questionTitleFontSize))),
       ),
       if (profile.isEmailAuth && showBadge) Positioned(
         bottom: 0,
@@ -267,17 +271,42 @@ Widget userProfileSlotWidget({required UserProfileModel e, required Color backgr
 }
 
 Widget userFirstLetterProfileNameOnly({required UserProfileModel e, required DashboardModel model, required Color textColor, required Color backgroundColor}) {
-  return Container(
-    width: 30,
-    height: 30,
-    decoration:  BoxDecoration(
-        color: backgroundColor,
-        border: Border.all(color: textColor),
-        borderRadius: BorderRadius.all(Radius.circular(30))
+  return CachedNetworkImage(
+    imageUrl: e.photoUri ?? '',
+    imageBuilder: (context, imageProvider) => Container(
+      width: 30,
+      height: 30,
+      decoration:  BoxDecoration(
+          color: backgroundColor,
+          border: Border.all(color: textColor),
+          borderRadius: BorderRadius.all(Radius.circular(30))
+      ),
+      child: CircleAvatar(
+        backgroundImage: imageProvider,
+      ),
     ),
-    child: (e.profileImage != null && e.profileImage?.image != null) ? CircleAvatar(
-      backgroundImage: e.profileImage?.image ?? Image.asset('assets/profile-avatar.png').image,
-    ) : Center(child: Text((e.legalName.isValid()) ? e.legalName.value.fold((l) => '..', (r) => r)[0] : e.emailAddress.value.fold((l) => 'cannot find', (r) => r)[0], style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15))),
+    placeholder: (context, url) => Container(
+      width: 30,
+      height: 30,
+      decoration:  BoxDecoration(
+          color: backgroundColor,
+          border: Border.all(color: textColor),
+          borderRadius: BorderRadius.all(Radius.circular(30))
+      ),
+      child: CircleAvatar(
+        backgroundImage: Image.asset('assets/profile-avatar.png').image,
+      ),
+    ),
+    errorWidget: (context, url, error) => Container(
+      width: 30,
+      height: 30,
+      decoration:  BoxDecoration(
+          color: backgroundColor,
+          border: Border.all(color: textColor),
+          borderRadius: BorderRadius.all(Radius.circular(30))
+      ),
+      child: Center(child: Text((e.legalName.isValid()) ? e.legalName.value.fold((l) => '..', (r) => r)[0] : e.emailAddress.value.fold((l) => 'cannot find', (r) => r)[0], style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15))),
+    ),
   );
 }
 
@@ -328,9 +357,18 @@ Widget userProfileNameAndEmail({required UserProfileModel e, required Color back
               SizedBox(
                 width: 10,
               ),
-              CircleAvatar(
-                  backgroundImage: (e.profileImage != null && e.profileImage?.image != null) ? e.profileImage!.image : Image.asset('assets/profile-avatar.png').image,
+              CachedNetworkImage(
+                imageUrl: e.photoUri ?? '',
+                imageBuilder: (context, imageProvider) => CircleAvatar(
+                    backgroundColor: Colors.grey.shade100,
+                    backgroundImage: imageProvider
+                ),
+                errorWidget: (context, url, error) => CircleAvatar(
+                  backgroundColor: Colors.grey.shade100,
+                  backgroundImage: Image.asset('assets/profile-avatar.png').image
+                )
               ),
+
               SizedBox(
                 width: 10,
               ),
@@ -424,15 +462,24 @@ Widget attendeeProfileWidget({required Function(UserProfileModel) selectedItem, 
         selectedItem(user);
     },
     leading: Container(
+      height: 40,
+        width: 40,
         decoration: BoxDecoration(
           color: textColor,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Padding(
       padding: const EdgeInsets.all(1.75),
-      child: CircleAvatar(backgroundImage: user.profileImage?.image ?? Image.asset('assets/profile-avatar.png').image))),
-    title: Text('${user.legalName.getOrCrash()} ${user.legalSurname.value.fold((l) => '', (r) => r)}', style: TextStyle(color: textColor, overflow: TextOverflow.ellipsis), maxLines: 1),
-    trailing: trailingWidget,
+      child: CachedNetworkImage(
+        imageUrl: user.photoUri ?? '',
+        imageBuilder: (context, imageProvider) => CircleAvatar(backgroundImage: imageProvider, ),
+        errorWidget: (context, url, error) => CircleAvatar(backgroundImage: Image.asset('assets/profile-avatar.png').image)
+            )
+          ),
+        ),
+      title: Text('${user.legalName.getOrCrash()} ${user.legalSurname.value.fold((l) => '', (r) => r)}', style: TextStyle(color: textColor, overflow: TextOverflow.ellipsis), maxLines: 1),
+      trailing: trailingWidget,
+
   );
 }
 

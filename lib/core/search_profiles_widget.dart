@@ -241,7 +241,15 @@ class _SearchProfilesState extends State<SearchProfiles> with SingleTickerProvid
                                                           }
                                                         });
                                                       },
-                                                      leading: CircleAvatar(backgroundImage: (user.profileImage != null) ? user.profileImage!.image : Image.asset('assets/profile-avatar.png').image),
+                                                      leading: Container(
+                                                        height: 50,
+                                                        width: 50,
+                                                        child: CachedNetworkImage(
+                                                            imageUrl: user.photoUri ?? '',
+                                                            imageBuilder: (context, imageProvider) => CircleAvatar(backgroundImage: imageProvider),
+                                                            errorWidget: (context, url, error) => CircleAvatar(backgroundImage: Image.asset('assets/profile-avatar.png').image)
+                                                        ),
+                                                      ),
                                                       trailing: isSelected ? Container(
                                                         height: 50,
                                                         width: 150,

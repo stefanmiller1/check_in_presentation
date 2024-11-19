@@ -153,21 +153,23 @@ void didSelectReviewApplicationsWeb(BuildContext context, UserProfileModel profi
 
 void didSelectReservationPreview(BuildContext context, DashboardModel model, ReservationPreviewer item) async {
   if (item.listing != null && item.reservation != null) {
-    Beamer.of(context).update(
-        configuration: RouteInformation(
-          location: searchedReservationRoute(item.reservation!.instanceId.getOrCrash(), item.reservation!.reservationId.getOrCrash()),
-        ),
-        rebuild: false
-    );
+
     final newUrl = getUrlForActivity(item.reservation!.instanceId.getOrCrash(), item.reservation!.reservationId.getOrCrash());
-    final canLaunch = await canLaunchUrlString(newUrl);
+
     if (kIsWeb && (Responsive.isMobile(context) == false)) {
+      final canLaunch = await canLaunchUrlString(newUrl);
       if (canLaunch) {
         await launchUrlString(newUrl);
       } else {
         return;
       }
     } else {
+      Beamer.of(context).update(
+        configuration: RouteInformation(
+            location: searchedReservationRoute(item.reservation!.instanceId.getOrCrash(), item.reservation!.reservationId.getOrCrash()),
+          ),
+          rebuild: false
+      );
       Navigator.of(context).push(MaterialPageRoute(builder: (_) {
         return ActivityPreviewScreen(
           model: model,
@@ -197,7 +199,7 @@ void didSelectEditGeneralProfile(BuildContext context, DashboardModel model, Use
           child: ClipRRect(
               borderRadius: BorderRadius.circular(25),
               child: Container(
-                height: 200,
+                height: 320,
                 width: 650,
                 decoration: BoxDecoration(
                     color: model.accentColor,
@@ -246,64 +248,104 @@ void didSelectEditGeneralProfile(BuildContext context, DashboardModel model, Use
 }
 
 void didSelectEditVendorProfile(BuildContext context, DashboardModel model, EventMerchantVendorProfile? currentVendorProfile) {
-  showGeneralDialog(
-    context: context,
-    barrierDismissible: true,
-    barrierLabel: 'Profile',
-    // barrierColor: widget.model.disabledTextColor.withOpacity(0.34),
-    transitionDuration: Duration(milliseconds: 350),
-    pageBuilder: (BuildContext contexts, anim1, anim2) {
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Center(
-          child: ClipRRect(
-              borderRadius: BorderRadius.circular(25),
-              child: Container(
-                height: 760,
-                width: 650,
-                decoration: BoxDecoration(
-                    color: model.webBackgroundColor,
-                    borderRadius: BorderRadius.all(Radius.circular(25))
-                ),
-                child: Scaffold(
-                  backgroundColor: Colors.transparent,
-                  appBar: AppBar(
-                    backgroundColor: (model.systemTheme.brightness != Brightness.dark) ? model.paletteColor : model.mobileBackgroundColor,
-                    elevation: 0,
-                    automaticallyImplyLeading: true,
-                    centerTitle: true,
-                    title: Text('Edit Profile'),
-                    leading: IconButton(onPressed: () {
-                      Navigator.of(context).pop();
-                    }, icon: Icon(Icons.cancel, size: 30, color: (model.systemTheme.brightness != Brightness.dark) ? model.mobileBackgroundColor : model.paletteColor), padding: EdgeInsets.zero),
-                    titleTextStyle: TextStyle(color: (model.systemTheme.brightness != Brightness.dark) ? model.accentColor : model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
+  if (kIsWeb) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Profile',
+      // barrierColor: widget.model.disabledTextColor.withOpacity(0.34),
+      transitionDuration: Duration(milliseconds: 350),
+      pageBuilder: (BuildContext contexts, anim1, anim2) {
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Center(
+            child: ClipRRect(
+                borderRadius: BorderRadius.circular(25),
+                child: Container(
+                  height: 760,
+                  width: 650,
+                  decoration: BoxDecoration(
+                      color: model.webBackgroundColor,
+                      borderRadius: BorderRadius.all(Radius.circular(25))
                   ),
-                  body: VendorProfileCreatorEditor(
-                    model: model,
-                    didSaveSuccessfully: () {
-                      Navigator.of(context).pop();
-                    },
-                    didCancel: () {
-                      Navigator.of(context).pop();
-                    },
-                    selectedVendorProfile: currentVendorProfile,
-                  )
-                ),
-              )
+                  child: Scaffold(
+                      backgroundColor: Colors.transparent,
+                      appBar: AppBar(
+                        backgroundColor: (model.systemTheme.brightness !=
+                            Brightness.dark) ? model.paletteColor : model
+                            .mobileBackgroundColor,
+                        elevation: 0,
+                        automaticallyImplyLeading: true,
+                        centerTitle: true,
+                        title: Text('Edit Profile'),
+                        leading: IconButton(onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                            icon: Icon(Icons.cancel, size: 30, color: (model
+                                .systemTheme.brightness != Brightness.dark)
+                                ? model.mobileBackgroundColor
+                                : model.paletteColor),
+                            padding: EdgeInsets.zero),
+                        titleTextStyle: TextStyle(
+                            color: (model.systemTheme.brightness !=
+                                Brightness.dark) ? model.accentColor : model
+                                .paletteColor,
+                            fontSize: model.secondaryQuestionTitleFontSize,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      body: VendorProfileCreatorEditor(
+                        model: model,
+                        didSaveSuccessfully: () {
+                          Navigator.of(context).pop();
+                        },
+                        didCancel: () {
+                          Navigator.of(context).pop();
+                        },
+                        selectedVendorProfile: currentVendorProfile,
+                      )
+                  ),
+                )
+            ),
           ),
-        ),
-      );
-    },
-    transitionBuilder: (context, anim1, anim2, child) {
-      return Transform.scale(
-          scale: anim1.value,
-          child: Opacity(
-              opacity: anim1.value,
-              child: child
-          )
-      );
-    },
-  );
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return Transform.scale(
+            scale: anim1.value,
+            child: Opacity(
+                opacity: anim1.value,
+                child: child
+            )
+        );
+      },
+    );
+  } else {
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) {
+          return Scaffold(
+            resizeToAvoidBottomInset: false,
+            appBar: AppBar(
+              backgroundColor: model.mobileBackgroundColor,
+              elevation: 0,
+              title: const Text('Vendor Profile'),
+              titleTextStyle: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold),
+              centerTitle: true,
+            ),
+            body: VendorProfileCreatorEditor(
+              model: model,
+              didSaveSuccessfully: () {
+                Navigator.of(context).pop();
+              },
+              didCancel: () {
+                Navigator.of(context).pop();
+              },
+              selectedVendorProfile: currentVendorProfile,
+            ),
+          );
+        }
+    )
+    );
+  }
 }
 
 void didSelectShowAllFacilities() {

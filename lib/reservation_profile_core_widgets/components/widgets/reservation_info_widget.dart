@@ -42,22 +42,24 @@ class ReservationInfoWidget extends StatelessWidget {
                 itemBuilder: (_, index) {
                   final SpaceOptionSizeDetail reservationSpace = retrieveReservationSpacesFromListing(reservationItem, listing)[index];
 
-                  if (reservationSpace.spacePhoto != null) {
-                    return Image(image: reservationSpace.spacePhoto!.image, fit: BoxFit.cover);
-                  }
-                  return  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: getActivityTypeTabOption(
-                          context,
-                          model,
-                          100,
-                          false,
-                          getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
-                      ),
-                    ),
-                  );
+                    return CachedNetworkImage(
+                      imageUrl: reservationSpace.photoUri ?? '',
+                      imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.cover),
+                      errorWidget: (context, url, error) => Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: getActivityTypeTabOption(
+                              context,
+                              model,
+                              100,
+                              false,
+                              getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
+                          ),
+                        ),
+                      )
+                    );
+
                 }
             ),
           ),

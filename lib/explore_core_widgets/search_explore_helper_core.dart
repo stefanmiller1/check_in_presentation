@@ -3,8 +3,8 @@ part of check_in_presentation;
 class ExploreWebHelperCore {
 
   static late bool isLoading = false;
-  static late bool selectedListing = false;
-  static late bool selectedSearch = false;
+  // static late bool selectedListing = false;
+  // static late bool selectedSearch = false;
   static SearchExploreHelperMarker searchExploreMarker = SearchExploreHelperMarker.map;
   static UniqueId? currentFacilityItemId = null;
   static UniqueId? currentReservationItemId = null;
@@ -14,7 +14,7 @@ class ExploreWebHelperCore {
   static void didSelectFacilityItem(BuildContext context, ListingManagerForm listing) {
     ExploreWebHelperCore.isLoading = true;
     // ExploreWebHelperCore.selectedSearch = false;
-    ExploreWebHelperCore.selectedListing = true;
+    searchExploreMarker = SearchExploreHelperMarker.listing;
     ExploreWebHelperCore.selectedFacilityItem = listing;
     ExploreWebHelperCore.currentFacilityItemId = listing.listingServiceId;
     ExploreWebHelperCore.selectedReservationItem = null;
@@ -30,8 +30,7 @@ class ExploreWebHelperCore {
 
   static void didSelectReservationItem(BuildContext context, ListingManagerForm? listing, ReservationItem reservation) {
     ExploreWebHelperCore.isLoading = true;
-    ExploreWebHelperCore.selectedSearch = false;
-    ExploreWebHelperCore.selectedListing = true;
+    searchExploreMarker = SearchExploreHelperMarker.activity;
     ExploreWebHelperCore.selectedFacilityItem = listing;
     ExploreWebHelperCore.currentFacilityItemId = reservation.instanceId;
     ExploreWebHelperCore.selectedReservationItem = reservation;

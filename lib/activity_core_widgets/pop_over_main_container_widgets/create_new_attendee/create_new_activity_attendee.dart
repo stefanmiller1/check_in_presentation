@@ -282,6 +282,9 @@ class _ReservationCreateNewAttendeeState extends State<ReservationCreateNewAtten
 
                             });
                           },
+                          didSelectDisabledNext: () {
+
+                          },
                         ),
                       )
                     )
