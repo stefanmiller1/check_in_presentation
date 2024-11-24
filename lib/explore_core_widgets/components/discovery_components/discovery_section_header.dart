@@ -85,7 +85,7 @@ class DiscoverySectionWidget extends StatelessWidget {
         const SizedBox(height: 12),
         if (discoverySectionObject.hasValues) discoverySectionObject.mainSectionWidget,
 
-        const SizedBox(height: 15),
+        const SizedBox(height: 45),
       ],
     );
   }

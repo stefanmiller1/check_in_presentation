@@ -4,9 +4,11 @@ class DiscoveryVendorMainWidget extends StatefulWidget {
 
 
   final DashboardModel model;
+  final double widgetWidth;
+  final double widthConstraint;
   final List<EventMerchantVendorProfile> profiles;
 
-  const DiscoveryVendorMainWidget({super.key, required this.model, required this.profiles});
+  const DiscoveryVendorMainWidget({super.key, required this.model, required this.profiles, required this.widgetWidth, required this.widthConstraint});
 
   @override
   State<DiscoveryVendorMainWidget> createState() => _DiscoveryVendorMainWidgetState();
@@ -17,61 +19,62 @@ class _DiscoveryVendorMainWidgetState extends State<DiscoveryVendorMainWidget> {
   int _currentPage = 0;
   late bool showButton = false;
   late final Future<List<EventMerchVendorPreview>> getVendorProfileList;
+  late PageController _reservationPageController;
 
+  Future<List<EventMerchVendorPreview>> _fetchVendorProfiles(List<EventMerchantVendorProfile> profiles) async {
+    final futures = profiles.map((vendor) async {
+      int weight = 0;
+      try {
+        final vendorProfile = await facade.UserProfileFacade.instance
+            .getCurrentUserProfile(userId: vendor.profileOwner.getOrCrash());
+        final vendingCount = await facade.AttendeeFacade.instance
+            .getNumberOfAttending(attendeeOwnerId: vendor.profileOwner.getOrCrash(),
+            status: ContactStatus.joined,
+            attendingType: AttendeeType.vendor,
+            isInterested: null);
+        weight = vendingCount ?? 0;
 
-  Future<List<EventMerchVendorPreview>> getWeightedDiscoveryFeed(List<EventMerchantVendorProfile> profiles) async {
-    late List<EventMerchVendorPreview> vendorToPreview = [];
-
-    late int weight = 0;
-    for (EventMerchantVendorProfile vendor in profiles) {
-
-      EventMerchVendorPreview venPreview = EventMerchVendorPreview(
+        return EventMerchVendorPreview(
           vendorToPreview: vendor,
-          previewWeight: weight
-      );
-
-      try {
-
-      final vendorProfile = await facade.UserProfileFacade.instance.getCurrentUserProfile(userId: vendor.profileOwner.getOrCrash());
-      venPreview = venPreview.copyWith(
-          vendorOwnerProfile: vendorProfile
-      );
-
-      } catch (e) {}
-
-      try {
-
-      final vendingCount = await facade.AttendeeFacade.instance.getNumberOfAttending(attendeeOwnerId: vendor.profileOwner.getOrCrash(), status: ContactStatus.joined, attendingType: AttendeeType.vendor, isInterested: null);
-      weight = vendingCount ?? 0;
-
-        venPreview = venPreview.copyWith(
-            attendedCount: vendingCount
+          previewWeight: weight,
+          vendorOwnerProfile: vendorProfile,
+          attendedCount: vendingCount,
         );
-
-      } catch (e) {
-        print(e);
+      } catch (_) {
+        return EventMerchVendorPreview(vendorToPreview: vendor, previewWeight: weight);
       }
+    });
 
-      venPreview = venPreview.copyWith(
-        previewWeight: weight
-      );
-      vendorToPreview.add(venPreview);
-    }
+    final vendorPreviews = await Future.wait(futures);
+    return vendorPreviews.sorted((a, b) => b.previewWeight.compareTo(a.previewWeight));
+  }
 
-    print(vendorToPreview.sorted((a, b) => b.previewWeight.compareTo(a.previewWeight)).map((e) => e.previewWeight).toList());
-    return vendorToPreview.sorted((a, b) => b.previewWeight.compareTo(a.previewWeight));
+  @override
+  void dispose() {
+    _reservationPageController.dispose();
+    super.dispose();
   }
 
   @override
   void initState() {
-
-    getVendorProfileList = getWeightedDiscoveryFeed(widget.profiles);
+    getVendorProfileList = _fetchVendorProfiles(widget.profiles);
     super.initState();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Initialize or update PageController when dependencies change
+    _reservationPageController = PageController(
+      viewportFraction: (MediaQuery.of(context).size.width >= widget.widthConstraint)
+          ? widget.widgetWidth / widget.widthConstraint
+          : widget.widgetWidth / MediaQuery.of(context).size.width,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final PageController _reservationPageController = PageController(viewportFraction: 380 / MediaQuery.of(context).size.width);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -125,43 +128,25 @@ class _DiscoveryVendorMainWidgetState extends State<DiscoveryVendorMainWidget> {
                         child: Stack(
                           alignment: Alignment.bottomCenter,
                           children: [
-                            Container(
-                              // height: MediaQuery.of(context).size.height,
-                              width: 450,
-                            ),
+
                             Container(
                               height: MediaQuery.of(context).size.height,
-                              width: 380,
+                              width: widget.widgetWidth,
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(15),
                                 child: CachedNetworkImage(
                                     imageUrl: (preview.vendorToPreview?.uriImage?.uriPath != null) ? preview.vendorToPreview!.uriImage!.uriPath! : '',
-                                    imageBuilder: (context, imageProvider) => Container(
-                                        // height: MediaQuery.of(context).size.height,
-                                        // height: 325,
-                                        // width: 450,
-                                        decoration:  BoxDecoration(
-                                            boxShadow: [
-                                              BoxShadow(
-                                                  color: Colors.black.withOpacity(0.11),
-                                                  spreadRadius: 1,
-                                                  blurRadius: 15,
-                                                  offset: Offset(0, 2)
-                                            )
-                                          ]
-                                        ),
-                                      child: Image(image: imageProvider, fit: BoxFit.cover)
-                                    ),
+                                    imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.cover),
                                     errorWidget: (context, url, error) => Container(
                                       // height: 325,
-                                      width: 450,
+                                      width: widget.widgetWidth,
                                     ),
                                 ),
                               ),
                             ),
 
                             Container(
-                              width: 450,
+                              width: widget.widgetWidth,
                               child: bottomFooterVendorDetails(
                                   context,
                                   widget.model,
@@ -297,7 +282,7 @@ Widget bottomFooterVendorDetails(BuildContext context, DashboardModel model, Eve
                                               height: 30,
                                               decoration: BoxDecoration(
                                                   borderRadius: BorderRadius.circular(40),
-                                                  border: Border.all(color: textColor)
+                                                  // border: Border.all(color: textColor)
                                               ),
                                               child: Center(
                                                 child: Text(preview.vendorOwnerProfile?.legalName.getOrCrash()[0] ?? '', style: TextStyle(color: secondaryTextColor, fontSize: model.questionTitleFontSize)),
@@ -342,7 +327,7 @@ Widget bottomFooterVendorDetails(BuildContext context, DashboardModel model, Eve
                                 icon: Icon(Icons.star_rounded, color: textColor),
                               ),
                             ),
-                            if (preview.rating != null && preview.rating != 0) Text('${preview.rating ?? 0}', style: TextStyle(color: secondaryTextColor)),
+                            Text('${preview.rating ?? 5}', style: TextStyle(color: secondaryTextColor)),
                           ],
                         ),
                       ]

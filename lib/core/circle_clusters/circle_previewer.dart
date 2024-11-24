@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:check_in_presentation/check_in_presentation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'circle_helper.dart';
 
 import 'dart:math';
@@ -20,7 +21,7 @@ class CircleClusterWidget extends StatefulWidget {
 class _CircleClusterWidgetState extends State<CircleClusterWidget> {
   @override
   Widget build(BuildContext context) {
-    double screenWidth = (Responsive.isMobile(context)) ? MediaQuery.of(context).size.width : MediaQuery.of(context).size.width - 200;
+    double screenWidth = (Responsive.isMobile(context)) ? MediaQuery.of(context).size.width : (MediaQuery.of(context).size.width >= 1500) ? 1500 : MediaQuery.of(context).size.width - 500;
     double containerWidth = screenWidth;
     double containerHeight = 330;
 
@@ -45,14 +46,14 @@ class _CircleClusterWidgetState extends State<CircleClusterWidget> {
                 offset: Offset(0, 0.25),
                 transitionWidget: MouseRegion(
                   onEnter: (_) {
-                    if (!circle.hovered) {
+                    if (!circle.hovered && circle.isElevated) {
                       setState(() {
                         circle.hovered = true;
                       });
                     }
                   },
                   onExit: (_) {
-                    if (circle.hovered) {
+                    if (circle.hovered && circle.isElevated) {
                       Future.delayed(const Duration(milliseconds: 400), () {
                         setState(() {
                           circle.hovered = false;
@@ -69,24 +70,31 @@ class _CircleClusterWidgetState extends State<CircleClusterWidget> {
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          boxShadow: [
+                          boxShadow: (circle.isElevated) ? [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2), // Shadow color
-                                spreadRadius: 2,
-                                blurRadius: 8,
-                                offset: const Offset(0, 2) // Positioning of the shadow
+                              color: Colors.black.withOpacity(0.1), // Shadow color
+                                spreadRadius: 5,
+                                blurRadius: 13,
+                                offset: const Offset(5, 0) // Positioning of the shadow
                             ),
-                          ],
+                          ] : null,
                         ),
                         child: CircleAvatar(
                           radius: circle.radius,
                           backgroundColor: circle.color,
-                          backgroundImage: circle.imageUrl != null
+                          backgroundImage: (circle.imageUrl != null && circle.isSvg == false)
                               ? CachedNetworkImageProvider(
                                     circle.imageUrl!
                                 )
                               : null,
-                        ),
+                          child: (circle.imageUrl != null && circle.isSvg == true) ? ClipRRect(
+                        borderRadius: BorderRadius.circular(25),
+                        child: SvgPicture.asset(
+                          fit: BoxFit.fitWidth,
+                          circle.imageUrl!,
+                          height: circle.radius / 0.8,
+                          ),
+                        ) : null)
                       ),
                     ),
                   ),
