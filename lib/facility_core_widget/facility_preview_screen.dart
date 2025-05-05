@@ -67,12 +67,12 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                             model: widget.model,
                             currentUser: currentUser,
                             ownerUser: owner,
-                            reservation: state.newFacilityBooking,
-                            amount: completeTotalPriceForCheckoutFormat(getListingTotalPriceDouble(state.newFacilityBooking.reservationSlotItem, state.newFacilityBooking.cancelledSlotItem ?? []) + getListingTotalPriceDouble(state.newFacilityBooking.reservationSlotItem, state.newFacilityBooking.cancelledSlotItem ?? []) * CICOBuyerPercentageFee + getListingTotalPriceDouble(state.newFacilityBooking.reservationSlotItem, state.newFacilityBooking.cancelledSlotItem ?? []) * CICOTaxesFee, listing.listingProfileService.backgroundInfoServices.currency),
+                            reservation: state.reservationItem,
+                            amount: completeTotalPriceForCheckoutFormat(getListingTotalPriceDouble(state.reservationItem.reservationSlotItem, state.reservationItem.cancelledSlotItem ?? []) + getListingTotalPriceDouble(state.reservationItem.reservationSlotItem, state.reservationItem.cancelledSlotItem ?? []) * CICOBuyerPercentageFee + getListingTotalPriceDouble(state.reservationItem.reservationSlotItem, state.reservationItem.cancelledSlotItem ?? []) * CICOTaxesFee, listing.listingProfileService.backgroundInfoServices.currency),
                             currency: listing.listingProfileService.backgroundInfoServices.currency,
                             description: 'Ticket to be sold and to be made redeemable for a specific Reservation',
                             didFinishPayment: (e) {
-                              context.read<ReservationFormBloc>().add(ReservationFormEvent.isFinishedCreatingReservationWeb(e));
+                              // context.read<ReservationFormBloc>().add(ReservationFormEvent.isFinishedCreatingReservationWeb(e));
                             },
                             didPressFinished: () {
                               setState(() {
@@ -138,13 +138,14 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                     reservations: reservations,
                     isPopOver: true,
                     listingOwnerProfile: listingOwnerProfile,
-                    selectedFacilityBooking: context.read<ReservationFormBloc>().state.newFacilityBooking,
+                    selectedFacilityBooking: context.read<ReservationFormBloc>().state.reservationItem,
                     selectedSpace: context.read<ReservationFormBloc>().state.currentSelectedSpace ?? listing.listingProfileService.spaceSetting.spaceTypes.value.fold((l) => SpaceOption.empty(), (r) => r.first),
                     selectedSportSpace: context.read<ReservationFormBloc>().state.currentSelectedSpaceOption,
-                    selectedListingActivityOption: context.read<ReservationFormBloc>().state.currentListingActivityOption,
+                    /// depricated
+                    selectedListingActivityOption: null,
                     didSaveReservation: (reservation) {
                       setState(() {
-                        context.read<ReservationFormBloc>().add(ReservationFormEvent.updateBookingItemList(reservation.reservationSlotItem, listing.listingProfileService.backgroundInfoServices.currency));
+                        context.read<ReservationFormBloc>().add(ReservationFormEvent.didChangeReservationSlotItems(reservation.reservationSlotItem, listing.listingProfileService.backgroundInfoServices.currency));
                         Navigator.of(context).pop();
                       });
                     },
@@ -167,21 +168,21 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
     } else {
     Navigator.push(context, MaterialPageRoute(
         builder: (_) {
-          return BlocProvider(create: (_) => getIt<ReservationFormBloc>()..add(ReservationFormEvent.initializedReservation(dart.optionOf(state.newFacilityBooking), dart.optionOf(widget.listing), dart.optionOf(state.listingOwner))),
+          return BlocProvider(create: (_) => getIt<ReservationFormBloc>()..add(ReservationFormEvent.initializedReservation(dart.optionOf(state.reservationItem))),
             child: AddNewReservationSlots(
               model: widget.model,
               listing: listing,
               reservations: reservations,
               listingOwnerProfile: listingOwnerProfile,
               isPopOver: true,
-              selectedFacilityBooking: context.read<ReservationFormBloc>().state.newFacilityBooking,
+              selectedFacilityBooking: context.read<ReservationFormBloc>().state.reservationItem,
               selectedSpace: context.read<ReservationFormBloc>().state.currentSelectedSpace ?? listing.listingProfileService.spaceSetting.spaceTypes.value.fold((l) => SpaceOption.empty(), (r) => r.first),
               selectedSportSpace: context.read<ReservationFormBloc>().state.currentSelectedSpaceOption,
-              selectedListingActivityOption: context.read<ReservationFormBloc>().state.currentListingActivityOption,
+              selectedListingActivityOption: null,
               didSaveReservation: (reservation) {
                 setState(() {
                   Navigator.of(context).pop();
-                  context.read<ReservationFormBloc>().add(ReservationFormEvent.updateBookingItemList(reservation.reservationSlotItem, listing.listingProfileService.backgroundInfoServices.currency));
+                  context.read<ReservationFormBloc>().add(ReservationFormEvent.didChangeReservationSlotItems(reservation.reservationSlotItem, listing.listingProfileService.backgroundInfoServices.currency));
                   });
                 },
               ),
@@ -329,29 +330,30 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                       child: FacilityOverviewInfoWidget(
                           model: model,
                           overViewState: FacilityPreviewState.listing,
-                          newFacilityBooking: state.newFacilityBooking,
+                          newFacilityBooking: state.reservationItem,
                           reservations: reservations,
                           listingOwnerProfile: listingOwnerProfile,
                           listing: listing,
+                          topPadding: (kIsWeb) ? 80 : 155,
                           selectedReservationsSlots: widget.selectedReservationsSlots,
-                          selectedActivityType: state.selectedActivityType,
-                          currentListingActivityOption: state.currentListingActivityOption,
+                          selectedActivityType: ((state.selectedActivityType ?? []).isNotEmpty == true) ? (state.selectedActivityType ?? [])[0] : null,
+                          currentListingActivityOption: null,
                           currentSelectedSpace: state.currentSelectedSpace,
                           currentSelectedSpaceOption: state.currentSelectedSpaceOption,
                           didSelectSpace: (space) {
                             setState(() {
-                              context.read<ReservationFormBloc>().add(ReservationFormEvent.spaceDetailChanged(space));
-                              context.read<ReservationFormBloc>().add(ReservationFormEvent.selectedSizeOptionChanged(space.quantity[0]));
+                              // context.read<ReservationFormBloc>().add(ReservationFormEvent.spaceDetailChanged(space));
+                              // context.read<ReservationFormBloc>().add(ReservationFormEvent.selectedSizeOptionChanged(space.quantity[0]));
                             });
                           },
                           didSelectSpaceOption: (spaceOption) {
                             setState(() {
-                              context.read<ReservationFormBloc>().add(ReservationFormEvent.selectedSizeOptionChanged(spaceOption));
+                              // context.read<ReservationFormBloc>().add(ReservationFormEvent.selectedSizeOptionChanged(spaceOption));
                             });
                           },
                           updateBookingItemList: (slotItem, currency) {
                             setState(() {
-                              context.read<ReservationFormBloc>().add(ReservationFormEvent.updateBookingItemList(slotItem, currency));
+                              context.read<ReservationFormBloc>().add(ReservationFormEvent.didChangeReservationSlotItems(slotItem, currency));
                             });
                           },
                           didSelectItem: () {
@@ -369,13 +371,13 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                   ),
                 ),
 
-                if (pageIndex == ListingOverviewMarker.activities) Flexible(
-                    child: FacilityActivityProgramming(
-                      model: model,
-                      currentUserId: UniqueId.fromUniqueString(facade.FirebaseChatCore.instance.firebaseUser?.uid ?? ''),
-                      listing: listing,
-                      reservations: reservations,
-                      didSelectReservation: widget.didSelectReservation
+              if (pageIndex == ListingOverviewMarker.activities) Flexible(
+                  child: FacilityActivityProgramming(
+                    model: model,
+                    currentUserId: UniqueId.fromUniqueString(facade.FirebaseChatCore.instance.firebaseUser?.uid ?? ''),
+                    listing: listing,
+                    reservations: reservations,
+                    didSelectReservation: widget.didSelectReservation
                   )
                 )
               ],
@@ -419,7 +421,7 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Column(
-                          children: getSpacesFromSelectedReservationSlot(context, listing, state.newFacilityBooking.reservationSlotItem).map(
+                          children: getSpacesFromSelectedReservationSlot(context, listing, state.reservationItem.reservationSlotItem).map(
                             (e) => Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8.0),
                               child: getSelectedSpaces(context, e, widget.model),
@@ -442,8 +444,8 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                       context,
                       widget.model,
                       [],
-                      context.read<ReservationFormBloc>().state.newFacilityBooking.reservationSlotItem,
-                      context.read<ReservationFormBloc>().state.newFacilityBooking.cancelledSlotItem ?? [],
+                      context.read<ReservationFormBloc>().state.reservationItem.reservationSlotItem,
+                      context.read<ReservationFormBloc>().state.reservationItem.cancelledSlotItem ?? [],
                       false,
                       AppLocalizations.of(context)!.profileFacilitySlotTime,
                       AppLocalizations.of(context)!.profileFacilitySlotBookingLocation,
@@ -491,9 +493,9 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                           ],
                         ),
                         subtitle: Text('Pay the complete amount (${completeTotalPriceWithCurrency(
-                                getListingTotalPriceDouble(context.read<ReservationFormBloc>().state.newFacilityBooking.reservationSlotItem, context.read<ReservationFormBloc>().state.newFacilityBooking.cancelledSlotItem ?? []) +
-                                getListingTotalPriceDouble(context.read<ReservationFormBloc>().state.newFacilityBooking.reservationSlotItem, context.read<ReservationFormBloc>().state.newFacilityBooking.cancelledSlotItem ?? [])*CICOBuyerPercentageFee +
-                                getListingTotalPriceDouble(context.read<ReservationFormBloc>().state.newFacilityBooking.reservationSlotItem, context.read<ReservationFormBloc>().state.newFacilityBooking.cancelledSlotItem ?? [])*CICOTaxesFee, listing.listingProfileService.backgroundInfoServices.currency)}) now and have your slots secured', style: TextStyle(color: model.disabledTextColor)),
+                                getListingTotalPriceDouble(context.read<ReservationFormBloc>().state.reservationItem.reservationSlotItem, context.read<ReservationFormBloc>().state.reservationItem.cancelledSlotItem ?? []) +
+                                getListingTotalPriceDouble(context.read<ReservationFormBloc>().state.reservationItem.reservationSlotItem, context.read<ReservationFormBloc>().state.reservationItem.cancelledSlotItem ?? [])*CICOBuyerPercentageFee +
+                                getListingTotalPriceDouble(context.read<ReservationFormBloc>().state.reservationItem.reservationSlotItem, context.read<ReservationFormBloc>().state.reservationItem.cancelledSlotItem ?? [])*CICOTaxesFee, listing.listingProfileService.backgroundInfoServices.currency)}) now and have your slots secured', style: TextStyle(color: model.disabledTextColor)),
                       ),
                       const SizedBox(height: 8),
                       RadioListTile(
@@ -549,9 +551,9 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
 
                   getPricingDetails(
                       widget.model,
-                      state.newFacilityBooking.reservationSlotItem,
-                      state.newFacilityBooking.cancelledSlotItem ?? [],
-                      numberOfSlotsSelected(state.newFacilityBooking.reservationSlotItem),
+                      state.reservationItem.reservationSlotItem,
+                      state.reservationItem.cancelledSlotItem ?? [],
+                      numberOfSlotsSelected(state.reservationItem.reservationSlotItem),
                       listing.listingProfileService.backgroundInfoServices.currency
                   ),
 
@@ -570,11 +572,11 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                         listing.listingReservationService.cancellationSetting.isAllowedEarlyEndAndChanges ?? false),
                   if ((listing.listingReservationService.cancellationSetting.isAllowedFeeBasedChanges ?? false) &&
                       (listing.listingReservationService.cancellationSetting.feeBasedCancellationOptions?.isNotEmpty ?? false))
-                    getPricingWithFeeCancellation(context, widget.model, state.newFacilityBooking.reservationSlotItem.map((e) => e.selectedDate).toList(),
+                    getPricingWithFeeCancellation(context, widget.model, state.reservationItem.reservationSlotItem.map((e) => e.selectedDate).toList(),
                         listing.listingReservationService.cancellationSetting.feeBasedCancellationOptions ?? []),
                   if ((listing.listingReservationService.cancellationSetting.isAllowedTimeBasedChanges ?? false) &&
                       (listing.listingReservationService.cancellationSetting.timeBasedCancellationOptions?.isNotEmpty ?? false))
-                    getPricingWithTimeCancellation(context, widget.model, state.newFacilityBooking.reservationSlotItem.map((e) => e.selectedDate).toList(), listing.listingReservationService.cancellationSetting.timeBasedCancellationOptions ?? []),
+                    getPricingWithTimeCancellation(context, widget.model, state.reservationItem.reservationSlotItem.map((e) => e.selectedDate).toList(), listing.listingReservationService.cancellationSetting.timeBasedCancellationOptions ?? []),
 
                   /// ------------------------ ///
                   /// policy & guidelines
@@ -622,7 +624,7 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (!(checkIfReservationSelected(context.read<ReservationFormBloc>().state.newFacilityBooking.reservationSlotItem, context.read<ReservationFormBloc>().state.newFacilityBooking.cancelledSlotItem ?? []))) Expanded(
+              if (!(checkIfReservationSelected(context.read<ReservationFormBloc>().state.reservationItem.reservationSlotItem, context.read<ReservationFormBloc>().state.reservationItem.cancelledSlotItem ?? []))) Expanded(
                 child: Container(
                   height: 60,
                   child: Column(
@@ -644,7 +646,7 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                 ),
               ),
 
-              if (checkIfReservationSelected(context.read<ReservationFormBloc>().state.newFacilityBooking.reservationSlotItem, context.read<ReservationFormBloc>().state.newFacilityBooking.cancelledSlotItem ?? [])) Expanded(
+              if (checkIfReservationSelected(context.read<ReservationFormBloc>().state.reservationItem.reservationSlotItem, context.read<ReservationFormBloc>().state.reservationItem.cancelledSlotItem ?? [])) Expanded(
                 child: Container(
                   height: 60,
                   child: Column(
@@ -655,9 +657,9 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                         children: [
                           getTotalPriceOnly(
                               widget.model,
-                              state.newFacilityBooking.reservationSlotItem,
-                              state.newFacilityBooking.cancelledSlotItem ?? [],
-                              numberOfSlotsSelected(context.read<ReservationFormBloc>().state.newFacilityBooking.reservationSlotItem),
+                              state.reservationItem.reservationSlotItem,
+                              state.reservationItem.cancelledSlotItem ?? [],
+                              numberOfSlotsSelected(context.read<ReservationFormBloc>().state.reservationItem.reservationSlotItem),
                               listing.listingProfileService.backgroundInfoServices.currency
                           ),
                         ],
@@ -667,7 +669,7 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                         children: [
                           Icon(Icons.calendar_month_rounded, color: widget.model.paletteColor),
                           const SizedBox(width: 8),
-                          Text('${numberOfSlotsSelected(context.read<ReservationFormBloc>().state.newFacilityBooking.reservationSlotItem)} slots', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold)),
+                          Text('${numberOfSlotsSelected(context.read<ReservationFormBloc>().state.reservationItem.reservationSlotItem)} slots', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold)),
                         ],
                       ),
 
@@ -681,7 +683,7 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
 
                     switch (reservationMarker) {
                       case ReservationMobileCreateNewMarker.listingDetails:
-                        if (!(checkIfReservationSelected(context.read<ReservationFormBloc>().state.newFacilityBooking.reservationSlotItem, context.read<ReservationFormBloc>().state.newFacilityBooking.cancelledSlotItem ?? []))) {
+                        if (!(checkIfReservationSelected(context.read<ReservationFormBloc>().state.reservationItem.reservationSlotItem, context.read<ReservationFormBloc>().state.reservationItem.cancelledSlotItem ?? []))) {
                           showBookingSlots(
                               context,
                               state,
@@ -689,7 +691,7 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                               reservations,
                               listing
                           );
-                        } else if (state.newFacilityBooking.customFieldRuleSetting?.isNotEmpty ?? false) {
+                        } else if (state.reservationItem.customFieldRuleSetting?.isNotEmpty ?? false) {
                           reservationMarker = ReservationMobileCreateNewMarker.additionalDetails;
                         } else {
                           reservationMarker = ReservationMobileCreateNewMarker.paymentReview;
@@ -718,7 +720,7 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                   child: Center(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text((checkIfReservationSelected(context.read<ReservationFormBloc>().state.newFacilityBooking.reservationSlotItem, context.read<ReservationFormBloc>().state.newFacilityBooking.cancelledSlotItem ?? [])) ? 'Book Now' : 'Select Slots', style: TextStyle(color: widget.model.accentColor, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize),),
+                      child: Text((checkIfReservationSelected(context.read<ReservationFormBloc>().state.reservationItem.reservationSlotItem, context.read<ReservationFormBloc>().state.reservationItem.cancelledSlotItem ?? [])) ? 'Book Now' : 'Select Slots', style: TextStyle(color: widget.model.accentColor, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize),),
                     ),
                   ),
                 ),
@@ -906,18 +908,18 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                       },
                     icon: Icon(Icons.arrow_back_ios, color: widget.model.paletteColor)
                   ),
-                  if (!(context.read<ReservationFormBloc>().state.isSubmitting)) InkWell(
+                  if (!(context.read<ReservationFormBloc>().state.isPublishing)) InkWell(
                     onTap: () {
                       if (kIsWeb) {
                         _handleCreateCheckOutForWeb(context, item.profile, listingOwnerProfile, state, listing);
                       } else {
-                        context.read<ReservationFormBloc>().add(ReservationFormEvent.isFinishedCreatingReservation(
-                            item.profile,
-                            (getListingTotalPriceDouble(state.newFacilityBooking.reservationSlotItem, state.newFacilityBooking.cancelledSlotItem ?? []) + getListingTotalPriceDouble(state.newFacilityBooking.reservationSlotItem, state.newFacilityBooking.cancelledSlotItem ?? []) * CICOBuyerPercentageFee + getListingTotalPriceDouble(state.newFacilityBooking.reservationSlotItem, state.newFacilityBooking.cancelledSlotItem ?? []) * CICOTaxesFee).toInt(),
-                            listing.listingProfileService.backgroundInfoServices.currency,
-                            null,
-                            listing.listingReservationService.accessVisibilitySetting.isReviewRequired ?? false)
-                        );
+                        // context.read<ReservationFormBloc>().add(ReservationFormEvent.isFinishedCreatingReservation(
+                        //     item.profile,
+                        //     (getListingTotalPriceDouble(state.reservationItem.reservationSlotItem, state.reservationItem.cancelledSlotItem ?? []) + getListingTotalPriceDouble(state.reservationItem.reservationSlotItem, state.reservationItem.cancelledSlotItem ?? []) * CICOBuyerPercentageFee + getListingTotalPriceDouble(state.reservationItem.reservationSlotItem, state.reservationItem.cancelledSlotItem ?? []) * CICOTaxesFee).toInt(),
+                        //     listing.listingProfileService.backgroundInfoServices.currency,
+                        //     null,
+                        //     listing.listingReservationService.accessVisibilitySetting.isReviewRequired ?? false)
+                        // );
                       }
                     },
                     child: Container(
@@ -936,7 +938,7 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
                     ),
                   ),
 
-                  if (context.read<ReservationFormBloc>().state.isSubmitting) JumpingDots(numberOfDots: 3, color: widget.model.paletteColor, radius: 8)
+                  if (context.read<ReservationFormBloc>().state.isPublishing) JumpingDots(numberOfDots: 3, color: widget.model.paletteColor, radius: 8)
                 ],
               );
             },
@@ -958,15 +960,12 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
           paymentStatus: ReservationItem.empty().paymentStatus,
           paymentIntentId: ReservationItem.empty().paymentIntentId,
           reservationSlotItem: [],
-          isInternalProgram: listing.listingProfileService.backgroundInfoServices.listingOwner.getOrCrash() == (facade.FirebaseChatCore.instance.firebaseUser?.uid ?? ''),
           customFieldRuleSetting: listing.listingReservationService.customFieldRuleSetting,
           dateCreated: ReservationItem.empty().dateCreated)),
-          dart.optionOf(listing),
-          dart.optionOf(listingOwnerProfile)
         )
       ),
       child: BlocConsumer<ReservationFormBloc, ReservationFormState>(
-        listenWhen: (p, c) => p.isSubmitting != c.isSubmitting,
+        listenWhen: (p, c) => p.isPublishing != c.isPublishing,
         listener: (context, state) {
           //
           // state.authFailureOrSuccessOption.fold(
@@ -1016,13 +1015,11 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
           //   )
           // );
         },
-        buildWhen: (p,c) =>  p.newFacilityBooking != c.newFacilityBooking ||
+        buildWhen: (p,c) =>  p.reservationItem != c.reservationItem ||
           p.isTermsConditionsAccepted != c.isTermsConditionsAccepted ||
           p.currentSelectedSpace != c.currentSelectedSpace ||
           p.currentSelectedSpaceOption != c.currentSelectedSpaceOption ||
-          p.cardItem != c.cardItem ||
-          p.isSavingCard != c.isSavingCard ||
-          p.isSubmitting != c.isSubmitting,
+          p.isPublishing != c.isPublishing,
         builder: (context, state) {
 
           List<NewReservationModel> reservationContainerModel = [
@@ -1064,8 +1061,8 @@ class _FacilityPreviewScreenState extends State<FacilityPreviewScreen> with Sing
             ),
           ];
           if (context.read<ReservationFormBloc>().state.currentSelectedSpace == null && context.read<ReservationFormBloc>().state.currentSelectedSpaceOption == null) {
-            (context.read<ReservationFormBloc>().add(ReservationFormEvent.spaceDetailChanged(listing.listingProfileService.spaceSetting.spaceTypes.value.fold((l) => [], (r) => r)[0])));
-            context.read<ReservationFormBloc>().add(ReservationFormEvent.selectedSizeOptionChanged(listing.listingProfileService.spaceSetting.spaceTypes.value.fold((l) => [], (r) => r)[0].quantity[0]));
+            // (context.read<ReservationFormBloc>().add(ReservationFormEvent.spaceDetailChanged(listing.listingProfileService.spaceSetting.spaceTypes.value.fold((l) => [], (r) => r)[0])));
+            // context.read<ReservationFormBloc>().add(ReservationFormEvent.selectedSizeOptionChanged(listing.listingProfileService.spaceSetting.spaceTypes.value.fold((l) => [], (r) => r)[0].quantity[0]));
           }
 
           return Stack(

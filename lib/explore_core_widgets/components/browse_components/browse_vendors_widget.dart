@@ -1,6 +1,6 @@
 part of check_in_presentation;
 
-class DiscoveryVendorMainWidget extends StatefulWidget {
+class BrowseVendorMainWidget extends StatefulWidget {
 
 
   final DashboardModel model;
@@ -8,13 +8,13 @@ class DiscoveryVendorMainWidget extends StatefulWidget {
   final double widthConstraint;
   final List<EventMerchantVendorProfile> profiles;
 
-  const DiscoveryVendorMainWidget({super.key, required this.model, required this.profiles, required this.widgetWidth, required this.widthConstraint});
+  const BrowseVendorMainWidget({super.key, required this.model, required this.profiles, required this.widgetWidth, required this.widthConstraint});
 
   @override
-  State<DiscoveryVendorMainWidget> createState() => _DiscoveryVendorMainWidgetState();
+  State<BrowseVendorMainWidget> createState() => _BrowseVendorMainWidgetState();
 }
 
-class _DiscoveryVendorMainWidgetState extends State<DiscoveryVendorMainWidget> {
+class _BrowseVendorMainWidgetState extends State<BrowseVendorMainWidget> {
 
   int _currentPage = 0;
   late bool showButton = false;
@@ -27,6 +27,7 @@ class _DiscoveryVendorMainWidgetState extends State<DiscoveryVendorMainWidget> {
       try {
         final vendorProfile = await facade.UserProfileFacade.instance
             .getCurrentUserProfile(userId: vendor.profileOwner.getOrCrash());
+            
         final vendingCount = await facade.AttendeeFacade.instance
             .getNumberOfAttending(attendeeOwnerId: vendor.profileOwner.getOrCrash(),
             status: ContactStatus.joined,
@@ -75,39 +76,23 @@ class _DiscoveryVendorMainWidgetState extends State<DiscoveryVendorMainWidget> {
 
   @override
   Widget build(BuildContext context) {
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (e) {
-        setState(() {
-          showButton = true;
-        });
-      },
-      onHover: (e) {
-        setState(() {
-          showButton = true;
-        });
-      },
-      onExit: (e) {
-        setState(() {
-          showButton = false;
-        });
-      },
-      child: FutureBuilder<List<EventMerchVendorPreview>>(
-        future: getVendorProfileList,
-        builder: (context, snap) {
-          final vendorList = snap.data ?? [];
-
-          if (snap.connectionState == ConnectionState.waiting) {
-            return emptyLargeListView(context, 4, Axis.horizontal, kIsWeb);
-          }
-
-          return Stack(
+    return FutureBuilder<List<EventMerchVendorPreview>>(
+      future: getVendorProfileList,
+      builder: (context, snap) {
+        final vendorList = snap.data ?? [];
+    
+        if (snap.connectionState == ConnectionState.waiting) {
+          return emptyLargeListView(context, 4, 300, Axis.horizontal, kIsWeb);
+        }
+    
+        return RepaintBoundary(
+          child: Stack(
             alignment: Alignment.topCenter,
             children: [
-
+          
               PageView.builder(
                   padEnds: false,
+                  // physics: (Responsive.isMobile(context)) ? null : NeverScrollableScrollPhysics(),
                   controller: _reservationPageController,
                   itemCount: vendorList.length,
                   onPageChanged: (page) {
@@ -117,18 +102,18 @@ class _DiscoveryVendorMainWidgetState extends State<DiscoveryVendorMainWidget> {
                   },
                   itemBuilder: (context, index) {
                     final EventMerchVendorPreview preview = vendorList[index];
-
-
+          
+          
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: InkWell(
                         onTap: () {
-
+          
                         },
                         child: Stack(
                           alignment: Alignment.bottomCenter,
                           children: [
-
+          
                             Container(
                               height: MediaQuery.of(context).size.height,
                               width: widget.widgetWidth,
@@ -140,11 +125,11 @@ class _DiscoveryVendorMainWidgetState extends State<DiscoveryVendorMainWidget> {
                                     errorWidget: (context, url, error) => Container(
                                       // height: 325,
                                       width: widget.widgetWidth,
-                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-
+          
                             Container(
                               width: widget.widgetWidth,
                               child: bottomFooterVendorDetails(
@@ -156,13 +141,39 @@ class _DiscoveryVendorMainWidgetState extends State<DiscoveryVendorMainWidget> {
                                 Colors.black,
                               )
                             ),
-
+          
                           ],
                         ),
                       ),
                     );
                   }
               ),
+              
+              Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Left MouseRegion
+                MouseRegion(
+                onEnter: (_) => setState(() => showButton = true),
+                onExit: (_) => setState(() => showButton = false),
+                  child: Container(
+                    width: 100,
+                    height: double.infinity,
+                    color: Colors.transparent,
+                  ),
+                ),
+                // Right MouseRegion
+                MouseRegion(
+                onEnter: (_) => setState(() => showButton = true),
+                onExit: (_) => setState(() => showButton = false),
+                  child: Container(
+                    width: 100,
+                    height: double.infinity,
+                    color: Colors.transparent,
+                  ),
+                ),
+              ],
+            ),
 
               AnimatedOpacity(
                 duration: Duration(milliseconds: 350),
@@ -173,37 +184,45 @@ class _DiscoveryVendorMainWidgetState extends State<DiscoveryVendorMainWidget> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                              color:  widget.model.paletteColor,
-                              border: Border.all(color: widget.model.paletteColor, width: 0.5),
-                              borderRadius: BorderRadius.circular(25)
-                          ),
-                          child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _reservationPageController.animateToPage(_currentPage - 1, duration: const Duration(milliseconds: 250), curve: Curves.easeInOut);
-                              });
-                            },
-                            icon: Icon(Icons.arrow_back_ios_new_rounded, color: widget.model.disabledTextColor),
+                        MouseRegion(
+                          onEnter: (_) => setState(() => showButton = true),
+                          onHover: (_) => setState(() => showButton = true),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                                color:  widget.model.paletteColor,
+                                border: Border.all(color: widget.model.paletteColor, width: 0.5),
+                                borderRadius: BorderRadius.circular(25)
+                            ),
+                            child: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _reservationPageController.animateToPage(_currentPage - 1, duration: const Duration(milliseconds: 250), curve: Curves.easeInOut);
+                                });
+                              },
+                              icon: Icon(Icons.arrow_back_ios_new_rounded, color: widget.model.disabledTextColor),
+                            ),
                           ),
                         ),
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                              color: widget.model.paletteColor,
-                              borderRadius: BorderRadius.circular(25)
-                          ),
-                          child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _reservationPageController.animateToPage(_currentPage + 1, duration: const Duration(milliseconds: 250), curve: Curves.easeInOut);
-                              });
-                            },
-                            icon: Icon(Icons.arrow_forward_ios_rounded, color: widget.model.disabledTextColor),
+                        MouseRegion(
+                          onEnter: (_) => setState(() => showButton = true),
+                          onHover: (_) => setState(() => showButton = true),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                                color: widget.model.paletteColor,
+                                borderRadius: BorderRadius.circular(25)
+                            ),
+                            child: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _reservationPageController.animateToPage(_currentPage + 1, duration: const Duration(milliseconds: 250), curve: Curves.easeInOut);
+                                });
+                              },
+                              icon: Icon(Icons.arrow_forward_ios_rounded, color: widget.model.disabledTextColor),
+                            ),
                           ),
                         ),
                       ],
@@ -212,9 +231,9 @@ class _DiscoveryVendorMainWidgetState extends State<DiscoveryVendorMainWidget> {
                 ),
               ),
             ]
-          );
-        }
-      ),
+          ),
+        );
+      }
     );
   }
 }
@@ -321,9 +340,9 @@ Widget bottomFooterVendorDetails(BuildContext context, DashboardModel model, Eve
                                 color: textColor.withOpacity(0.07),
                               ),
                               child: IconButton(
-                                onPressed: () {},
+                                onPressed: () {}, 
                                 padding: EdgeInsets.only(top: 4),
-                                tooltip: 'Bookmark',
+                                tooltip: '${preview.rating ?? 5} Stars',
                                 icon: Icon(Icons.star_rounded, color: textColor),
                               ),
                             ),

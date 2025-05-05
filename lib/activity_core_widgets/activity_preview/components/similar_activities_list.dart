@@ -94,7 +94,7 @@ class _PagingHorizontalActivitiesWidgetState extends State<PagingHorizontalActiv
 
         if (snap.connectionState == ConnectionState.waiting) {
           return Expanded(
-              child: emptyLargeListView(context, 3, Axis.horizontal, kIsWeb));
+              child: emptyLargeListView(context, 3, 300, Axis.horizontal, kIsWeb));
         }
 
         return MouseRegion(

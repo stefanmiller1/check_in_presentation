@@ -322,7 +322,7 @@ Widget getFooterForFreeActivity(BuildContext context, DashboardModel model, Rese
                       if (!(kIsWeb && Responsive.isMobile(context))) Flexible(
                         child: InkWell(
                           onTap: () {
-
+                            showAttendeesList(context, model, reservation, activityForm, allAttending, AttendeeType.free);
                           },
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -337,7 +337,7 @@ Widget getFooterForFreeActivity(BuildContext context, DashboardModel model, Rese
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 5),
                                     child: Text('Joined', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                  )
+                                )
                               ),
                               if (numberOfFreeAttendees == 0) Text('--', style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
                               if (numberOfFreeAttendees != 0) Text('$numberOfFreeAttendees', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -376,7 +376,7 @@ Widget getFooterForFreeActivity(BuildContext context, DashboardModel model, Rese
                       if (numberOfVendorAttendees != 0) Flexible(
                         child: InkWell(
                           onTap: () {
-
+                            showAttendeesList(context, model, reservation, activityForm, allAttending, AttendeeType.vendor);
                           },
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,

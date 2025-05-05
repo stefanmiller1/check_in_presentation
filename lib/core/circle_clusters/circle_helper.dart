@@ -4,6 +4,7 @@ class CircleData {
   final String? imageUrl;
   final int score;
   final Color color;
+  bool? isGetStarted;
   bool isElevated;
   bool isSvg;
   Offset velocity;
@@ -15,6 +16,7 @@ class CircleData {
     this.imageUrl,
     required this.score,
     required this.color,
+    this.isGetStarted = false,
     this.isElevated = true,
     this.isSvg = false,
     this.velocity = Offset.zero,

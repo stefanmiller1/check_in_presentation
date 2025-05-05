@@ -1,15 +1,118 @@
-// import 'package:check_in_domain/check_in_domain.dart';
-// import 'package:check_in_domain/domain/auth/reservation_manager/post.dart';
-// import 'package:check_in_domain/domain/auth/reservation_manager/reservation_post/system_post.dart';
-// import 'package:check_in_presentation/check_in_presentation.dart';
-// import 'package:flutter/material.dart';
-// import 'package:intl/intl.dart';
-// import 'package:shimmer/shimmer.dart';
-// import 'package:check_in_facade/auth/notification_facade/notification_core_config.dart';
-// import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
-// import 'package:check_in_facade/check_in_facade.dart';
 part of check_in_presentation;
 
+enum ReservationHostingType {hosting, posting}
+
+class ReservationFilter {
+  final String filterTitle;
+  final ReservationTypeFilter filterType;
+  final List<ContactStatus?>? contactStatusOptions;
+  final List<ReservationSlotState>? reservationHostingType;
+  final List<FormStatus>? formStatus;
+
+  ReservationFilter({
+    required this.filterTitle,
+    required this.filterType,
+     this.contactStatusOptions,
+     this.reservationHostingType,
+     this.formStatus
+  });
+}
+
+int getNumberOfReservationFilterItems(ReservationFilterObject? filter, ReservationFilter currentFilter) {
+  
+  late ReservationFilterObject? reservationFilter = filter;
+  reservationFilter = filter;
+
+  if (reservationFilter == null) {
+    return 0;
+  }
+
+  int count = 0;
+
+  if (reservationFilter.contactStatusOptions != null && currentFilter.contactStatusOptions != null) {
+    count += reservationFilter.contactStatusOptions!.length;
+  }
+
+  if (reservationFilter.reservationHostingType != null && currentFilter.reservationHostingType != null) {
+    count += reservationFilter.reservationHostingType!.length;
+  }
+
+  if (reservationFilter.formStatus != null && currentFilter.formStatus != null) {
+    count += reservationFilter.formStatus!.length;
+  }
+
+  if (reservationFilter.privateReservationsOnly != null && reservationFilter.privateReservationsOnly == true) {
+    count += 1;
+  }
+
+  if (reservationFilter.isReverseSorted != null && reservationFilter.isReverseSorted == true) {
+      count += 1;
+  }
+
+  if (reservationFilter.filterByDateType != null) {
+    count += 1;
+  }
+
+  return count;
+}
+
+
+void showReservationFilterPopOver(BuildContext context, ReservationFilterObject? initialFilterModel, ReservationFilter currentFilterMode, DashboardModel model, {required Function(ReservationFilterObject?) didFinishUpdatingFilter}) {
+  if (kIsWeb) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: 'Filter',
+      transitionDuration: Duration(milliseconds: 350),
+      pageBuilder: (BuildContext contexts, anim1, anim2) {
+        return  Align(
+            alignment: Alignment.center,
+            child: ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(25)),
+                child: Container(
+                    decoration: BoxDecoration(
+                        color: model.accentColor,
+                        borderRadius: BorderRadius.all(Radius.circular(17.5))
+                    ),
+                    width: 700,
+                    height: 850,
+                    child: ReservationFilterPopOver(
+                      initialFilterModel: initialFilterModel,
+                      currentFilterMode: currentFilterMode,
+                      model: model,
+                      didFinishUpdatingFilter: (filter) {
+                        didFinishUpdatingFilter(filter);
+                      },
+              )
+            )
+          )
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return Transform.scale(
+            scale: anim1.value,
+            child: Opacity(
+                opacity: anim1.value,
+                child: child
+            )
+        );
+      },
+    );
+  } else { 
+    Navigator.push(context, MaterialPageRoute(
+        builder: (_) {
+          return ReservationFilterPopOver(
+            initialFilterModel: initialFilterModel,
+            currentFilterMode: currentFilterMode,
+            model: model, 
+            didFinishUpdatingFilter: (filter) {  
+              didFinishUpdatingFilter(filter);
+            },
+          );
+        })
+    );
+  }
+}
 
 class ReservationCoreHelper {
 
@@ -21,7 +124,7 @@ class ReservationCoreHelper {
   static late PagingController<int, ReservationPreviewer>? pagingController = null;
   static const _pageSize = 15;
 
-  static Future<void> fetchByCompleted(BuildContext context, List<ReservationSlotState> statusType, bool? isActivivty, String currentUserId, int pageKey) async {
+  static Future<void> fetchByCompleted(BuildContext context, List<ReservationSlotState> statusType, bool? isActivivty, bool? isPrivate, bool? reverseOrder, String currentUserId, int pageKey) async {
     try {
 
       List<ReservationPreviewer> activityItems = [];
@@ -31,6 +134,8 @@ class ReservationCoreHelper {
             hoursTimeAhead: null,
             hoursTimeBefore: null,
             isActivity: isActivivty,
+            reverseOrder: reverseOrder,
+            isPrivate: isPrivate,
             isLookingForVendor: null,
             userId: currentUserId,
             limit: _pageSize,
@@ -44,6 +149,8 @@ class ReservationCoreHelper {
             hoursTimeAhead: null,
             hoursTimeBefore: null,
             isActivity: isActivivty,
+            reverseOrder: reverseOrder,
+            isPrivate: isPrivate,
             isLookingForVendor: null,
             userId: currentUserId,
             limit: _pageSize,
@@ -166,8 +273,6 @@ class ReservationCoreHelper {
     }
     return resToPreview;
   }
-
-
 }
 
 

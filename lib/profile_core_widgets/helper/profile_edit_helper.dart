@@ -4,7 +4,7 @@ part of check_in_presentation;
 
 
 
-Widget saveCancelFooter(BuildContext context, DashboardModel model, bool isSaving, bool isChangeMade, bool isValid, bool canDelete, {required Function() didSelectSave, required Function() didSelectCancel, required Function() didSelectDelete}) {
+Widget saveCancelFooter(BuildContext context, DashboardModel model, bool isSaving, bool isChangeMade, bool isValid, bool canDelete, bool? cantCancel, {required Function() didSelectSave, required Function() didSelectCancel, required Function() didSelectDelete}) {
   return Padding(
     padding: const EdgeInsets.only(left: 8.0),
     child: Container(
@@ -26,9 +26,9 @@ Widget saveCancelFooter(BuildContext context, DashboardModel model, bool isSavin
         child: (isSaving) ? JumpingDots(numberOfDots: 3, color: model.paletteColor) : Row(
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            InkWell(
+            if (cantCancel == false || cantCancel == null) InkWell(
               onTap: () {
                 didSelectCancel();
               },
@@ -43,7 +43,7 @@ Widget saveCancelFooter(BuildContext context, DashboardModel model, bool isSavin
                 ),
               ),
             ),
-            const SizedBox(width: 18),
+            if (cantCancel == false || cantCancel == null) const SizedBox(width: 18),
             // const Spacer(),
             Row(
               children: [

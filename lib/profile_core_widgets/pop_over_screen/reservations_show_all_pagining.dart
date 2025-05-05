@@ -20,7 +20,7 @@ class _ReservationShowAllPagingState extends State<ReservationShowAllPaging> {
      ReservationCoreHelper.pagingController = PagingController(firstPageKey: 0);
       if (mounted) {
         ReservationCoreHelper.pagingController?.addPageRequestListener((pageKey) {
-          ReservationCoreHelper.fetchByCompleted(context, widget.statusType, true, widget.userId.getOrCrash(), pageKey);
+          ReservationCoreHelper.fetchByCompleted(context, widget.statusType, true, null, null, widget.userId.getOrCrash(), pageKey);
         });
       }
     super.initState();
@@ -49,7 +49,7 @@ class _ReservationShowAllPagingState extends State<ReservationShowAllPaging> {
             builderDelegate: PagedChildBuilderDelegate<ReservationPreviewer>(
                 animateTransitions: true,
                 firstPageProgressIndicatorBuilder: (context) {
-                  return emptyLargeListView(context, 10, Axis.vertical, kIsWeb);
+                  return emptyLargeListView(context, 10, 300, Axis.vertical, kIsWeb);
                 },
                 newPageProgressIndicatorBuilder: (context) {
                   return Padding(

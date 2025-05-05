@@ -13,6 +13,9 @@ class FormCreatorContainerModel {
   final bool showAddIcon;
   final bool isActivated;
   final bool? isLoading;
+  final bool? isRequired;
+  final bool? isLocked;
+  final bool? hasHoverEffect;
   final Function(bool) didSelectActivate;
 
   FormCreatorContainerModel({
@@ -23,6 +26,9 @@ class FormCreatorContainerModel {
      this.showErrorMessage,
      this.formSubHelper,
      this.isLoading,
+     this.isRequired,
+     this.isLocked,
+     this.hasHoverEffect,
      required this.formMainCreatorWidget,
      required this.height,
      required this.showAddIcon,

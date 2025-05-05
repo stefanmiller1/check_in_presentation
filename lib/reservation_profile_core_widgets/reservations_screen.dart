@@ -25,21 +25,59 @@ class ReservationScreen extends StatefulWidget {
 
 class _ReservationScreenState extends State<ReservationScreen> with SingleTickerProviderStateMixin {
 
-  late int _pageIndex = 1;
-  late TabController? _tabController;
-  late PageController? _pageController;
+  late ReservationFilterObject? _currentFilterModel = ReservationFilterObject(
+    filterType: ReservationTypeFilter.comingUp,
+    reservationHostingType: null,
+    contactStatusOptions: ContactStatus.values,
+    formStatus: null,
+    privateReservationsOnly: null,
+    isReverseSorted: null,
+    filterByDateType: null,
+    filterWithStartDate: null,
+    filterWithEndDate: null
+  );
+  late bool isLoading = false;
 
+  late List<ReservationFilter> _reservationFilters = [
+    ReservationFilter(
+      filterTitle: 'Coming Up',
+      filterType: ReservationTypeFilter.comingUp,
+    ),
+    ReservationFilter(
+      filterTitle: 'Completed',
+      filterType: ReservationTypeFilter.completed,
+    ),
+    ReservationFilter(
+      filterTitle: 'Hosting', 
+      filterType: ReservationTypeFilter.hosting, 
+      reservationHostingType: ReservationSlotState.values.where((state) => state != ReservationSlotState.completed).toList()
+    ),
+    ReservationFilter(
+      filterTitle: 'Posted',
+      filterType: ReservationTypeFilter.posted,
+      reservationHostingType: [ReservationSlotState.confirmed, ReservationSlotState.current, ReservationSlotState.cancelled]
+    ),
+    ReservationFilter(
+      filterTitle: 'Draft',
+      filterType: ReservationTypeFilter.draft,
+      formStatus: FormStatus.values.where((status) => status != FormStatus.published).toList()
+    ),
+    ReservationFilter(
+      filterTitle: 'Attending',
+      filterType: ReservationTypeFilter.attending,
+      contactStatusOptions: ContactStatus.values,
+    ),
+  ];
+  
 
   @override
   void initState() {
-    _tabController = TabController(initialIndex: ReservationCoreHelper.currentTabPageIndex, length: 2, vsync: this);
-    _pageController = PageController(initialPage: ReservationCoreHelper.currentTabPageIndex);
 
     if (facade.FirebaseChatCore.instance.firebaseUser?.uid != null) {
       ReservationCoreHelper.pagingController = PagingController(firstPageKey: 0);
       if (mounted) {
         ReservationCoreHelper.pagingController?.addPageRequestListener((pageKey) {
-          ReservationCoreHelper.fetchByCompleted(context, [ReservationSlotState.completed], null, facade.FirebaseChatCore.instance.firebaseUser!.uid, pageKey);
+          ReservationCoreHelper.fetchByCompleted(context, [ReservationSlotState.completed], true, _currentFilterModel?.privateReservationsOnly, _currentFilterModel?.isReverseSorted, facade.FirebaseChatCore.instance.firebaseUser!.uid, pageKey);
         });
       }
     }
@@ -48,9 +86,6 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
 
   @override
   void dispose() {
-    _tabController?.dispose();
-    _pageController?.dispose();
-    // ReservationCoreHelper.pagingController?.dispose();
     facade.ReservationFacade.instance.lastDoc = null;
     super.dispose();
   }
@@ -70,11 +105,11 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
       child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
         builder: (context, authState) {
           return authState.maybeMap(
-              loadInProgress: (_) => emptyLargeListView(context, 10, Axis.vertical, kIsWeb),
-              loadProfileFailure: (_) => (isBrowser) ? GetLoginSignUpWidget(showFullScreen: true, model: widget.model, didLoginSuccess: () {  },) : emptyLargeListView(context, 10, Axis.vertical, kIsWeb),
+              loadInProgress: (_) => emptyLargeListView(context, 10, 300, Axis.vertical, kIsWeb),
+              loadProfileFailure: (_) => (isBrowser) ? GetLoginSignUpWidget(showFullScreen: true, model: widget.model, didLoginSuccess: () {  },) : emptyLargeListView(context, 10, 300, Axis.vertical, kIsWeb),
               loadUserProfileSuccess: (item) => getNotificationsForAllReservations(context, item.profile),
               orElse: () {
-                return emptyLargeListView(context, 10, Axis.vertical, kIsWeb);
+                return emptyLargeListView(context, 10, 300, Axis.vertical, kIsWeb);
             }
           );
         },
@@ -97,65 +132,212 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
     );
   }
 
+  Widget getReservationByFilterType(BuildContext context, ReservationFilter filter, UserProfileModel currentUser, List<AccountNotificationItem> notifications) {
+    switch (filter.filterType) {
+      case ReservationTypeFilter.comingUp:
+        return Column(
+          children: [
+            getConfirmedCurrentReservations(context, currentUser, _currentFilterModel, notifications),
+            // getReservationsByFilter(context, currentUser, 'Happening Now!', [ReservationSlotState.current], null, notifications),
+            // getReservationsByFilter(context, currentUser, 'Coming Up', [ReservationSlotState.confirmed], null, notifications),
+          ]
+        );
+      case ReservationTypeFilter.completed:
+        return getCompletedReservations(context, currentUser, notifications);
+      case ReservationTypeFilter.hosting:
+        return getReservationsByFilter(context, currentUser, 'Hosting', _currentFilterModel, filter, notifications);
+        /// show completed as separate tab with show more option which switches to completed tab
+      case ReservationTypeFilter.posted:
+        return getReservationsByFilter(context, currentUser, 'Posted', _currentFilterModel, filter, notifications);
+        /// show completed as separate tab with show more option which switches to completed tab
+      case ReservationTypeFilter.draft:
+         return getReservationsByFilter(context, currentUser, 'Draft', _currentFilterModel, filter, notifications);
+      case ReservationTypeFilter.attending:
+        return Column(
+          children: [
+            if ((_currentFilterModel?.contactStatusOptions ?? []).contains(ContactStatus.requested)) getAttendingRequestedReservation(context, currentUser, notifications),
+            if ((_currentFilterModel?.contactStatusOptions ?? []).contains(ContactStatus.joined)) getAttendingJoinedReservations(context, currentUser, notifications),
+            if ((_currentFilterModel?.contactStatusOptions ?? []).contains(ContactStatus.invited)) getAttendingInvitedReservations(context, currentUser, notifications),
+        ]
+      );
+    }
+  }
+
   Widget listOfReservations(BuildContext context, UserProfileModel currentUser, List<AccountNotificationItem> notifications) {
     return Column(
       children: [
-        const SizedBox(height: 25),
-        TabBar(
-          indicatorSize: TabBarIndicatorSize.tab,
-          controller: _tabController,
-          onTap: (index) {
-            ReservationCoreHelper.currentTabPageIndex = index;
-            _pageController?.animateToPage(index, duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
-          },
-          indicator: BoxDecoration(
-              borderRadius: BorderRadius.circular(25.0),
-              color: widget.model.paletteColor
-          ),
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-            labelColor: widget.model.accentColor,
-            unselectedLabelColor: widget.model.disabledTextColor,
-            tabs: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(25),
-              child: const Tab(text: 'Reservations')
-            ),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(25),
-              child: Tab(text: 'Completed')
-              )
-            ]
-          ),
+        ReservationFilterHeader(
+          initialFilterModel: _currentFilterModel,
+          filterItem: _reservationFilters.firstWhere((e) => _currentFilterModel?.filterType == e.filterType),
+          model: widget.model,
+          didUpdateFilterModel: (filterModel) {
+            setState(() {
+              isLoading = true;
 
-        const SizedBox(height: 15),
-        Expanded(
-          child: PageView.builder(
-              physics: (kIsWeb) ? const NeverScrollableScrollPhysics() : null,
-              controller: _pageController,
-              itemCount: 2,
-              scrollDirection: Axis.horizontal,
-              allowImplicitScrolling: true,
-              itemBuilder: (_, index) {
-                if (index == 0) {
-                  return SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        getCurrentReservations(context, currentUser, notifications),
-                        getRequestedReservations(context, currentUser, notifications),
-                        getAttendingJoinedReservations(context, currentUser, notifications),
-                        getAttendingInvitedReservations(context, currentUser, notifications),
-                        Divider(color: widget.model.accentColor),
-                        getConfirmedReservations(context, currentUser, notifications),
-                      ],
-                    ),
-                  );
-                } else {
-                    return getCompletedReservations(context, currentUser, notifications);
+              if (_currentFilterModel != null && filterModel != null) {
+                final previousFilters = _currentFilterModel!.filterType;
+                final newFilters = filterModel.filterType;
+
+                bool hasFilterChanged = previousFilters == newFilters && _currentFilterModel != filterModel;
+              
+                if (hasFilterChanged) {
+                  // Clear paging controller and fetch new data
+                 // **Fix: Create a new PagingController instance**
+                  ReservationCoreHelper.pagingController?.dispose();
+                  ReservationCoreHelper.pagingController = PagingController(firstPageKey: 0);
+
+                  // Add new listener
+                  ReservationCoreHelper.pagingController?.addPageRequestListener((pageKey) {
+                    ReservationCoreHelper.fetchByCompleted(
+                      context,
+                      [ReservationSlotState.completed],
+                      true,
+                      _currentFilterModel?.privateReservationsOnly,
+                      _currentFilterModel?.isReverseSorted,
+                      facade.FirebaseChatCore.instance.firebaseUser!.uid,
+                      pageKey,
+                    );
+                  });
+                  // Manually trigger first page fetch
+
                 }
               }
+
+              _currentFilterModel = filterModel;
+
+              Future.delayed(const Duration(milliseconds: 600), () {
+                setState(() {
+                  isLoading = false;
+                });
+              });
+            });
+          }
+        ),
+
+
+        const SizedBox(height: 15),
+        if (isLoading == true) Expanded(child: emptyLargeListView(context, 10, 300, Axis.vertical, kIsWeb)),
+        if (isLoading == false) Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: SingleChildScrollView(
+              child: getReservationByFilterType(
+                context, 
+                _reservationFilters.firstWhere((e) => _currentFilterModel?.filterType == e.filterType), 
+                currentUser,
+                 notifications
+              )
+            ),
           ),
         ),
+        
       ],
+    );
+  }
+
+
+  Widget getReservationsByFilter(BuildContext context, UserProfileModel currentUser, String title, ReservationFilterObject? filterItem, ReservationFilter fixedFilter, List<AccountNotificationItem> notifications) {
+    return BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations(fixedFilter.reservationHostingType ?? [], currentUser, false, null, filterItem?.filterWithStartDate, filterItem?.filterWithEndDate, null, filterItem?.privateReservationsOnly, filterItem?.isReverseSorted, fixedFilter.formStatus)),
+        child: BlocBuilder<ReservationManagerWatcherBloc, ReservationManagerWatcherState>(
+        builder: (context, state) {
+      return state.maybeMap(
+          resLoadInProgress: (_) => JumpingDots(color: widget.model.paletteColor, numberOfDots: 3),
+          loadCurrentUserReservationsSuccess: (e) {
+              /// happening now!
+            return Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                    if (e.item.isEmpty) noItemsFound(
+                    widget.model,
+                    Icons.calendar_today_outlined,
+                    'Nothing Yet!',
+                    'Start a Pop-Up Shop in your backyard or Rent out a basement for your next underground Rave.',
+                    'Start Booking',
+                    didTapStartButton: () {
+
+                    }),
+
+                    if (e.item.isNotEmpty) Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          // color: widget.model.disabledTextColor.withOpacity(0.23),
+                          borderRadius: BorderRadius.circular(18)
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 10),
+                              ReservationAttendingPreviewerListWidget(
+                                model: widget.model,
+                                showLoadingList: false,
+                                titleText: title,
+                                isPagingView: false,
+                                selectedReservationId: widget.initialReservationId,
+                                currentUserId: currentUser.userId,
+                                didSelectReservation: (item) {
+                                  if (fixedFilter.filterType == ReservationTypeFilter.draft) {
+                                    didSelectCreateNewActivity(
+                                      context,
+                                      widget.model,
+                                      item.reservation,
+                                      item.listing,
+                                      didSaveActivity: (res) {
+                                        print('saveee');
+                                        setState(() {
+                                          isLoading = true;
+                                        });
+
+                                        Future.delayed(const Duration(milliseconds: 600), () {
+                                          setState(() {
+                                            isLoading = false;
+                                          });
+                                        });
+                                      },
+                                      didPublishActivity: (res) {
+                                        print('saveee');
+                                        setState(() {
+                                          isLoading = true;
+                                        });
+
+                                        Future.delayed(const Duration(milliseconds: 600), () {
+                                          setState(() {
+                                            isLoading = false;
+                                          });
+                                        });
+                                      },
+                                    );
+                                  } else if (item.listing != null && item.reservation != null) {
+                                    widget.didSelectReservation(item.listing!, item.reservation!, currentUser, item.activityManagerForm ?? ActivityManagerForm.empty(), item.attendingItem, []);
+                                  }
+                                },
+                                reservations: e.item.map((e) => e.reservationId).toList(),
+                              ),
+                            const SizedBox(height: 10),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ]
+              );
+            },
+            orElse: () => noItemsFound(
+                widget.model,
+                Icons.calendar_today_outlined,
+                'No Reservations Yet!',
+                'Start a Pop-Up Shop in an Alley or Rent out a basement for your next underground Rave.',
+                'Start Booking',
+                didTapStartButton: () {
+
+              }),
+          );
+        }
+      )
     );
   }
 
@@ -222,79 +404,8 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
     );
   }
 
-  Widget getCurrentReservations(BuildContext context, UserProfileModel currentUser, List<AccountNotificationItem> notifications) {
-    return BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations([ReservationSlotState.current], currentUser, false, null, null)),
-        child: BlocBuilder<ReservationManagerWatcherBloc, ReservationManagerWatcherState>(
-        builder: (context, state) {
-      return state.maybeMap(
-          resLoadInProgress: (_) => JumpingDots(color: widget.model.paletteColor, numberOfDots: 3),
-          loadCurrentUserReservationsSuccess: (e) {
-              /// happening now!
-            return Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                    if (e.item.isEmpty) noItemsFound(
-                    widget.model,
-                    Icons.calendar_today_outlined,
-                    'No Reservations Yet!',
-                    'Start a Pop-Up Shop in your backyard or Rent out a basement for your next underground Rave.',
-                    'Start Booking',
-                    didTapStartButton: () {
-                    }),
 
-                    if (e.item.isNotEmpty) Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: widget.model.disabledTextColor.withOpacity(0.23),
-                          borderRadius: BorderRadius.circular(18)
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 10),
-                              ReservationAttendingPreviewerListWidget(
-                                model: widget.model,
-                                showLoadingList: false,
-                                titleText: 'Happening Now!',
-                                isPagingView: false,
-                                selectedReservationId: widget.initialReservationId,
-                                currentUserId: currentUser.userId,
-                                didSelectReservation: (item) {
-                                  if (item.listing != null && item.reservation != null) {
-                                    widget.didSelectReservation(item.listing!, item.reservation!, currentUser, item.activityManagerForm ?? ActivityManagerForm.empty(), item.attendingItem, []);
-                                  }
-                                },
-                                reservations: e.item.map((e) => e.reservationId).toList(),
-                              ),
-                              const SizedBox(height: 10),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ]
-              );
-            },
-            orElse: () => noItemsFound(
-                widget.model,
-                Icons.calendar_today_outlined,
-                'No Reservations Yet!',
-                'Start a Pop-Up Shop in your backyard or Rent out a basement for your next underground Rave.',
-                'Start Booking',
-                didTapStartButton: () {
-                }),
-          );
-        }
-      )
-    );
-  }
-
-  Widget getRequestedReservations(BuildContext context, UserProfileModel currentUser, List<AccountNotificationItem> notifications) {
+  Widget getAttendingRequestedReservation(BuildContext context, UserProfileModel currentUser, List<AccountNotificationItem> notifications) {
     return BlocProvider(create: (_) => getIt<UserProfileWatcherBloc>()..add(UserProfileWatcherEvent.watchProfileAllAttendingResStarted(ContactStatus.requested, null, 5, currentUser.userId.getOrCrash())),
         child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
             builder: (context, state) {
@@ -315,18 +426,18 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                             widget.didSelectReservation(item.listing!, item.reservation!, currentUser, item.activityManagerForm ?? ActivityManagerForm.empty(), attendeeItem, []);
                           }
                         },
-                        reservations: e.attending.map((f) => f.reservationId).toList(),
-                      ),
-                    );
-                  },
-                  orElse: () => Container()
-              );
-            })
+                    reservations: e.attending.map((f) => f.reservationId).toList(),
+                  ),
+                );
+              },
+            orElse: () => Container()
+        );
+      })
     );
   }
 
-  Widget getConfirmedReservations(BuildContext context, UserProfileModel currentUser, List<AccountNotificationItem> notifications) {
-    return BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations([ReservationSlotState.confirmed], currentUser, false, null, null)),
+  Widget getConfirmedCurrentReservations(BuildContext context, UserProfileModel currentUser, ReservationFilterObject? filterItem, List<AccountNotificationItem> notifications) {
+    return BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations([ReservationSlotState.confirmed, ReservationSlotState.current], currentUser, false, null, filterItem?.filterWithStartDate, filterItem?.filterWithEndDate, null, filterItem?.privateReservationsOnly, filterItem?.isReverseSorted, null)),
         child: BlocBuilder<ReservationManagerWatcherBloc, ReservationManagerWatcherState>(
         builder: (context, state) {
           return state.maybeMap(
@@ -336,11 +447,10 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       ReservationAttendingPreviewerListWidget(
                         model: widget.model,
                         showLoadingList: true,
-                        titleText: 'Coming-Up',
+                        titleText: 'Coming-Up & Current',
                         isPagingView: false,
                         selectedReservationId: widget.initialReservationId,
                         currentUserId: currentUser.userId,
@@ -354,7 +464,15 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                   ]
                 );
               },
-            orElse: () => Container()
+            orElse: () => noItemsFound(
+                widget.model,
+                Icons.calendar_today_outlined,
+                'No Reservations Yet!',
+                'Start a Pop-Up Shop in your backyard or Rent out a basement for your next underground Rave.',
+                'Start Booking',
+                didTapStartButton: () {
+              }
+            )
           );
         }
       )
@@ -373,13 +491,13 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
               scrollDirection: Axis.vertical,
               pagingController: ReservationCoreHelper.pagingController!,
               builderDelegate: PagedChildBuilderDelegate<ReservationPreviewer>(
-                animateTransitions: true,
+               animateTransitions: true,
                firstPageProgressIndicatorBuilder: (context) {
-                 return emptyLargeListView(context, 10, Axis.vertical, kIsWeb);
+                 return emptyLargeListView(context, 10, 300, Axis.vertical, kIsWeb);
                },
                newPageProgressIndicatorBuilder: (context) {
                  return Padding(
-                   padding: const EdgeInsets.symmetric(vertical: 18.0),
+                   padding: const EdgeInsets.symmetric(vertical: 28.0),
                    child: JumpingDots(color: widget.model.paletteColor, numberOfDots: 3),
                  );
                },
@@ -406,6 +524,8 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                            didSelectItem: () {
                           if (item.listing != null && item.reservation != null) {
                              widget.didSelectReservation(item.listing!, item.reservation!, currentUser, item.activityManagerForm ?? ActivityManagerForm.empty(), item.attendingItem, []);
+                           } else {
+                            
                            }
                        }),
                        bottomWidget: getSearchFooterWidget(

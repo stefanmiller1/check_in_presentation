@@ -17,6 +17,8 @@ class _GetLoginSignUpWidgetState extends State<GetLoginSignUpWidget> {
   late PhoneController _phoneController;
   late bool _showEmailSignIn = false;
   late bool showOnBoarding = false;
+  late bool isProfileInfoNotValid = false;
+  late UserProfileModel? userProfileModel = null;
   late VideoPlayerController _controller;
 
   @override
@@ -66,7 +68,7 @@ class _GetLoginSignUpWidgetState extends State<GetLoginSignUpWidget> {
                     },
                     (r) {
 
-                      if (r) {
+                      if (r.hasSignedIn == true) {
                         // showOnBoarding = false;
                         /// not first time sign in
                         widget.didLoginSuccess();
@@ -373,7 +375,7 @@ Widget getLoginSignupWidget({required BuildContext context, required DashboardMo
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
-    mainAxisAlignment: MainAxisAlignment.center,
+    // mainAxisAlignment: MainAxisAlignment.center,
       children: [
       // const SizedBox(height: 12),
       // Text('Log in or sign up below', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),

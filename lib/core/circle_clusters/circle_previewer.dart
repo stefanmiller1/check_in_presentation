@@ -10,9 +10,13 @@ import 'dart:math';
 
 class CircleClusterWidget extends StatefulWidget {
   final List<CircleData> circles;
+  final double minWidth;
+  final double maxWidth;
+  final double width;
+  final double height;
   final double circlePadding;
 
-  CircleClusterWidget({required this.circles, required this.circlePadding});
+  CircleClusterWidget({required this.circles, required this.circlePadding, required this.width, required this.height, required this.minWidth, required this.maxWidth});
 
   @override
   State<CircleClusterWidget> createState() => _CircleClusterWidgetState();
@@ -21,13 +25,13 @@ class CircleClusterWidget extends StatefulWidget {
 class _CircleClusterWidgetState extends State<CircleClusterWidget> {
   @override
   Widget build(BuildContext context) {
-    double screenWidth = (Responsive.isMobile(context)) ? MediaQuery.of(context).size.width : (MediaQuery.of(context).size.width >= 1500) ? 1500 : MediaQuery.of(context).size.width - 500;
+    double screenWidth = widget.width; 
     double containerWidth = screenWidth;
-    double containerHeight = 330;
+    double containerHeight = widget.height;
 
     List<CircleData> limitedCircles = Responsive.isMobile(context) ? widget.circles.take(10).toList() : widget.circles;
 
-    calculateRadii(limitedCircles, 15, 90);
+    calculateRadii(limitedCircles, widget.minWidth, widget.maxWidth);
     packCircles(limitedCircles, containerWidth, containerHeight, widget.circlePadding);
     centerCluster(limitedCircles, containerWidth, containerHeight);
 
@@ -70,6 +74,7 @@ class _CircleClusterWidgetState extends State<CircleClusterWidget> {
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
+                          color: circle.color,
                           boxShadow: (circle.isElevated) ? [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.1), // Shadow color
@@ -79,7 +84,20 @@ class _CircleClusterWidgetState extends State<CircleClusterWidget> {
                             ),
                           ] : null,
                         ),
-                        child: CircleAvatar(
+                        child: (circle.isGetStarted == true) ? IconButton(
+                          tooltip: 'Start a new circle',
+                          icon: Icon(Icons.add, size: 30, color: Colors.black),
+                          onPressed: () {
+                            // Define the action when the button is pressed
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                backgroundColor: Colors.black,
+                                content: Text('The ability to create ACIRCLE is coming soon!', style: TextStyle(color: Colors.white),),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                        ) : CircleAvatar(
                           radius: circle.radius,
                           backgroundColor: circle.color,
                           backgroundImage: (circle.imageUrl != null && circle.isSvg == false)
@@ -93,8 +111,9 @@ class _CircleClusterWidgetState extends State<CircleClusterWidget> {
                           fit: BoxFit.fitWidth,
                           circle.imageUrl!,
                           height: circle.radius / 0.8,
-                          ),
-                        ) : null)
+                            ),
+                          ) : null
+                        )
                       ),
                     ),
                   ),

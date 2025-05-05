@@ -1,6 +1,6 @@
 part of check_in_presentation;
 
-String getUrlForUserProfile(String userId) => 'https://cincout.ca/${DashboardMarker.search.name.toString()}/${SearchExploreHelperMarker.map.name}/profile/${userId}';
+String getUrlForUserProfile(String userId, String userName, String profileType) => (kIsWeb) ? Uri.base.origin + searchExploreByProfileRoute(userId, profileType, userName) : 'https://cincout.ca/${searchExploreByProfileRoute(userId, profileType, userName)}';
 
 Widget reportProfileWidget(DashboardModel model, String profileId) {
   return Row(
@@ -111,9 +111,9 @@ void dedSelectProfilePopOverOnly(BuildContext context, DashboardModel model, Use
   }
 }
 
-void didSelectProfile(BuildContext context, UserProfileModel currentUser, ProfileTypeMarker profileType, DashboardModel model) async {
+void didSelectProfile(BuildContext context, String userId, String userName, ProfileTypeMarker profileType, DashboardModel model) async {
   if (kIsWeb) {
-    final newUrl = getUrlForUserProfile(currentUser.userId.getOrCrash());
+    final newUrl = getUrlForUserProfile(userId, userName, profileType.name);
     final canLaunch = await canLaunchUrlString(newUrl);
 
     if (canLaunch) {
@@ -122,11 +122,19 @@ void didSelectProfile(BuildContext context, UserProfileModel currentUser, Profil
   } else {
     Navigator.of(context).push(MaterialPageRoute(
         builder: (_) {
-          return ProfileMainContainer(
-              model: model,
-              currentUserId: currentUser.userId.getOrCrash(),
-              currentUserProfile: currentUser,
-              profileType: profileType
+          return Scaffold(
+            appBar: AppBar(
+              elevation: 0,
+              automaticallyImplyLeading: true,
+              centerTitle: true,
+              title: Text('${userName}'),
+            ),
+            body: ProfileMainContainer(
+                model: model,
+                currentUserId: userId,
+                currentUserProfile: null,
+                profileType: profileType
+            ),
           );
         }
       )
@@ -199,10 +207,10 @@ void didSelectEditGeneralProfile(BuildContext context, DashboardModel model, Use
           child: ClipRRect(
               borderRadius: BorderRadius.circular(25),
               child: Container(
-                height: 320,
-                width: 650,
+                height: 530,
+                width: 500,
                 decoration: BoxDecoration(
-                    color: model.accentColor,
+                    color: model.webBackgroundColor,
                     borderRadius: BorderRadius.all(Radius.circular(25))
                 ),
                 child: Scaffold(
@@ -222,7 +230,7 @@ void didSelectEditGeneralProfile(BuildContext context, DashboardModel model, Use
                         model: model,
                           currentUser: currentUserProfile,
                           didSaveSuccessfully: () {
-                              Navigator.of(context).pop();
+                              // Navigator.of(context).pop();
                           },
                             didCancel: () {
                               Navigator.of(context).pop();

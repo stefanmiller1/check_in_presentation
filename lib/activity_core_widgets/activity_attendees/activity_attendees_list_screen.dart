@@ -10,9 +10,10 @@ class ActivityAttendeesListScreen extends StatefulWidget {
   late List<AttendeeItem>? attendeeList;
   late AttendeeItem? selectedAttendee;
   late UserProfileModel? selectedUserProfile;
+  late bool? showHeader;
   final Function(AttendeeItem attendee, UserProfileModel user) didSelectAttendee;
 
-  ActivityAttendeesListScreen({super.key, required this.model, required this.activityManagerForm, required this.reservationItem, required this.didSelectAttendee, required this.currentUser, this.attendeeList, this.selectedAttendee, this.selectedUserProfile, this.attendeeTypeTab});
+  ActivityAttendeesListScreen({super.key, required this.model, required this.activityManagerForm, required this.reservationItem, required this.didSelectAttendee, required this.currentUser, this.attendeeList, this.selectedAttendee, this.selectedUserProfile, this.attendeeTypeTab, this.showHeader});
 
   @override
   State<ActivityAttendeesListScreen> createState() => _ActivityAttendeesListScreenState();
@@ -74,17 +75,16 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: (kIsWeb) ? Colors.transparent : null,
-        appBar: (!(kIsWeb)) ? AppBar(
+        appBar: (widget.showHeader == true) ? AppBar(
           backgroundColor: (widget.model.systemTheme.brightness != Brightness.dark) ? widget.model.paletteColor : widget.model.mobileBackgroundColor,
           elevation: 0,
           automaticallyImplyLeading: true,
           centerTitle: true,
           toolbarHeight: 80,
           title: Text('Attendees'),
+          leading: IconButton(onPressed: () => Navigator.of(context).pop(), icon: Icon(Icons.cancel, size: 40, color:  (widget.model.systemTheme.brightness != Brightness.dark) ? widget.model.accentColor : widget.model.paletteColor), padding: EdgeInsets.zero),
           titleTextStyle: TextStyle(color: (widget.model.systemTheme.brightness != Brightness.dark) ? widget.model.accentColor : widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
-          actions: [
-            /// add 'invite' button (and edit button)`
-          ],
+          
         ) : null,
       body: (widget.reservationItem != null && widget.activityManagerForm != null) ?
         BlocProvider(create: (context) =>  getIt<AttendeeManagerWatcherBloc>()..add(AttendeeManagerWatcherEvent.watchAllAttendance(widget.reservationItem!.reservationId.getOrCrash())),
@@ -269,7 +269,7 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
                                                 const SizedBox(height: 8),
                                                 Visibility(
                                                     visible: attendeesOnlyList(allAttendees.item).isNotEmpty && querySearch.isEmpty,
-                                                    child: Text('Attendees', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.questionTitleFontSize))),
+                                                    child: Text('Joined', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.questionTitleFontSize))),
                                                 const SizedBox(height: 8),
                                                 getActivityAllAttendees(widget.activityManagerForm!, attendeesOnlyList(allAttendees.item)),
                                               ]
@@ -503,7 +503,7 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text((widget.activityManagerForm?.profileService.isActivityPost == true || widget.activityManagerForm?.profileService.isActivityPost == null) ? 'Posted By' : 'Host', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.questionTitleFontSize)),
+          Text((widget.activityManagerForm?.profileService.isTrueOwner == true) ? 'Host' : 'Posted By', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.questionTitleFontSize)),
           const SizedBox(height: 8),
           getActivityAttendeeTile(
             widget.model,
@@ -511,7 +511,7 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
             widget.selectedAttendee?.attendeeOwnerId == reservation.reservationOwnerId,
             didSelectAttendee: (attendee, user) {
               setState(() {
-                widget.didSelectAttendee(attendee, user);
+                didSelectProfile(context, user.userId.getOrCrash(), '${user.legalName.getOrCrash()} ${user.legalSurname.getOrCrash()}', ProfileTypeMarker.generalProfile, widget.model);
             });
           }
         ),
@@ -648,9 +648,9 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
                                 widget.model,
                                 e,
                                 widget.selectedAttendee?.attendeeOwnerId == e.profileOwner,
-                                didSelectAttendee: (attendee) {
+                                didSelectAttendee: (vendorProfile) {
                                   setState(() {
-
+                                    didSelectProfile(context, vendorProfile.profileOwner.getOrCrash(), e.brandName.getOrCrash(), ProfileTypeMarker.vendorProfile, widget.model);
                                   });
                                 })).toList()
                   ],
@@ -662,16 +662,16 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Vendors', style: TextStyle(color: widget.model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize)),
+                    Text('Vendors', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.questionTitleFontSize)),
                     const SizedBox(height: 8),
                     ...profiles.map(
                         (e) => getActivityVendorProfileTile(
                         widget.model,
                         e,
                         widget.selectedAttendee?.attendeeOwnerId == e.profileOwner,
-                        didSelectAttendee: (attendee) {
+                        didSelectAttendee: (vendorProfile) {
                           setState(() {
-                            // widget.didSelectAttendee(attendee, user);
+                           didSelectProfile(context, vendorProfile.profileOwner.getOrCrash(), e.brandName.getOrCrash(), ProfileTypeMarker.vendorProfile, widget.model);
                           });
                       })).toList()
           ],
@@ -692,7 +692,7 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
                   widget.selectedAttendee?.attendeeOwnerId == e.attendeeOwnerId,
                   didSelectAttendee: (attendee, user) {
                     setState(() {
-                      widget.didSelectAttendee(attendee, user);
+                      didSelectProfile(context, user.userId.getOrCrash(), '${user.legalName.getOrCrash()} ${user.legalSurname}', ProfileTypeMarker.generalProfile, widget.model);
                     });
                   })).toList()
         ],
@@ -707,7 +707,7 @@ class _ActivityAttendeesListScreenState extends State<ActivityAttendeesListScree
                 widget.selectedAttendee?.attendeeOwnerId == e.attendeeOwnerId,
                 didSelectAttendee: (attendee, user) {
                   setState(() {
-                    widget.didSelectAttendee(attendee, user);
+                    didSelectProfile(context, user.userId.getOrCrash(), '${user.legalName.getOrCrash()} ${user.legalSurname}', ProfileTypeMarker.generalProfile, widget.model);
                   });
                 })).toList()
         ],

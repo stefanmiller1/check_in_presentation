@@ -219,10 +219,11 @@ class _ReservationDetailsWidgetState extends State<ReservationDetailsWidget> {
                           builder: (_) {
                             return DirectChatScreen(
                               model: widget.model,
-                              room: null,
+                              roomId: null,
                               currentUser: widget.currentUser,
                               reservationItem: widget.reservationItem,
                               isFromReservation: true,
+                              showOptions: null,
                             );
                         }));
                     },

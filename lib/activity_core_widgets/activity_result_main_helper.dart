@@ -19,18 +19,18 @@ Widget getActivityResultsWidget(BuildContext context, DashboardModel model, Uniq
         width: MediaQuery.of(context).size.width,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(15),
-          child: Image.network(
-              preview.activityManagerForm?.profileService.activityBackground.activityProfileImages?.first.uriPath ?? '',
-              errorBuilder: (context, err, stack) {
+          child: CachedNetworkImage(
+              imageUrl: preview.activityManagerForm?.profileService.activityBackground.activityProfileImages?.first.uriPath ?? '',
+              imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.cover),
+              errorWidget: (context, url, error) {
                 return getActivityTypeTabOption(
                     context,
                     model,
                     40,
                     false,
                     getActivityOptions().firstWhere((element) => element.activityId == preview.reservation?.reservationSlotItem.first.selectedActivityType)
-                );
-              },
-              fit: BoxFit.cover
+              );
+            },
           ),
         ),
       ),
@@ -144,39 +144,39 @@ Widget bottomFooterDetails(BuildContext context, DashboardModel model, Reservati
                 ),
 
                 const SizedBox(height: 4),
-                if (res.attendeesCount != null && res.attendeesCount != 0 || res.activityManagerForm?.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true) Theme(
-                  data: Theme.of(context).copyWith(canvasColor: Colors.transparent),
-                  child: Container(
-                    height: 30,
-                    width: MediaQuery.of(context).size.width,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
+                // if (res.attendeesCount != null && res.attendeesCount != 0 || res.activityManagerForm?.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true) Theme(
+                //   data: Theme.of(context).copyWith(canvasColor: Colors.transparent),
+                //   child: Container(
+                //     height: 30,
+                //     width: MediaQuery.of(context).size.width,
+                //     child: SingleChildScrollView(
+                //       scrollDirection: Axis.horizontal,
+                //       child: Row(
+                //         children: [
 
-                          if (res.attendeesCount != 0 && res.attendeesCount != null) Chip(
-                              side: BorderSide.none,
-                              backgroundColor: model.accentColor.withOpacity(0.18),
-                              padding: EdgeInsets.zero,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                              avatar: Icon(Icons.person, color: Colors.grey.shade200, size: 18,),
-                              label: Text(res.attendeesCount == 1 ? '${res.attendeesCount} Person Joined' : '${res.attendeesCount} People Joined', style: TextStyle(color: Colors.grey.shade200))
-                          ),
-                          const SizedBox(width: 4),
-                          if (res.activityManagerForm?.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true) Chip(
-                              backgroundColor: model.accentColor.withOpacity(0.18),
-                              side: BorderSide.none,
-                              padding: EdgeInsets.zero,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                              avatar: Icon(Icons.remove_red_eye_outlined, color: Colors.grey.shade200, size: 18,),
-                              label: Text('Looking For Vendors/Merchants', style: TextStyle(color: Colors.grey.shade200),)
-                          ),
+                //           if (res.attendeesCount != 0 && res.attendeesCount != null) Chip(
+                //               side: BorderSide.none,
+                //               backgroundColor: model.accentColor.withOpacity(0.18),
+                //               padding: EdgeInsets.zero,
+                //               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                //               avatar: Icon(Icons.person, color: Colors.grey.shade200, size: 18,),
+                //               label: Text(res.attendeesCount == 1 ? '${res.attendeesCount} Person Joined' : '${res.attendeesCount} People Joined', style: TextStyle(color: Colors.grey.shade200))
+                //           ),
+                //           const SizedBox(width: 4),
+                //           if (res.activityManagerForm?.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true) Chip(
+                //               backgroundColor: model.accentColor.withOpacity(0.18),
+                //               side: BorderSide.none,
+                //               padding: EdgeInsets.zero,
+                //               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                //               avatar: Icon(Icons.remove_red_eye_outlined, color: Colors.grey.shade200, size: 18,),
+                //               label: Text('Looking For Vendors/Merchants', style: TextStyle(color: Colors.grey.shade200),)
+                //           ),
 
-                        ],
-                      ),
-                    ),
-                  ),
-                )
+                //         ],
+                //       ),
+                //     ),
+                //   ),
+                // )
               ],
             ),
           ),

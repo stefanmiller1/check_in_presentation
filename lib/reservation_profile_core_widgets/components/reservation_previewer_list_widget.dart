@@ -47,7 +47,7 @@ class _ReservationAttendingPreviewerListWidgetState extends State<ReservationAtt
       future: _getReservationList,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting && widget.showLoadingList) {
-          return emptyLargeListView(context, 3, Axis.vertical, kIsWeb);
+          return emptyLargeListView(context, 3, 300, Axis.vertical, kIsWeb);
         }
 
         final List<ReservationPreviewer> reservationPreview = snapshot.data ?? [];
@@ -72,40 +72,75 @@ class _ReservationAttendingPreviewerListWidgetState extends State<ReservationAtt
 
                 return Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: baseSearchItemContainer(
-                    width: 500,
-                    height: 500,
-                    model: widget.model,
-                    isSelected: item.reservation?.reservationId == widget.selectedReservationId,
-                    backgroundWidget: getReservationMediaFrameFlexible(
-                      context,
-                      widget.model,
-                      500,
-                      500,
-                      item.listing,
-                      item.activityManagerForm,
-                      item.reservation!,
-                      false,
-                      didSelectItem: () {
-                        widget.didSelectReservation(item);
-                      },
-                    ),
-                    bottomWidget: getSearchFooterWidget(
-                      context,
-                      widget.model,
-                      widget.currentUserId,
-                      widget.model.paletteColor,
-                      widget.model.disabledTextColor,
-                      widget.model.accentColor,
-                      item,
-                      false,
-                      didSelectItem: () {
-                        widget.didSelectReservation(item);
-                      },
-                      didSelectInterested: () {
-                        // Handle interested action
-                      },
-                    ),
+                  child: Stack(
+                    alignment: Alignment.topCenter,
+                    children: [
+                      
+                      
+                      baseSearchItemContainer(
+                        width: 500,
+                        height: 500,
+                        model: widget.model,
+                        isSelected: item.reservation?.reservationId == widget.selectedReservationId,
+                        backgroundWidget: getReservationMediaFrameFlexible(
+                          context,
+                          widget.model,
+                          500,
+                          500,
+                          item.listing,
+                          item.activityManagerForm,
+                          item.reservation!,
+                          false,
+                          didSelectItem: () {
+                            widget.didSelectReservation(item);
+                          },
+                        ),
+                        bottomWidget: getSearchFooterWidget(
+                          context,
+                          widget.model,
+                          widget.currentUserId,
+                          widget.model.paletteColor,
+                          widget.model.disabledTextColor,
+                          widget.model.accentColor,
+                          item,
+                          false,
+                          didSelectItem: () {
+                            widget.didSelectReservation(item);
+                          },
+                          didSelectInterested: () {
+                            // Handle interested action
+                          },
+                        ),
+                      ),
+
+                      if (item.reservation?.formStatus == FormStatus.inProgress|| item.reservation?.formStatus == FormStatus.closed) Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: SizedBox(
+                              width: 400,
+                              child: Row(
+                                children: [
+                                  Spacer(),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Container(
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                          color: getStatusColor(widget.model, item.reservation?.formStatus ?? FormStatus.inProgress).withOpacity(0.15),
+                                          borderRadius: BorderRadius.circular(30)
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text((item.reservation?.formStatus ?? FormStatus.inProgress).name, style: TextStyle(color: getStatusColor(widget.model, item.reservation?.formStatus ?? FormStatus.inProgress))),
+                                      )
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 );
 
@@ -135,40 +170,74 @@ class _ReservationAttendingPreviewerListWidgetState extends State<ReservationAtt
             const SizedBox(height: 6),
             ...reservationPreview.map((item) => Padding(
               padding: const EdgeInsets.all(8.0),
-              child: baseSearchItemContainer(
-                width: 400,
-                height: 400,
-                model: widget.model,
-                isSelected: item.reservation?.reservationId == widget.selectedReservationId,
-                backgroundWidget: getReservationMediaFrameFlexible(
-                  context,
-                  widget.model,
-                  400,
-                  400,
-                  item.listing,
-                  item.activityManagerForm,
-                  item.reservation!,
-                  false,
-                  didSelectItem: () {
-                    widget.didSelectReservation(item);
-                  },
-                ),
-                bottomWidget: getSearchFooterWidget(
-                  context,
-                  widget.model,
-                  widget.currentUserId,
-                  widget.model.paletteColor,
-                  widget.model.disabledTextColor,
-                  widget.model.accentColor,
-                  item,
-                  false,
-                  didSelectItem: () {
-                    widget.didSelectReservation(item);
-                  },
-                  didSelectInterested: () {
-                    // Handle interested action
-                  },
-                ),
+              child: Stack(
+                alignment: Alignment.topCenter,
+                children: [
+                  
+                  baseSearchItemContainer(
+                    width: 400,
+                    height: 400,
+                    model: widget.model,
+                    isSelected: item.reservation?.reservationId == widget.selectedReservationId,
+                    backgroundWidget: getReservationMediaFrameFlexible(
+                      context,
+                      widget.model,
+                      400,
+                      400,
+                      item.listing,
+                      item.activityManagerForm,
+                      item.reservation!,
+                      false,
+                      didSelectItem: () {
+                        widget.didSelectReservation(item);
+                      },
+                    ),
+                    bottomWidget: getSearchFooterWidget(
+                      context,
+                      widget.model,
+                      widget.currentUserId,
+                      widget.model.paletteColor,
+                      widget.model.disabledTextColor,
+                      widget.model.accentColor,
+                      item,
+                      false,
+                      didSelectItem: () {
+                        widget.didSelectReservation(item);
+                      },
+                      didSelectInterested: () {
+                        // Handle interested action
+                      },
+                    ),
+                  ),
+                  if (item.reservation?.formStatus == FormStatus.inProgress|| item.reservation?.formStatus == FormStatus.closed) Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        width: 400,
+                        child: Row(
+                          children: [
+                            Spacer(),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Container(
+                                height: 40,
+                                // width: 130,
+                                decoration: BoxDecoration(
+                                    color: getStatusColor(widget.model, item.reservation?.formStatus ?? FormStatus.inProgress).withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(30)
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text((item.reservation?.formStatus ?? FormStatus.inProgress).name, style: TextStyle(color: getStatusColor(widget.model, item.reservation?.formStatus ?? FormStatus.inProgress))),
+                                )
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             )).toList()
           ],

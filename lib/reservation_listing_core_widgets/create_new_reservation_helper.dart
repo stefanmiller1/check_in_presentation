@@ -239,7 +239,7 @@ bool checkCompletion(ReservationStepsMarker page, ReservationFormState state) {
     // TODO: Handle this case.
       break;
     case ReservationStepsMarker.selectDates:
-      return (getListingTotalPriceDouble(state.newFacilityBooking.reservationSlotItem, state.newFacilityBooking.cancelledSlotItem ?? []) != 0);
+      return (getListingTotalPriceDouble(state.reservationItem.reservationSlotItem, state.reservationItem.cancelledSlotItem ?? []) != 0);
     case ReservationStepsMarker.addAdditionalDetails:
       return true;
     case ReservationStepsMarker.addPaymentMethod:
@@ -248,7 +248,7 @@ bool checkCompletion(ReservationStepsMarker page, ReservationFormState state) {
     // TODO: Handle this case.
       break;
     case ReservationStepsMarker.selectFromPaymentMethods:
-      return (state.cardItem != null);
+      // return (state.cardItem != null);
     case ReservationStepsMarker.listingDetails:
       // TODO: Handle this case.
       break;

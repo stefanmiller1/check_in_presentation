@@ -7,12 +7,12 @@ Widget vendorFormTextField(BuildContext context, DashboardModel model, int lineC
     padding: const EdgeInsets.all(8.0),
     child: Column(
       children: [
-        const SizedBox(height: 8),
+       const SizedBox(height: 8),
         if (headerText != null) Expanded(
             child: Text(headerText, style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize, overflow: TextOverflow.fade), maxLines: 2,
             ),
         ),
-        const SizedBox(height: 18),
+        if (headerText != null) const SizedBox(height: 18),
         TextFormField(
           style: TextStyle(color: model.paletteColor),
           maxLines: lineCount,

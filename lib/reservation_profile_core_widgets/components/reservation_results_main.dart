@@ -178,10 +178,11 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
                                  backgroundColor: model.paletteColor,
                                  ) : null,
                                  body: DirectChatScreen(
-                                     room: room,
+                                     roomId: room.id,
                                      model: model,
                                      currentUser: currentUser,
                                      reservationItem: reservation,
+                                     showOptions: null,
                                      isFromReservation: false
                                  ),
                                )
@@ -278,6 +279,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
                overViewState: FacilityPreviewState.reservation,
                newFacilityBooking: reservation,
                reservations: [],
+               topPadding: (kIsWeb) ? 80 : 155,
                ///TODO: THIS NEEDS TO BE THE LISTING OWNER!!!!!
                listingOwnerProfile: currentUser,
                listing: listing,
@@ -1410,7 +1412,7 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
                           } else {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (_) {
-                                  return DiscoverySearchComponent(
+                                  return ExploreSearchMainDashboard(
                                     model: widget.model,
                                   );
 

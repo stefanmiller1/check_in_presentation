@@ -12,7 +12,8 @@ import 'package:beamer/beamer.dart';
 import 'package:check_in_presentation/core/circle_clusters/circle_helper.dart';
 import 'package:check_in_presentation/core/circle_clusters/circle_previewer.dart';
 import 'package:check_in_presentation/core/voucher_widget.dart';
-import 'package:check_in_presentation/explore_core_widgets/components/discovery_components/discovery_section_header.dart';
+import 'package:check_in_presentation/explore_core_widgets/components/browse_components/browse_section_widget.dart';
+import 'package:check_in_presentation/explore_core_widgets/components/browse_components/feed_components/activities_feed_widget.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:alphabet_list_scroll_view/alphabet_list_scroll_view.dart';
 import 'package:check_in_application/misc/update_services/invitiation_services/invitation_service_bloc.dart';
@@ -21,6 +22,7 @@ import 'package:check_in_application/un_auth/watcher_services/attendee_watcher_s
 import 'package:check_in_application/auth/update_services/listing_update_create_services/settings_update_create_services/activity_settings/vendor_settings/vendor_settings_form_bloc.dart';
 import 'package:check_in_presentation/listing_manager_core_widgets/component/listing_card.dart';
 import 'package:check_in_presentation/listing_manager_core_widgets/component/map_options.dart';
+import 'package:check_in_presentation/reservation_profile_core_widgets/components/filter_components/reservation_filter_sort_widget.dart';
 import 'package:collection/collection.dart';
 import 'package:confetti/confetti.dart';
 import 'package:fluster/fluster.dart';
@@ -34,10 +36,14 @@ import 'package:check_in_domain/check_in_domain.dart';
 import 'package:check_in_domain/domain/misc/attendee_services/form/merchant_vendor/custom_availability/mv_custom_availability.dart';
 import 'package:check_in_domain/domain/misc/attendee_services/form/merchant_vendor/booth_payments/mv_booth_payments.dart';
 import 'package:check_in_domain/domain/misc/attendee_services/form/merchant_vendor/custom_options/mv_custom_options.dart';
+import 'package:check_in_domain/domain/misc/explore_services/filter/explore_filter_item.dart';
+import 'package:check_in_domain/domain/misc/explore_services/value_objects.dart';
 import 'package:check_in_domain/domain/misc/attendee_services/attendee_item/attendee_item.dart';
 import 'package:check_in_domain/domain/misc/stripe/receipt_services/receipt/receipt_pdf_generator.dart';
 import 'package:check_in_domain/domain/misc/filter_services/vendor_contact_filter_model.dart';
+import 'package:check_in_domain/domain/misc/reservation_services/reservation_filter/reservation_filter_sort_widget.dart';
 import 'package:check_in_facade/check_in_facade.dart' as facade;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/gestures.dart';
@@ -74,6 +80,7 @@ import 'package:check_in_application/auth/update_services/listing_update_create_
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
+import 'package:syncfusion_flutter_charts/charts.dart' as charts;
 import 'package:dartz/dartz.dart' as dart;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:check_in_domain/domain/misc/attendee_services/attendee_item/attendee_item.dart';
@@ -84,6 +91,7 @@ import 'activity_core_widgets/pop_over_main_container_widgets/create_new_vendor_
 import 'activity_core_widgets/pop_over_main_container_widgets/create_new_vendor_form/widgets/open_close_dates_widget.dart';
 import 'activity_core_widgets/pop_over_main_container_widgets/create_new_vendor_form/widgets/welcome_message_widget.dart';
 import 'activity_core_widgets/pop_over_main_container_widgets/create_new_vendor_form/widgets/discount_code_widget.dart';
+import 'activity_core_widgets/create_activity/create_activity_screen_2.dart';
 import 'core/image_picker_core.dart' if (dart.library.html) 'core/image_picker_core_for_web.dart';
 import 'core/ios_core/file_picker.dart' if (dart.library.html) 'core/web_core/payment_core/file_picker.dart';
 import 'core/ios_core/single_image_selector_widget_mobile.dart' if (dart.library.html) 'core/web_core/single_image_selector_widget_web.dart';
@@ -119,11 +127,18 @@ import 'package:check_in_domain/domain/misc/discount_code_service/discount_code_
 import 'package:check_in_application/auth/update_services/booked_reservation_services/booked_reservation_form_bloc.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:check_in_domain/domain/auth/reservation_manager/reservation_post/system_post.dart';
+import 'package:check_in_domain/domain/misc/messages_services/messenger_filter/rooms_filter_sort_widget.dart';
 import 'core/ios_core/image_selector_widget_mobile.dart' if (dart.library.html) 'core/web_core/image_selector_widget_web.dart';
+import 'explore_core_widgets/components/browse_components/filter_components/activities_filter_sort_helper.dart';
+import 'explore_core_widgets/components/browse_components/filter_components/vendor_filter_sort_helper.dart';
+import 'explore_core_widgets/components/template_components/explore_search_main_layout.dart';
+import 'explore_core_widgets/components/template_components/explore_search_shell.dart';
+import 'explore_core_widgets/components/browse_components/feed_components/vendor_feed_widget.dart';
 import 'share_core/mobile_share_widget.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'core/ios_core/new_payment_method_widget_mobile.dart' if (dart.library.html) 'core/web_core/payment_core/widgets/new_payment_method_widget_web.dart';
+import 'package:hovering/hovering.dart';
 
 part 'check_in_theme_model.dart';
 part 'misc.dart';
@@ -136,6 +151,7 @@ part 'reservation_listing_core_widgets/reservation_listing_calendar.dart';
 part 'reservation_listing_core_widgets/reservation_listing_selected_slots.dart';
 part 'reservation_listing_core_widgets/reservation_manager_helper.dart';
 part 'reservation_profile_core_widgets/reservation_profile_spaces.dart';
+part 'reservation_profile_core_widgets/components/filter_components/reservation_filter_header.dart';
 part 'reservation_profile_core_widgets/components/widgets/reservation_details_widget.dart';
 part 'reservation_listing_core_widgets/reservation_notification_helper.dart';
 part 'reservation_profile_core_widgets/reservation_profile_helper.dart';
@@ -150,10 +166,22 @@ part 'reservation_profile_core_widgets/reservations_screen.dart';
 part 'reservation_profile_core_widgets/components/reservation_results_main.dart';
 part 'messenger_core_widgets/messenger_helper.dart';
 
-part 'chat_core_widgets/direct_chat_screen.dart';
-part 'chat_core_widgets/post_helper.dart';
-part 'chat_core_widgets/post_widget_builder.dart';
-part 'chat_core_widgets/chat_helper_core.dart';
+part 'messages_core_widgets/direct_chat_screen.dart';
+part 'messages_core_widgets/direct_chat_helper.dart';
+part 'messages_core_widgets/post_helper.dart';
+part 'messages_core_widgets/post_widget_builder.dart';
+part 'messages_core_widgets/rooms_helper_core.dart';
+part 'messages_core_widgets/rooms_screen.dart';
+part 'messages_core_widgets/pop_over/new_chat_pop_over/send_new_chat_container.dart';
+part 'messages_core_widgets/pop_over/new_chat_pop_over/new_chat_pop_over_helper.dart';
+part 'messages_core_widgets/components/chat_headers.dart';
+part 'messages_core_widgets/components/chat_details_sidebar.dart';
+part 'messages_core_widgets/components/filter_components/rooms_filter_header.dart';
+part 'messages_core_widgets/components/rooms_components/channel_rooms_list.dart';
+part 'messages_core_widgets/components/rooms_components/direct_rooms_list.dart';
+part 'messages_core_widgets/components/rooms_components/group_rooms_list.dart';
+part 'messages_core_widgets/components/rooms_components/rooms_component_helper.dart';
+part 'messages_core_widgets/components/rooms_components/all_rooms_list.dart';
 
 part 'listing_manager_core_widgets/space_option_info_widgets.dart';
 part 'listing_manager_core_widgets/profile_manager_dashboard.dart';
@@ -203,6 +231,7 @@ part 'core/form_creator_template/form_creator_template.dart';
 part 'core/indicator_widget.dart';
 part 'core/main_form_buttons_widget.dart';
 part 'core/list_wheel_scroll_view.dart';
+part 'core/location_form_field.dart';
 part 'core/search_profiles_widget.dart';
 part 'core/attendee_type_helper_widget.dart';
 part 'core/web_core/payment_core/check_out_payment_helper.dart';
@@ -326,12 +355,15 @@ part 'activity_core_widgets/manage_activity_tickets/activity_ticket_settings_con
 
 
 part 'explore_core_widgets/search_explore_helper_core.dart';
-part 'explore_core_widgets/discovery_search_component.dart';
+part 'explore_core_widgets/explore_discovery_main_dashboard.dart';
 part 'explore_core_widgets/discovery_search_helper.dart';
-part 'explore_core_widgets/components/discovery_components/discovery_community_widget.dart';
-part 'explore_core_widgets/components/discovery_components/discovery_hero_main_widget.dart';
-part 'explore_core_widgets/components/discovery_components/discovery_listigs_widget.dart';
-part 'explore_core_widgets/components/discovery_components/discovery_vendors_widget.dart';
+part 'explore_core_widgets/components/browse_components/browse_filter_app_bar.dart';
+part 'explore_core_widgets/components/browse_components/browse_main_container_widget.dart';
+part 'explore_core_widgets/components/browse_components/browse_hero_main_widget.dart';
+part 'explore_core_widgets/components/browse_components/filter_components/activities_filter_date_range_widget.dart';
+part 'explore_core_widgets/components/browse_components/browse_listigs_widget.dart';
+part 'explore_core_widgets/components/browse_components/browse_vendors_widget.dart';
+part 'explore_core_widgets/components/browse_components/browse_full_bleed_widget.dart';
 part 'explore_core_widgets/components/listing_components/listing_result_main_card.dart';
 part 'explore_core_widgets/components/listing_components/listing_result_main.dart';
 part 'explore_core_widgets/components/listing_components/listing_quick_preview.dart';
@@ -351,6 +383,7 @@ part 'account/login_email_core.dart';
 part 'account/on_boarding_activities_profile.dart';
 
 part 'location_core_widgets/search_locations_google_places.dart';
+
 
 part 'dashboard_core_widgets/counter_badge_widget.dart';
 

@@ -54,14 +54,14 @@ class ReservationActivityInfoWidget extends StatelessWidget {
         _buildActivityBackgroundInfo(context),
         if (!kIsWeb) _buildMoreInfoButton(context),
         const SizedBox(height: 5),
+        // Divider(color: model.paletteColor.withOpacity(0.1)),
+        // const SizedBox(height: 5),
+        // _buildActivityType(context),
+        // const SizedBox(height: 5),
         Divider(color: model.paletteColor.withOpacity(0.1)),
         const SizedBox(height: 5),
-        _buildActivityType(context),
-        const SizedBox(height: 5),
-        Divider(color: model.paletteColor.withOpacity(0.1)),
-        const SizedBox(height: 5),
-        if (_shouldShowHostColumn(context)) _buildHostColumn(context),
-        if (_shouldShowPostedOnBehalfColumn(context)) _buildPostedOnBehalfColumn(context),
+        if (_shouldShowHostColumn(context)) _buildHostColumn(context, currentUser, currentAttendee),
+        if (_shouldShowPostedOnBehalfColumn(context)) _buildPostedOnBehalfColumn(context, currentUser, currentAttendee),
 
         _buildActivityRequirementsColumn(context),
         if (activityForm.profileService.activityRequirements.eventActivityRulesRequirement?.isMerchantSupported == true) _buildMerchantSupportColumn(context, listingForm, currentAttendee),
@@ -208,12 +208,26 @@ class ReservationActivityInfoWidget extends StatelessWidget {
   Widget _buildActivityType(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2.0),
-      child: ListTile(
-        title: Text(
-          getTitleForActivityOption(context, activityForm.activityType.activityId) ?? 'To Rent',
-          style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold),
-        ),
-        leading: getActivityFromReservationId(context, model, 25, reservation),
+      child: Wrap(
+      spacing: 8.0,
+      runSpacing: 4.0,
+      children: (activityForm.activityTypes ?? []).map((activity) {
+        return Container(
+        height: 50,
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: model.disabledTextColor),
+            color: model.disabledTextColor.withOpacity(0.25),
+          ),
+          child: Center(
+            child: Text(
+            getTitleForActivityOption(context, activity.activity) ?? 'To Rent',
+            style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold),
+            ),
+          ),
+        );
+      }).toList(),
       ),
     );
   }
@@ -222,12 +236,12 @@ class ReservationActivityInfoWidget extends StatelessWidget {
     return activityOwner != null && activityForm.profileService.isActivityPost == false;
   }
 
-  Widget _buildHostColumn(BuildContext context) {
+  Widget _buildHostColumn(BuildContext context, String? currentUserId, AttendeeItem? attendee) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18.0),
       child: Responsive.isDesktop(context)
-          ? SizedBox(width: 400, child: getHostColumn(context, activityOwner!, true, model))
-          : getHostColumn(context, activityOwner!, true, model),
+          ? SizedBox(width: 400, child: getHostColumn(context, currentUserId, activityOwner!, true, model, attendee, reservation))
+          : getHostColumn(context, currentUserId, activityOwner!, true, model, attendee, reservation),
     );
   }
 
@@ -236,12 +250,12 @@ class ReservationActivityInfoWidget extends StatelessWidget {
         (activityForm.profileService.isActivityPost == true || activityForm.profileService.isActivityPost == null);
   }
 
-  Widget _buildPostedOnBehalfColumn(BuildContext context) {
+  Widget _buildPostedOnBehalfColumn(BuildContext context, String? currentUserId, AttendeeItem? attendee) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18.0),
       child: Responsive.isDesktop(context)
-          ? SizedBox(width: 400, child: getPostedOnBehalfColumn(context, model, activityOwner!, activityForm))
-          : getPostedOnBehalfColumn(context, model, activityOwner!, activityForm),
+          ? SizedBox(width: 400, child: getPostedOnBehalfColumn(context, model, activityOwner!, currentUserId, attendee, reservation, activityForm))
+          : getPostedOnBehalfColumn(context, model, activityOwner!, currentUserId, attendee, reservation, activityForm),
     );
   }
 
@@ -259,107 +273,7 @@ class ReservationActivityInfoWidget extends StatelessWidget {
       allVendors,
       facade.FirebaseChatCore.instance.firebaseUser?.uid,
       didSelectAttendees: () {
-        if (kIsWeb && (Responsive.isMobile(context) == false)) {
-          showGeneralDialog(
-            context: context,
-            barrierDismissible: true,
-            barrierLabel: 'Attendees',
-            barrierColor: model.disabledTextColor.withOpacity(0.34),
-            transitionDuration: Duration(milliseconds: 350),
-            pageBuilder: (BuildContext contexts, anim1, anim2) {
-              return Scaffold(
-                  backgroundColor: Colors.transparent,
-                  body: Align(
-                    alignment: Alignment.center,
-                    child: Container(
-                      decoration: BoxDecoration(
-                          color: model.webBackgroundColor,
-                          borderRadius: BorderRadius.all(Radius.circular(17.5))
-                      ),
-                      width: 750,
-                      height: 900,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.all(Radius.circular(17.5)),
-                        child: Stack(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(top: 85.0),
-                              child: ActivityAttendeesListScreen(
-                                model: model,
-                                reservationItem: reservation,
-                                activityManagerForm: activityForm,
-                                attendeeTypeTab: AttendeeType.vendor,
-                                attendeeList: _getVendorAttendees(),
-                                currentUser: facade.FirebaseChatCore.instance.firebaseUser?.uid,
-                                didSelectAttendee: (AttendeeItem attendee, UserProfileModel user) {
-                                },
-                              ),
-                            ),
-                            Container(
-                              height: 70,
-                              width: 750,
-                              child: AppBar(
-                                backgroundColor: model.paletteColor,
-                                elevation: 0,
-                                automaticallyImplyLeading: false,
-                                centerTitle: true,
-                                toolbarHeight: 80,
-                                title: Text('Attendees'),
-                                titleTextStyle: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
-                                actions: [
-                                  IconButton(onPressed: () => Navigator.of(context).pop(), icon: Icon(Icons.cancel, size: 40, color: model.accentColor), padding: EdgeInsets.zero),
-                                  const SizedBox(width: 10),
-                                ],
-                              ),
-                            ),
-
-                          ],
-                        ),
-                      ),
-                  ),
-                )
-              );
-            },
-            transitionBuilder: (context, anim1, anim2, child) {
-              return Transform.scale(
-                  scale: anim1.value,
-                  child: Opacity(
-                  opacity: anim1.value,
-                  child: child
-                )
-              );
-            },
-          );
-        } else {
-        Navigator.of(context).push(MaterialPageRoute(builder: (newContext) {
-            return Scaffold(
-              appBar: AppBar(
-                backgroundColor: model.paletteColor,
-                elevation: 0,
-                automaticallyImplyLeading: false,
-                centerTitle: true,
-                toolbarHeight: 80,
-                title: Text('Attendees'),
-                titleTextStyle: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold),
-                actions: [
-                IconButton(onPressed: () => Navigator.of(context).pop(), icon: Icon(Icons.cancel, size: 40, color: model.accentColor), padding: EdgeInsets.zero),
-                const SizedBox(width: 10),
-                ],
-              ),
-              body: ActivityAttendeesListScreen(
-                model: model,
-                reservationItem: reservation,
-                activityManagerForm: activityForm,
-                attendeeTypeTab: AttendeeType.vendor,
-                attendeeList: _getVendorAttendees(),
-                currentUser: facade.FirebaseChatCore.instance.firebaseUser?.uid,
-                didSelectAttendee: (AttendeeItem attendee, UserProfileModel user) {
-
-                },
-              ),
-            );
-          }));
-        }
+        showAttendeesList(context, model, reservation, activityForm, _getVendorAttendees(), AttendeeType.vendor);
       },
     );
   }

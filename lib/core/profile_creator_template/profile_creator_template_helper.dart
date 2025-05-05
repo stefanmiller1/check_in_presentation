@@ -2,10 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
+import 'package:check_in_domain/check_in_domain.dart';
 import '../../check_in_presentation.dart';
 
-enum ProfileTypeMarker {generalProfile, vendorProfile}
 
 class ProfileCreatorContainerModel {
 

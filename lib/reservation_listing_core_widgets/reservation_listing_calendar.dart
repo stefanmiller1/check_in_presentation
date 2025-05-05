@@ -22,6 +22,7 @@ Widget selectedCalendarDatesSlotReservations(DashboardModel model, DateTime init
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: SfDateRangePicker(
+                backgroundColor: model.accentColor,
                 initialSelectedDate: initialSelection,
                 view: DateRangePickerView.month,
                 selectionColor: model.paletteColor,
@@ -36,6 +37,7 @@ Widget selectedCalendarDatesSlotReservations(DashboardModel model, DateTime init
                 selectionMode: DateRangePickerSelectionMode.single,
                 headerStyle: DateRangePickerHeaderStyle(
                     textAlign: TextAlign.center,
+                    backgroundColor: model.accentColor,
                     textStyle: TextStyle(fontSize: model.secondaryQuestionTitleFontSize, color: model.disabledTextColor)
                 ),
                 headerHeight: 40,
@@ -104,282 +106,168 @@ bool highlightSelectedDates(List<DateTime> selected, DateTime date) {
 
 
 Widget calendarListOfSelectableReservations(
-    BuildContext context,
-    DashboardModel model,
-    int durationType,
-    List<ReservationItem> reservations,
-    UniqueId currentSpaceOption,
-    List<ReservationTimeFeeSlotItem> listOfReservationOptions,
-    List<ReservationTimeFeeSlotItem> listOfSelectedReservations,
-    bool isRepeatShown,
-    String slotTimeString,
-    String addLocationString,
-    {required Function(ReservationTimeFeeSlotItem) selectedReservation}) {
-  return Column(
-    mainAxisAlignment: MainAxisAlignment.start,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(20)),
-        ),
-        width: 600,
-        // height: 475,
-        child: Center(
-          child: Wrap(
-            direction: Axis.horizontal,
-            children: listOfReservationOptions.map(
-                    (e) => IgnorePointer(
-                      ignoring: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: Container(
-                          width: (kIsWeb) ? 250 : null,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(20)),
-                            color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.webBackgroundColor : model.paletteColor : Colors.transparent,
-                            border: Border.all(width: 1, color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor)
-                        ),
+  BuildContext context,
+  DashboardModel model,
+  int durationType,
+  List<ReservationItem> reservations,
+  UniqueId currentSpaceOption,
+  List<ReservationTimeFeeSlotItem> listOfReservationOptions,
+  List<ReservationTimeFeeSlotItem> listOfSelectedReservations,
+  bool isRepeatShown,
+  String slotTimeString,
+  String addLocationString,
+  {required Function(ReservationTimeFeeSlotItem) selectedReservation}
+) {
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final crossAxisCount = kIsWeb ? 2 : 1; // At least 2 columns on web
+      final double childAspectRatio = (kIsWeb ? 3 : 3); // Adjust aspect ratio based on platform
 
-                          child: TextButton(
-                            style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                                      (Set<MaterialState> states) {
-                                    if (states.contains(MaterialState.selected) && states.contains(MaterialState.pressed) && states.contains(MaterialState.focused)) {
-                                      return model.paletteColor.withOpacity(0.1);
-                                    }
-                                    if (states.contains(MaterialState.hovered)) {
-                                      return model.paletteColor.withOpacity(0.1);
-                                    }
-                                    return Colors.transparent; // Use the component's default.
-                                  },
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Main Container with GridView
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+            ),
+            width: constraints.maxWidth,
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: listOfReservationOptions.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 16.0,
+                mainAxisSpacing: 16.0,
+                childAspectRatio: 3,
+              ),
+              itemBuilder: (context, index) {
+                final e = listOfReservationOptions[index];
+                final isBlocked = blockedOutDate(e.slotRange.start, reservations, currentSpaceOption);
+                final isSelected = highlightSelectedDates(
+                  listOfSelectedReservations.map((e) => e.slotRange.start).toList(),
+                  e.slotRange.start,
+                );
+
+                return IgnorePointer(
+                  ignoring: isBlocked,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                      color: isSelected
+                          ? (isBlocked ? model.webBackgroundColor : model.paletteColor)
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: isSelected
+                            ? model.webBackgroundColor
+                            : (isBlocked ? model.disabledTextColor : model.paletteColor),
+                        width: 1,
+                      ),
+                    ),
+                    child: TextButton(
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                          (Set<MaterialState> states) {
+                            if (states.contains(MaterialState.hovered)) {
+                              return model.paletteColor.withOpacity(0.1);
+                            }
+                            return Colors.transparent;
+                          },
+                        ),
+                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
+                      onPressed: () => selectedReservation(e),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            
+                            Flexible(
+                              child: Text(
+                                "$slotTimeString: ${DateFormat.jm().format(e.slotRange.start)} - ${DateFormat.jm().format(e.slotRange.start.add(Duration(minutes: durationType)))}",
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? model.webBackgroundColor
+                                      : (isBlocked
+                                          ? model.disabledTextColor
+                                          : model.paletteColor),
+                                  fontSize: 16.5,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                    RoundedRectangleBorder(
-                                      borderRadius: const BorderRadius.all(Radius.circular(20)),
-                                    )
-                                )
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                            onPressed: () {
-                              selectedReservation(e);
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "$slotTimeString: ${DateFormat.jm().format(e.slotRange.start)} - ${DateFormat.jm().format(e.slotRange.start.add(Duration(minutes: durationType)))}",
-                                          style: TextStyle(
-                                              color: highlightSelectedDates(
-                                                  listOfSelectedReservations.map((e) => e.slotRange.start).toList(),
-                                                  e.slotRange.start
-                                              )
-                                                  ? model.webBackgroundColor
-                                                  : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption)
-                                                  ? model.disabledTextColor
-                                                  : model.paletteColor,
-                                              fontSize: 16.5,
-                                              fontWeight: FontWeight.bold
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        Text(
-                                          "Price: \$0.00",
-                                          style: TextStyle(
-                                              color: highlightSelectedDates(
-                                                  listOfSelectedReservations.map((e) => e.slotRange.start).toList(),
-                                                  e.slotRange.start
-                                              )
-                                                  ? model.webBackgroundColor
-                                                  : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption)
-                                                  ? model.disabledTextColor
-                                                  : model.paletteColor
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Visibility(
-                                    visible: !highlightSelectedDates(
-                                        listOfSelectedReservations.map((e) => e.slotRange.start).toList(),
-                                        e.slotRange.start
-                                    ),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.all(Radius.circular(8)),
-                                        color: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption)
-                                            ? model.accentColor
-                                            : Colors.transparent,
-                                        border: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption)
-                                            ? null
-                                            : Border.all(width: 1, color: model.paletteColor),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(3.0),
-                                        child: Text(
-                                          addLocationString,
-                                          style: TextStyle(
-                                              color: highlightSelectedDates(
-                                                  listOfSelectedReservations.map((e) => e.slotRange.start).toList(),
-                                                  e.slotRange.start
-                                              )
-                                                  ? model.webBackgroundColor
-                                                  : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption)
-                                                  ? model.disabledTextColor
-                                                  : model.paletteColor,
-                                              fontSize: model.secondaryQuestionTitleFontSize,
-                                              fontWeight: FontWeight.bold
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Visibility(
-                                    visible: highlightSelectedDates(
-                                        listOfSelectedReservations.map((e) => e.slotRange.start).toList(),
-                                        e.slotRange.start
-                                    ),
-                                    child: Icon(Icons.cancel, color: model.webBackgroundColor, size: 35),
-                                  ),
-                                  //
-                                  // Expanded(
-                                  //   child: Column(
-                                  //     mainAxisAlignment: MainAxisAlignment.center,
-                                  //     crossAxisAlignment: CrossAxisAlignment.start,
-                                  //     children: [
-                                  //       Text("$slotTimeString: ${DateFormat.jm().format(e.slotRange.start)} - ${DateFormat.jm().format(e.slotRange.start.add(Duration(minutes: durationType)))}",
-                                  //         style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor, fontSize: 16.5, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                                  //       /// TODO: show price only
-                                  //       // Text("Price: ${e.fee}", style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor), overflow: TextOverflow.ellipsis)
-                                  //       Text("Price: \$0.00", style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor), overflow: TextOverflow.ellipsis)
-                                  //     ],
-                                  //   ),
-                                  // ),
-                                  //
-                                  // Visibility(
-                                  //   visible: !(highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start)),
-                                  //   child: Container(
-                                  //     decoration: BoxDecoration(
-                                  //         borderRadius: BorderRadius.all(Radius.circular(8)),
-                                  //         color: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.accentColor : Colors.transparent,
-                                  //         border: blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? null : Border.all(width: 1, color: model.paletteColor)
-                                  //     ),
-                                  //     child: Padding(
-                                  //       padding: const EdgeInsets.all(3.0),
-                                  //       child: Text(addLocationString, style: TextStyle(color: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start) ? model.webBackgroundColor : blockedOutDate(e.slotRange.start, reservations, currentSpaceOption) ? model.disabledTextColor : model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold)),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  //
-                                  // Visibility(
-                                  //     visible: highlightSelectedDates(listOfSelectedReservations.map((e) => e.slotRange.start).toList(), e.slotRange.start),
-                                  //     child: Icon(Icons.cancel, color: model.webBackgroundColor, size: 35)),
+                            Flexible(
+                              child: Text(
+                                "Price: \$0.00",
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? model.webBackgroundColor
+                                      : (isBlocked
+                                          ? model.disabledTextColor
+                                          : model.paletteColor),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ),
                   ),
-                )
-              )
-            ).toList(),
+                );
+              },
+            ),
           ),
-        ),
-      ),
 
-      Visibility(
-        visible: isRepeatShown,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 25),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text('Available Dates', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
-            ),
-            SizedBox(height: 10),
-            Container(
-              width: 300,
-              child: DropdownButtonHideUnderline(
-                  child: DropdownButton2(
-                      // offset: const Offset(-10,-15),
+          // Additional Section for Repeat Options
+          if (isRepeatShown)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 25),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'Available Dates',
+                    style: TextStyle(
+                      color: model.disabledTextColor,
+                      fontSize: model.secondaryQuestionTitleFontSize,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  width: 300,
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton(
                       isDense: true,
-                      // buttonElevation: 0,
-                      // buttonDecoration: BoxDecoration(
-                      //   color: Colors.transparent,
-                      //   borderRadius: BorderRadius.circular(35),
-                      // ),
-                      customButton: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: model.accentColor,
-                          border: Border.all(color: model.disabledTextColor),
-                          borderRadius: BorderRadius.circular(35),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(2.5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: Text('', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.normal),),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: Icon(Icons.keyboard_arrow_down_rounded, color: model.paletteColor),
-                              ),
-                            ],
+                      items: RepeatType.values.map((e) {
+                        return DropdownMenuItem<RepeatType>(
+                          value: e,
+                          child: Text(
+                            e.toString(),
+                            style: TextStyle(color: model.disabledTextColor),
                           ),
-                        ),
-                      ),
-                      onChanged: (Object? navItem) {
-                      },
-                      // buttonWidth: 80,
-                      // buttonHeight: 70,
-                      // dropdownElevation: 1,
-                      // dropdownPadding: const EdgeInsets.all(1),
-                      // dropdownDecoration: BoxDecoration(
-                      //     boxShadow: [BoxShadow(
-                      //         color: Colors.black.withOpacity(0.07),
-                      //         spreadRadius: 1,
-                      //         blurRadius: 15,
-                      //         offset: Offset(0, 2)
-                      //     )
-                      //     ],
-                      //     color: model.accentColor,
-                      //     border: Border.all(color: model.disabledTextColor),
-                      //     borderRadius: BorderRadius.circular(20)),
-                      // itemHeight: 50,
-                      // // dropdownWidth: mainWidth,
-                      // focusColor: Colors.grey.shade100,
-                      items: RepeatType.values.map(
-                              (e) {
-                            return DropdownMenuItem<RepeatType>(
-                                onTap: () {
-
-                                },
-                                value: e,
-                                child: Text(e.toString(), style: TextStyle(color: model.disabledTextColor))
-                            );
-                          }
-                      ).toList()
-                  )
-              ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {},
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      )
-
-    ],
+        ],
+      );
+    },
   );
 }
 

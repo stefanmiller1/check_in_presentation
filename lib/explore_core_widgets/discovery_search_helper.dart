@@ -1,6 +1,5 @@
 part of check_in_presentation;
 
-enum discoverySearchMarker {circlesProfile, userProfiles}
 
 class SearchExploreCoreHelper {
 

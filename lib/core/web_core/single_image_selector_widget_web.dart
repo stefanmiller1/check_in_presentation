@@ -85,34 +85,5 @@ class _ProfileImageUploadPreviewState extends State<ProfileImageUploadPreview> {
         ],
       ),
     );
-    return ListTile(
-      onTap: () {
-        _handleSingleImageSelection();
-
-      },
-      leading: Container(
-          height: 60,
-          width: 60,
-          child: InkWell(
-            onTap: () {
-              _handleSingleImageSelection();
-            },
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: widget.model.accentColor,
-                  backgroundImage: (selectedImage?.uriPath != null) ? Image.network(selectedImage!.uriPath!, fit: BoxFit.cover).image : null,
-                  foregroundImage: (selectedImage?.imageToUpload != null) ? Image.memory(selectedImage!.imageToUpload!, fit: BoxFit.cover).image : null,
-                ),
-                Icon(Icons.camera_alt, size: 20, color: widget.model.disabledTextColor),
-              ],
-            ),
-          )
-      ),
-      title: Text('${widget.title}*', style: TextStyle(color: widget.model.disabledTextColor, fontSize: widget.model.secondaryQuestionTitleFontSize)),
-      subtitle: Text(widget.subTitle, style: TextStyle(color: widget.model.disabledTextColor)),
-    );
   }
 }

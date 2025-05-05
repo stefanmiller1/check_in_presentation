@@ -67,8 +67,8 @@ class _ActivityRuleToCreateState extends State<ActivityRuleToCreate> {
                 _selectedCustomRulesToInclude(context, widget.model, context.read<UpdateActivityFormBloc>().state.activitySettingsForm.rulesService.customRuleOption),
 
                 Visibility(
-                  visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity == ProfileActivityOption.camp ||
-                      context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.classesLessons,
+                  visible: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityOption.camp) ||
+                    (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityTypeOption.classesLessons),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,

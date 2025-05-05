@@ -1,6 +1,6 @@
 part of check_in_presentation;
 
-Widget profileHeaderContainer(UserProfileModel profile, DashboardModel model, bool isCurrentUser, int listingCount, int joinedResCount, String userId, {required Function() editProfile, required Function() didSelectShare}) {
+Widget profileHeaderContainer(UserProfileModel profile, DashboardModel model, bool isCurrentUser, int? listingCount, int? joinedResCount, String userId, {required Function() editProfile, required Function() didSelectShare}) {
   return Column(
     mainAxisAlignment: MainAxisAlignment.start,
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,7 +30,7 @@ Widget profileHeaderContainer(UserProfileModel profile, DashboardModel model, bo
 
           Row(
             children: [
-              Column(
+              if (listingCount != null) Column(
                 children: [
                   Icon(Icons.home_outlined, color: model.paletteColor),
                   Text('Hosting', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold)),
@@ -61,7 +61,7 @@ Widget profileHeaderContainer(UserProfileModel profile, DashboardModel model, bo
                 ],
               ),
               const SizedBox(width: 14),
-              Column(
+              if (joinedResCount != null) Column(
                 children: [
                   Icon(Icons.accessibility_new_rounded, color: model.paletteColor),
                   Text('Joined', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold)),
@@ -93,7 +93,7 @@ Widget profileHeaderContainer(UserProfileModel profile, DashboardModel model, bo
                  // border: Border.all(color: model.disabledTextColor)
                ),
                child: Center(
-                 child: Text('Edit My Profile', style: TextStyle(color: model.disabledTextColor)),
+                 child: Text('Edit My Profile', style: TextStyle(color: model.paletteColor)),
                ),
              ),
            ),
@@ -216,31 +216,35 @@ Widget getVendorMerchProfileHeader(DashboardModel model, bool isOwner, EventMerc
         runSpacing: 2,
         children: [
           if (profile.instagramLink != null && profile.instagramLink!.isNotEmpty) InkWell(
+            mouseCursor: WidgetStateMouseCursor.clickable,
             onTap: () async {
               if (await canLaunchUrlString('https://www.instagram.com/${profile.instagramLink}')) {
                 launchUrlString('https://www.instagram.com/${profile.instagramLink}');
               }
             },
             child: Chip(
-                side: BorderSide.none,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                backgroundColor: model.mobileBackgroundColor.withOpacity(0.3),
-                avatar: Icon(Icons.photo_camera_outlined, color: model.disabledTextColor),
-                label: Text(profile.instagramLink!)
+              side: BorderSide.none,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+              backgroundColor: model.accentColor,
+              avatar: Icon(Icons.photo_camera_outlined, size: 25, color: model.disabledTextColor),
+              label: Text('${profile.instagramLink!}  ', style: TextStyle(fontSize: 17.5)),
+              labelPadding: EdgeInsets.symmetric(vertical: 8),
             ),
-          ),
-          if (profile.websiteLink != null) InkWell(
+            ),
+            if (profile.websiteLink != null) InkWell(
+            mouseCursor: WidgetStateMouseCursor.clickable,
             onTap: () async {
               if (await canLaunchUrlString('https://www.${profile.websiteLink}')) {
-                launchUrlString('https://www.${profile.websiteLink}');
+              launchUrlString('https://www.${profile.websiteLink}');
               }
             },
             child: Chip(
               side: BorderSide.none,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              backgroundColor: model.mobileBackgroundColor.withOpacity(0.3),
-              avatar: Icon(CupertinoIcons.globe, color: model.disabledTextColor),
-              label: Text(profile.websiteLink!)
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+              backgroundColor: model.accentColor,
+              avatar: Icon(CupertinoIcons.globe, size: 25, color: model.disabledTextColor),
+              label: Text('${profile.websiteLink!} ', style: TextStyle(fontSize: 17.5)),
+              labelPadding: EdgeInsets.symmetric(vertical: 8),
             ),
           )
         ],
@@ -260,7 +264,7 @@ Widget getVendorMerchProfileHeader(DashboardModel model, bool isOwner, EventMerc
                 // border: Border.all(color: model.disabledTextColor)
               ),
               child: Center(
-                child: Text('Edit My Profile', style: TextStyle(color: model.disabledTextColor)),
+                child: Text('Edit My Profile', style: TextStyle(color: model.paletteColor)),
               ),
             ),
           ),
@@ -270,6 +274,264 @@ Widget getVendorMerchProfileHeader(DashboardModel model, bool isOwner, EventMerc
   );
 }
 
+
+// - [ ] Non-profile owner:
+   // - [ ] Send invite 
+   // - [ ] Send Msg Request
+   // - [ ] Send message 
+   // - [ ] View circles 
+   // - [ ] Join public circles 
+   // - [ ] View status (looking, planning?)
+   // - [ ] View interests…product types…
+// - [ ] Profile Owner:
+   // - [ ] Create a group (Circle) 
+   // - [ ] Create Activity 
+   // - [ ] Create Appearance
+   // - [ ] Update/delete/leave circles 
+   // - [ ] Change status 
+   // - [ ] Update interests 
+   // - [ ] Update. Calendar (unavailable/free)
+   // - [ ] Review Invites 
+   // - [ ] Add appearance
+   // - [ ] Get verified 
+
+String getLastSeenText(DateTime lastSeen) {
+  final now = DateTime.now();
+  final difference = now.difference(lastSeen);
+
+  if (difference.inMinutes < 60) {
+    return '${difference.inMinutes} minutes ago';
+  } else if (difference.inHours < 24) {
+    return '${difference.inHours} hours ago';
+  } else if (difference.inDays < 7) {
+    return '${difference.inDays} days ago';
+  } else if (difference.inDays < 30) {
+    return '${(difference.inDays / 7).floor()} weeks ago';
+  } else if (difference.inDays < 365) {
+    return '${(difference.inDays / 30).floor()} months ago';
+  } else {
+    return '${(difference.inDays / 365).floor()} years ago';
+  }
+}
+
+Widget buildProfileVisitorActionButtons(BuildContext context, DashboardModel model, bool isOwner, List<CircleProfileItem> circleProfiles, UserProfileModel userProfile, EventMerchantVendorProfile? vendorProfile, ProfileTypeMarker userType, {required Function() didSelectSendMessage}) {
+  final List<CircleData> circles = [
+      CircleData(
+        imageUrl: null,
+        score: 5,
+        isElevated: false,
+        color: model.accentColor,
+      ),
+      CircleData(
+        imageUrl: null,
+        score: 3,
+        isElevated: false,
+        color: model.accentColor,
+      ),
+      CircleData(
+        imageUrl: null,
+        score: 8,
+        isElevated: false,
+        color: model.accentColor,
+      ),
+      CircleData(
+        imageUrl: null,
+        score: 7,
+        isElevated: false,
+        color: model.accentColor
+      ),
+      CircleData(
+        imageUrl: null,
+        score: 15,
+        isElevated: false,
+        color: model.accentColor,
+      ),
+      CircleData(
+        imageUrl: null,
+        score: 1,
+        isElevated: false,
+        color: model.accentColor,
+      ),
+      CircleData(
+        imageUrl: null,
+        score: 2,
+        isElevated: false,
+        color: model.accentColor,
+      ),
+      CircleData(
+        imageUrl: null,
+        score: 10,
+        isElevated: false,
+        color: model.accentColor,
+      ),
+      CircleData(
+        imageUrl: null,
+        score: 10,
+        isGetStarted: true,
+        isElevated: false,
+        color: model.accentColor,
+      ),
+  ];
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 18),
+      // if (userProfile.lastSeen != null) Padding(
+      //   padding: const EdgeInsets.all(4.0),
+      //   child: Container(
+      //     height: 60,
+      //     constraints: BoxConstraints(maxWidth: 500),
+      //     child: ListTile(
+      //       leading: Icon(Icons.access_time, color: model.disabledTextColor),
+      //       title: Text('Last seen', style: TextStyle(color: model.disabledTextColor)),
+      //       subtitle: Text(getLastSeenText(userProfile.lastSeen!), style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold))
+      //     ),
+      //   ),
+      // ),
+      if (userType == ProfileTypeMarker.vendorProfile && vendorProfile != null) Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: Container(
+          height: 60,
+          constraints: BoxConstraints(maxWidth: 500),
+          child: ListTile(
+            leading: Icon(
+              vendorProfile.workStatus == WorkAvailabilityStatus.available ? Icons.check_circle_outline :
+              vendorProfile.workStatus == WorkAvailabilityStatus.booked ? Icons.work_off :
+              vendorProfile.workStatus == WorkAvailabilityStatus.lookingForWork ? Icons.search :
+              Icons.work, // default icon
+              color: model.disabledTextColor
+              ),
+              title: Text('Work Status', style: TextStyle(color: model.disabledTextColor)),
+                trailing: (isOwner) ? InkWell(
+                  onTap: () {
+                  // Handle edit status action
+                  },
+                  child: Container(
+                  height: 45,
+                  width: 150,
+                  decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: model.accentColor,
+                  ),
+                  child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('Edit Status', style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
+                        ),
+                      ),
+                    ),
+                  ) : Visibility(
+                  visible: vendorProfile.workStatus == WorkAvailabilityStatus.available || vendorProfile.workStatus == WorkAvailabilityStatus.lookingForWork || vendorProfile.workStatus == null,
+                  child: InkWell(
+                    onTap: () { 
+                      // Handle send invite action
+                    },
+                    child: Container(
+                      height: 45,
+                      width: 150,
+                      constraints: BoxConstraints(maxWidth: 500),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(25),
+                        color: model.paletteColor,
+                      ),
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            'Send Invite',
+                            style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              subtitle: Text((vendorProfile.workStatus != null) ? getWorkAvailabilityStatusTitle(vendorProfile.workStatus!) : 'Looking For Work', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold)),
+          ),
+        ),
+      ),
+      const SizedBox(height: 8),
+      if (circleProfiles.isEmpty) Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Container(
+              height: 60,
+              constraints: BoxConstraints(maxWidth: 500),
+              child: ListTile(
+                leading: Icon(Icons.circle_outlined, color: model.disabledTextColor),
+                title: Text('O\'s Joined and Started', style: TextStyle(color: model.disabledTextColor)),
+                trailing: (isOwner || circleProfiles.isNotEmpty) ? InkWell(
+                  onTap: () {
+                    // Handle the button action
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        backgroundColor: Colors.black,
+                        content: Text('The ability to create ACIRCLE is coming soon!', style: TextStyle(color: Colors.white),),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    height: 45,
+                    width: 150,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25),
+                      color: (!isOwner) ? model.paletteColor : model.accentColor,
+                    ),
+                    child: Center(
+                      child: Text(isOwner ? 'Create' : 'Join', style: TextStyle(color: (!isOwner) ? model.accentColor : model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize)),
+                    ),
+                  ),
+                ) : null,
+                // subtitle: Text('View all circles and activities', style: TextStyle(color: model.disabledTextColor, fontWeight: FontWeight.bold)),
+                // onTap: () {
+                //   // Handle the tap action
+                // },
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Container(
+              height: 160,
+              constraints: BoxConstraints(maxWidth: 500),
+              child: CircleClusterWidget(
+                circles: circles,
+                circlePadding: 15,
+                minWidth: 15,
+                maxWidth: 40,
+                width: (MediaQuery.of(context).size.width <= 500) ? MediaQuery.of(context).size.width - 50 : 500,
+                height: 150
+              ),
+            ),
+          ),
+        ],
+      ),
+
+      if (!isOwner) Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: InkWell(
+          onTap: () {
+            didSelectSendMessage();
+          },
+          child: Container(
+            height: 45,
+            constraints: BoxConstraints(maxWidth: 500),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              color: model.paletteColor,
+            ),
+            child: Center(
+              child: Text('Send Message', style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize)),
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+}
 
 Widget verificationsAndConfirmations(DashboardModel model, UserProfileModel profile) {
   return Column(
@@ -323,7 +585,6 @@ Widget verificationsAndConfirmations(DashboardModel model, UserProfileModel prof
           Text('Email Not Yet Verified', style: TextStyle(color: model.disabledTextColor))
         ],
       ),
-
     ],
   );
 }

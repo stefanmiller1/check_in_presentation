@@ -37,7 +37,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
               loadUserProfileSuccess: (item) {
                 return getCurrentUsersPaymentMethods(item.profile);
               },
-              orElse: () => Container()
+              orElse: () => JumpingDots(numberOfDots: 3, color: widget.model.paletteColor)
           );
         },
       ),
@@ -62,7 +62,7 @@ class _PaymentMethodsWidgetState extends State<PaymentMethodsWidget> {
                     ),
                   ),
                   body: Center(child: JumpingDots(numberOfDots: 3, color: widget.model.paletteColor))
-                ) : Container(),
+                ) : JumpingDots(numberOfDots: 3, color: widget.model.paletteColor),
           loadAllPaymentMethodsFailure: (_) => updatePaymentMethodSettings(context, [], profile),
           loadAllPaymentMethodsSuccess: (items) => updatePaymentMethodSettings(context, items.cards, profile),
           orElse: () => updatePaymentMethodSettings(context, [], profile));

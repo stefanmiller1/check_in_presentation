@@ -1,20 +1,20 @@
 part of check_in_presentation;
 
-class DiscoveryListingWidget extends StatefulWidget {
+class BrowseListingWidget extends StatefulWidget {
 
   final List<ListingManagerForm> listings;
   final DashboardModel model;
   final ProfileActivityOption? activityFilterType;
   final Function(ListingManagerForm) didSelectListing;
 
-  const DiscoveryListingWidget({super.key, required this.listings, required this.model, required this.activityFilterType, required this.didSelectListing});
+  const BrowseListingWidget({super.key, required this.listings, required this.model, required this.activityFilterType, required this.didSelectListing});
 
 
   @override
-  State<DiscoveryListingWidget> createState() => _DiscoveryListingWidgetState();
+  State<BrowseListingWidget> createState() => _BrowseListingWidgetState();
 }
 
-class _DiscoveryListingWidgetState extends State<DiscoveryListingWidget> {
+class _BrowseListingWidgetState extends State<BrowseListingWidget> {
 
   int _currentPage = 0;
   late bool showButton = false;
@@ -137,6 +137,7 @@ class _DiscoveryListingWidgetState extends State<DiscoveryListingWidget> {
 
               PageView.builder(
                   padEnds: false,
+                  physics: (Responsive.isMobile(context)) ? null : NeverScrollableScrollPhysics(),
                   controller: _reservationPageController,
                   itemCount: listingList.length,
                   onPageChanged: (page) {

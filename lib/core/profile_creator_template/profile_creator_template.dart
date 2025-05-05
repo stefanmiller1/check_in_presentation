@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:jumping_dot/jumping_dot.dart';
+import 'package:check_in_domain/check_in_domain.dart';
 
 import 'profile_creator_template_helper.dart';
 
@@ -43,7 +44,6 @@ class _ProfileMainDashboardMainState extends State<ProfileMainDashboardMain> wit
 
   @override
   void initState() {
-
     _tabController = TabController(initialIndex: widget.profileContainerItem.indexWhere((e) => e.profileType == (widget.initialTab ?? ProfileTypeMarker.generalProfile)), length: widget.profileContainerItem.length, vsync: this);
     _pageController = PageController(initialPage: widget.profileContainerItem.indexWhere((e) => e.profileType == (widget.initialTab ?? ProfileTypeMarker.generalProfile)), keepPage: true);
     super.initState();
@@ -79,7 +79,7 @@ class _ProfileMainDashboardMainState extends State<ProfileMainDashboardMain> wit
                   color: widget.model.mobileBackgroundColor
               ),
               child: Padding(
-                padding: EdgeInsets.only(top: (isMobile == false) ? 70.0 : 6.0, left: 8, right: 8),
+                padding: EdgeInsets.only(top: (isMobile == false) ? 40.0 : 6.0, left: 8, right: 8),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(25),
                   child: PageView.builder(
@@ -101,9 +101,10 @@ class _ProfileMainDashboardMainState extends State<ProfileMainDashboardMain> wit
                           return e.profilesList;
                         }
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 10.0),
+                          padding: const EdgeInsets.only(bottom: 10.0, top: 10.0),
                           child: SingleChildScrollView(
                             controller: _controller,
+                            physics: (e.isEditorVisible) ? const NeverScrollableScrollPhysics() : null,
                             child: mainContainerForDashboard(e, constraints),
                           ),
                         );
@@ -114,9 +115,10 @@ class _ProfileMainDashboardMainState extends State<ProfileMainDashboardMain> wit
                           return e.profilesList;
                         }
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 10.0),
+                          padding: const EdgeInsets.only(bottom: 10.0, top: 10.0),
                           child: SingleChildScrollView(
                             controller: _controller2,
+                            physics: (e.isEditorVisible) ? const NeverScrollableScrollPhysics() : null,
                             child: mainContainerForDashboard(e, constraints),
                           ),
                         );
@@ -156,50 +158,6 @@ class _ProfileMainDashboardMainState extends State<ProfileMainDashboardMain> wit
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // if (e.isOwner == true && e.showAddIcon == true || e.isEditorVisible) if (!(kIsWeb)) Column(
-        //   children: [
-        //     const SizedBox(height: 20),
-        //     Padding(
-        //       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        //       child: Container(
-        //         decoration: BoxDecoration(
-        //             borderRadius: BorderRadius.circular(40),
-        //             color: widget.model.accentColor
-        //         ),
-        //         child: Padding(
-        //           padding: const EdgeInsets.all(8.0),
-        //           child: Row(
-        //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //             children: [
-        //               Expanded(
-        //                 child: Padding(
-        //                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        //                   child: Text(e.profileHeaderTitle, style: TextStyle(fontSize: widget.model.secondaryQuestionTitleFontSize, color: widget.model.disabledTextColor, overflow: TextOverflow.ellipsis), maxLines: 1),
-        //                 ),
-        //               ),
-        //               InkWell(
-        //                 onTap: e.didSelectNew,
-        //                 child: Chip(
-        //                   side: BorderSide.none,
-        //                   backgroundColor: (e.isEditorVisible) ? widget.model.webBackgroundColor : widget.model.paletteColor,
-        //                   padding: EdgeInsets.zero,
-        //                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        //                   label: Padding(
-        //                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-        //                     child: Text(e.profileHeaderSubTitle, style: TextStyle(color: (e.isEditorVisible) ? widget.model.paletteColor : widget.model.accentColor, fontSize: widget.model.secondaryQuestionTitleFontSize, overflow: TextOverflow.ellipsis), maxLines: 1),
-        //                   ),
-        //                   avatar: Icon(e.profileHeaderIcon, size: 25, color: (e.isEditorVisible) ? widget.model.paletteColor : widget.model.disabledTextColor,),
-        //                 ),
-        //               )
-        //             ],
-        //           ),
-        //         ),
-        //       ),
-        //     ),
-        //   ],
-        // ),
-        // const SizedBox(height: 8),
-
         if (e.isReloading == true)
           Column(
             children: [
@@ -212,7 +170,7 @@ class _ProfileMainDashboardMainState extends State<ProfileMainDashboardMain> wit
           )
         else
           Padding(
-            padding: EdgeInsets.only(top: (e.isEditorVisible) ? 40.0 : 0.0),
+            padding: EdgeInsets.only(top: (e.isEditorVisible) ? 25.0 : 0.0),
             child: ProfileEditorComponent(model: widget.model, editorWidget: e.profileMainEditor, isVisible: e.isEditorVisible),
           ),
 

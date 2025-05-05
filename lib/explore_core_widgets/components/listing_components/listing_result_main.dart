@@ -1,15 +1,3 @@
-// import 'dart:math';
-//
-// import 'package:check_in_application/check_in_application.dart';
-// import 'package:check_in_domain/check_in_domain.dart';
-// import 'package:check_in_presentation/check_in_presentation.dart';
-// import 'package:flutter/material.dart';
-// import 'package:google_maps_flutter/google_maps_flutter.dart';
-// import 'package:shimmer/shimmer.dart';
-// import 'package:check_in_facade/check_in_facade.dart' as facade;
-// import 'package:flutter_bloc/flutter_bloc.dart';
-//
-// import '../helper.dart';
 part of check_in_presentation;
 
 class ListingResultMain extends StatefulWidget {
@@ -127,13 +115,14 @@ class _ListingResultMainState extends State<ListingResultMain> {
             return state.maybeMap(
               resLoadInProgress: (_) => isLoadingMainContainer(context),
               loadReservationListSuccess: (e) {
+                return Text('update this with reservation activities');
 
-                return ActivityResultMain(
-                    reservations: e.item.where((element) => element.isActivity == true).toList(),
-                    model: widget.model,
-                    listing: widget.listing,
-                    didSelectEmbeddedRes: (listing, res) => didSelectEmbeddedRes(listing, res)
-                );
+                // return ActivityResultMain(
+                //     reservations: e.item,
+                //     model: widget.model,
+                //     listing: widget.listing,
+                //     didSelectEmbeddedRes: (listing, res) => didSelectEmbeddedRes(listing, res)
+                // );
               },
               orElse: () => Container()
           );

@@ -28,7 +28,7 @@ bool showBackButtonNewActivity() => true;
 
 
 
-void didSelectCreateNewActivity(BuildContext context, DashboardModel model, ListingManagerForm? listing, int? initPage) {
+void didSelectCreateNewActivity(BuildContext context, DashboardModel model, ReservationItem? initRes, ListingManagerForm? listing, {required Function(ReservationItem) didSaveActivity, required Function(ReservationItem) didPublishActivity}) {
   if (kIsWeb) {
     showGeneralDialog(
       context: context,
@@ -45,13 +45,14 @@ void didSelectCreateNewActivity(BuildContext context, DashboardModel model, List
                         color: model.accentColor,
                         borderRadius: BorderRadius.all(Radius.circular(17.5))
                     ),
-                    width: 750,
+                    width: 1200,
                     height: 1050,
-                    child: CreateNewActivityScreen(
-                      currentListingManForm: listing,
-                      initPage: initPage,
+                    child: CreateReservationActivityFormWidget(
+                      currentListing: listing,
+                      initReservation: initRes,
                       isPopOver: true,
-                      didSelectClose: () {},
+                      isSaving: (res) => didSaveActivity(res),
+                      isPublishing: (res) => didPublishActivity(res),
                       model: model,
                     )
                 )
@@ -71,12 +72,13 @@ void didSelectCreateNewActivity(BuildContext context, DashboardModel model, List
   } else {
     Navigator.push(context, MaterialPageRoute(
         builder: (_) {
-          return CreateNewActivityScreen(
-              currentListingManForm: listing,
-              initPage: initPage,
+          return CreateReservationActivityFormWidget(
+              currentListing: listing,
+              initReservation: null,
               isPopOver: true,
-              didSelectClose: () {},
-              model: model
+              isSaving: (res) => didSaveActivity(res),
+              isPublishing: (res) => didPublishActivity(res),
+              model: model,
           );
         })
     );

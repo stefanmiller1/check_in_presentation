@@ -96,7 +96,7 @@ class _CustomProfileLayoutState extends State<CustomProfileLayout> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 500,
+                      width: 550,
                       child: Stack(
                         children: [
                           Container(

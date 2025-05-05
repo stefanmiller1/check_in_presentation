@@ -2,7 +2,7 @@ import 'package:check_in_presentation/check_in_presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
-class DiscoverySectionObject {
+class BrowseSectionObject {
   final String sectionTitle;
   final String sectionDescription;
   final IconData sectionIcon;
@@ -13,7 +13,7 @@ class DiscoverySectionObject {
   final Widget mainSectionWidget;
   final Function()? onEditPressed;
 
-  DiscoverySectionObject({
+  BrowseSectionObject({
     required this.hasValues,
     required this.sectionTitle,
     required this.sectionDescription,
@@ -27,12 +27,12 @@ class DiscoverySectionObject {
 }
 
 
-class DiscoverySectionWidget extends StatelessWidget {
+class BrowseSectionWidget extends StatelessWidget {
   final DashboardModel model;
-  final DiscoverySectionObject discoverySectionObject;
+  final BrowseSectionObject discoverySectionObject;
 
 
-  const DiscoverySectionWidget({
+  const BrowseSectionWidget({
     Key? key,
     required this.model,
     required this.discoverySectionObject
@@ -42,7 +42,7 @@ class DiscoverySectionWidget extends StatelessWidget {
   Widget build(BuildContext context) {
 
     if (discoverySectionObject.isLoading) {
-      return const LoadingDiscoverySectionWidget();
+      return const LoadingBrowseSectionWidget();
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,15 +92,15 @@ class DiscoverySectionWidget extends StatelessWidget {
 }
 
 
-class LoadingDiscoverySectionWidget extends StatefulWidget {
+class LoadingBrowseSectionWidget extends StatefulWidget {
 
-  const LoadingDiscoverySectionWidget({Key? key}) : super(key: key);
+  const LoadingBrowseSectionWidget({Key? key}) : super(key: key);
 
   @override
-  State<LoadingDiscoverySectionWidget> createState() => _LoadingDiscoverySectionWidgetState();
+  State<LoadingBrowseSectionWidget> createState() => _LoadingBrowseSectionWidgetState();
 }
 
-class _LoadingDiscoverySectionWidgetState extends State<LoadingDiscoverySectionWidget> {
+class _LoadingBrowseSectionWidgetState extends State<LoadingBrowseSectionWidget> {
 
   @override
   void initState() {

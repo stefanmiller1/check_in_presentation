@@ -62,87 +62,57 @@ class _ActivityAttendeesResultMainState extends State<ActivityAttendeesResultMai
   Widget getMainContainer(BuildContext context, UserProfileModel selectedProfile) {
 
     bool isLessThanMain = (MediaQuery.of(context).size.width <= 1150);
-
-    return Stack(
-      alignment: Alignment.topLeft,
-      children: [
-        Container(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-        ),
-        SingleChildScrollView(
-          controller: _scrollController,
-          child: Padding(
-            padding: EdgeInsets.all(15.0),
-            child: (isLessThanMain) ? Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-
-                mainContainerForSectionOneAtt(
-                  context: context,
-                  model: widget.model,
-                  attendeeItem: widget.attendee!,
-                  isColumn: true,
-                  didSelectRemoveAttendee: () {
-
-                  },
-                  didSelectLeaveActivity: () {
-
-                  }
-                ),
-                Container(
-                  height: MediaQuery.of(context).size.height,
-                  child: ProfileMainContainer(
-                    model: widget.model,
-                    currentUserId: selectedProfile.userId.getOrCrash(),
-                    currentUserProfile: selectedProfile,
-                  )
-                ),
-              ],
-            ) : Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-
-                      // mainContainerForSectionOneAtt(
-                      //   context: context,
-                      //   model: widget.model,
-                      //   attendeeItem: widget.attendee!,
-                      //   isColumn: false,
-                      //   didSelectRemoveAttendee: () {
-                      //
-                      //   },
-                      //   didSelectLeaveActivity: () {
-                      //
-                      //   }
-                      // ),
-                      const SizedBox(width: 25),
-                      Flexible(
-                        child: Container(
-                          width: 800,
-                          height: MediaQuery.of(context).size.height,
-                          child: ProfileMainContainer(
-                            model: widget.model,
-                            currentUserId: selectedProfile.userId.getOrCrash(),
-                            currentUserProfile: selectedProfile,
-                            isMobileViewOnly: true
-                          )
-                        ),
-                      )
-                  ],
-                )
-              ],
+    return IntrinsicHeight(
+            child: Container(
+              width: MediaQuery.of(context).size.width - 600,
+              height: MediaQuery.of(context).size.height - 300,
+              child: ProfileMainContainer(
+                model: widget.model,
+                currentUserId: selectedProfile.userId.getOrCrash(),
+                currentUserProfile: selectedProfile,
+                isMobileViewOnly: true
+              )
             ),
-          ),
-        ),
-
-      ],
-    );
+          );
+   
+    return Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+            
+                          // mainContainerForSectionOneAtt(
+                          //   context: context,
+                          //   model: widget.model,
+                          //   attendeeItem: widget.attendee!,
+                          //   isColumn: false,
+                          //   didSelectRemoveAttendee: () {
+                          //
+                          //   },
+                          //   didSelectLeaveActivity: () {
+                          //
+                          //   }
+                          // ),
+                          const SizedBox(width: 25),
+                          IntrinsicHeight(
+                            child: Container(
+                              width: MediaQuery.of(context).size.width - 600,
+                              height: MediaQuery.of(context).size.height - 300,
+                              child: ProfileMainContainer(
+                                model: widget.model,
+                                currentUserId: selectedProfile.userId.getOrCrash(),
+                                currentUserProfile: selectedProfile,
+                                isMobileViewOnly: true
+                              )
+                            ),
+                          )
+                      ],
+                    )
+                  ],
+                );
   }
 
   Widget mainHeaderContainer(BuildContext context, Widget attendeeType) {

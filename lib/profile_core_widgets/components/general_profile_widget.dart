@@ -88,8 +88,6 @@ class _GeneralProfileWidgetState extends State<GeneralProfileWidget> {
   }
 
 
-
-
   @override
   Widget build(BuildContext context) {
 
@@ -199,21 +197,25 @@ class _GeneralProfileWidgetState extends State<GeneralProfileWidget> {
               ),
             ),
           ),
-          if (widget.isOwner) Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              Container(
-                width: 500,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: widget.model.disabledTextColor),
-                ),
-                child: _buildAllCircleCommunities(),
-              ),
-            ],
-          ),
+          buildProfileVisitorActionButtons(
+            context, 
+            widget.model, 
+            widget.isOwner,
+            [],
+            widget.currentUser, 
+            null, 
+            ProfileTypeMarker.generalProfile,
+            didSelectSendMessage: () {
+                showNewMessagePopOver(
+                  context,
+                  widget.currentUser, 
+                  null,
+                  null, 
+                  NewMessageTypes.direct,
+                  widget.model,
+                );
+              }
+            ), 
           const SizedBox(height: 15),
           verificationsAndConfirmations(widget.model, widget.currentUser),
           const SizedBox(height: 25),
@@ -331,7 +333,6 @@ class _GeneralProfileWidgetState extends State<GeneralProfileWidget> {
     );
   }
 
-
   //// ---- FACILITIES SECTION ---- /////
 
   Widget _buildFacilitiesLocation() {
@@ -362,8 +363,14 @@ class _GeneralProfileWidgetState extends State<GeneralProfileWidget> {
                 didSelectCreateNewActivity(
                     context,
                     widget.model,
+                    null,
                     facility,
-                    2
+                    didSaveActivity: (res) {
+
+                    },
+                    didPublishActivity: (res) {
+
+                    },
                 );
                 break;
               case AppOption.owners:
@@ -649,7 +656,13 @@ class _GeneralProfileWidgetState extends State<GeneralProfileWidget> {
                       context,
                       widget.model,
                       null,
-                      null
+                      null,
+                      didSaveActivity: (res) {
+
+                      },
+                      didPublishActivity: (res) {
+                        
+                      }
                   );
                   break;
                 case AppOption.owners:

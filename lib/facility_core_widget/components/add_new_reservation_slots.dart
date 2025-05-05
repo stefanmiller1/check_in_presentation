@@ -131,22 +131,25 @@ class _AddNewReservationSlotsState extends State<AddNewReservationSlots> {
               color: widget.model.webBackgroundColor,
               child: Column(
                 children: [
-                  selectedCalendarDatesSlotReservations(
-                    widget.model,
-                    DateTime.now(),
-                    getClosedDatesForCalendar(
+                  ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(25)),
+                    child: selectedCalendarDatesSlotReservations(
                       widget.model,
-                      currentSelectedSpaceOption,
-                      currentSelectedSpaceOption?.durationType ?? 30,
+                      DateTime.now(),
+                      getClosedDatesForCalendar(
+                        widget.model,
+                        currentSelectedSpaceOption,
+                        currentSelectedSpaceOption?.durationType ?? 60,
+                        widget.listing.listingProfileService.backgroundInfoServices.startEndDate,
+                      ),
+                      _calendarController,
                       widget.listing.listingProfileService.backgroundInfoServices.startEndDate,
+                      selectedDateTime: (date) {
+                        setState(() {
+                          currentDateTime = date;
+                        });
+                      },
                     ),
-                    _calendarController,
-                    widget.listing.listingProfileService.backgroundInfoServices.startEndDate,
-                    selectedDateTime: (date) {
-                      setState(() {
-                        currentDateTime = date;
-                      });
-                    },
                   ),
                   Container(
                     width: MediaQuery.of(context).size.width,
@@ -222,7 +225,7 @@ class _AddNewReservationSlotsState extends State<AddNewReservationSlots> {
                 calendarListOfSelectableReservations(
                   context,
                   widget.model,
-                  currentSelectedSpaceOption?.durationType ?? 30,
+                  currentSelectedSpaceOption?.durationType ?? 60,
                   widget.reservations,
                   currentSelectedSpaceOption?.spaceId ?? UniqueId(),
                   getLiveCalendarList(

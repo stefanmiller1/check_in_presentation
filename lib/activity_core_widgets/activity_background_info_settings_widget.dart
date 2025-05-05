@@ -138,7 +138,7 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
                     .fold((l) => l.maybeMap(textInputTitleOrDetails: (i) => i.f?.maybeWhen(invalidFacilityName: (e) => AppLocalizations.of(context)!.signUpDashboardPasswordConfirmError2, orElse: () => null), orElse: () => null), (r) => r),
                   ),
                 Visibility(
-                visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.gameMatches,
+                visible: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityTypeOption.gameMatches),
                   child: Column(
                   children: [
                   const SizedBox(height: 25),
@@ -211,7 +211,7 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
                   ),
                 ),
                   Visibility(
-                    visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.classesLessons,
+                    visible: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains( ProfileActivityTypeOption.classesLessons),
                     child: Column(
                     children: [
                     const SizedBox(height: 25),
@@ -285,7 +285,7 @@ Widget mainContainerForSectionOneRowOne({required BuildContext context, required
                   )
                 ),
                 Visibility(
-                visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.experiences,
+                visible: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityTypeOption.experiences),
                 child: Column(
                 children: [
                 const SizedBox(height: 25),
@@ -452,7 +452,7 @@ Widget mainContainerForSectionOneRowTwo({required BuildContext context, required
             ),
           ),
         Visibility(
-        visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.classesLessons,
+        visible: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityTypeOption.classesLessons),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -526,25 +526,36 @@ Widget mainContainerForSectionOneRowTwo({required BuildContext context, required
 
 Widget mainTopContainer({required BuildContext context, required DashboardModel model, required List<String> numberOfImages, required List<ImageUpload> currentImages, required Function() didSelectImage, required Function(List<ImageUpload>) activityProfileImagesChanged}) {
   Widget buildItem(String text) {
-    return GestureDetector(
-      onTap: () {
-        didSelectImage();
-      },
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: model.disabledTextColor, width: 1),
-        ),
-        color: Colors.transparent,
-        key: ValueKey(text),
-        child: ClipRRect(
-            borderRadius: BorderRadius.circular(15),
-            child: Container(
-                height: 150,
-                width: 150,
-                child: Icon(Icons.add_circle_rounded, color: model.disabledTextColor, size: 55))
-        ),
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: model.disabledTextColor, width: 1),
+      ),
+      color: Colors.transparent,
+      key: ValueKey(text),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: Container(
+          height: 150,
+          width: 150,
+          child: HoverButton(
+          onpressed: () {
+            didSelectImage();
+          },
+          hoverColor: model.disabledTextColor.withOpacity(0.2),
+          hoverShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            // side: BorderSide(color: model.disabledTextColor, width: 1),
+          ),
+          hoverPadding: EdgeInsets.all(8),
+          elevation: 0,
+          child: Container(
+          height: 150,
+          width: 150,
+          child: Icon(Icons.add_circle_rounded, color: model.disabledTextColor, size: 55))
+          ),
+        )
       ),
     );
   }
@@ -602,14 +613,6 @@ Widget mainTopContainer({required BuildContext context, required DashboardModel 
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 25),
-        /// *** select/add profile images for activity *** ///
-        Text('Photos/Videos*', style: TextStyle(
-          fontSize: model.secondaryQuestionTitleFontSize,
-          color: model.disabledTextColor,
-          ),
-        ),
-        const SizedBox(height: 10),
         Stack(
           children: [
             Align(
@@ -633,7 +636,7 @@ Widget mainTopContainer({required BuildContext context, required DashboardModel 
           ],
         ),
         const SizedBox(height: 5),
-        Text('Edit & Add an image for your Activity', style: TextStyle(
+        Text('Edit & Add an image by Selecting above - less than 5mb', style: TextStyle(
           color: model.disabledTextColor,
           ),
         ),
@@ -643,7 +646,7 @@ Widget mainTopContainer({required BuildContext context, required DashboardModel 
   );
 }
 
-Widget mainActivityBackgroundContainerFooter({required BuildContext context, required DashboardModel model, required ActivityManagerForm activityForm, required UpdateActivityFormState state, required Function(String value) contactEmailChanged, required Function(String value) contactWebsiteChanged, required Function(String value) contactInstagramChanged}) {
+Widget mainActivityBackgroundContainerFooter({required BuildContext context, required DashboardModel model, required ActivityManagerForm activityForm, required Function(String value) contactEmailChanged, required Function(String value) contactWebsiteChanged, required Function(String value) contactInstagramChanged}) {
   return Container(
     width: 900,
     decoration: BoxDecoration(
@@ -658,7 +661,7 @@ Widget mainActivityBackgroundContainerFooter({required BuildContext context, req
         children: [
           /// post source
           /// ways to reach activity owner
-          SizedBox(height: 25),
+          SizedBox(height: 12),
           /// *** select/add profile images for activity *** ///
           Text('Host Details', style: TextStyle(
             fontSize: model.secondaryQuestionTitleFontSize,

@@ -37,6 +37,7 @@ class _VendorProfileCreatorEditorState extends State<VendorProfileCreatorEditor>
       child: BlocConsumer<UpdateVendorMerchProfileBloc, UpdateVendorMerchProfileState>(
         listenWhen: (p, c) => p.isSubmitting != c.isSubmitting,
         listener: (context, state) {
+
           state.authFailureOrSuccessOption.fold(
                   () => {},
                   (either) => either.fold(
@@ -134,6 +135,7 @@ class _VendorProfileCreatorEditorState extends State<VendorProfileCreatorEditor>
                             /// profile name
                             ListTile(
                               leading: Text('Brand Name*', style: TextStyle(color: widget.model.disabledTextColor, fontSize: widget.model.secondaryQuestionTitleFontSize)),
+                              subtitle: Text('Please avoid special characters', style: TextStyle(color: widget.model.disabledTextColor)),
                               title: Container(
                                 width: MediaQuery.of(context).size.width,
                                 child: TextFormField(
@@ -141,7 +143,7 @@ class _VendorProfileCreatorEditorState extends State<VendorProfileCreatorEditor>
                                       .fold((l) => l.maybeMap(textInputTitleOrDetails: (i) => i.f?.maybeWhen(invalidFacilityName: (e) => e, orElse: () => ''), orElse: () => ''), (r) => r),
                                   style: TextStyle(color: widget.model.paletteColor),
                                   decoration: InputDecoration(
-                                    hintText: 'My Brand',
+                                    hintText: 'Your Brand',
                                     focusedErrorBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(60.0),
                                       borderSide: BorderSide(
@@ -195,7 +197,7 @@ class _VendorProfileCreatorEditorState extends State<VendorProfileCreatorEditor>
                                       .fold((l) => l.maybeMap(textInputTitleOrDetails: (i) => i.f?.maybeWhen(invalidFacilityName: (e) => e, orElse: () => ''), orElse: () => ''), (r) => r),
                                   style: TextStyle(color: widget.model.paletteColor),
                                   decoration: InputDecoration(
-                                    hintText: 'Tell Them About Your Vision...',
+                                    hintText: 'Your Vision...',
                                     focusedErrorBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(20.0),
                                       borderSide: BorderSide(
@@ -539,6 +541,7 @@ class _VendorProfileCreatorEditorState extends State<VendorProfileCreatorEditor>
                       (widget.selectedVendorProfile != null) ? widget.selectedVendorProfile != state.profile : newVendorProfile != state.profile,
                       vendorProfileIsValid(state.profile) && widget.selectedVendorProfile != state.profile,
                       widget.selectedVendorProfile != null,
+                      null,
                       didSelectSave: () {
                         // if (!(kIsWeb)) {
                         setState(() {
@@ -559,6 +562,7 @@ class _VendorProfileCreatorEditorState extends State<VendorProfileCreatorEditor>
                             'Are you sure you want to delete this profile?',
                             'Delete',
                             didSelectDone: () {
+                              Navigator.of(context).pop();
                               context.read<UpdateVendorMerchProfileBloc>().add(UpdateVendorMerchProfileEvent.deleteVendorProfileFinished());
                             }
                         );

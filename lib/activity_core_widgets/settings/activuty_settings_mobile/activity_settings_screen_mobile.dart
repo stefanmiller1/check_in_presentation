@@ -74,7 +74,7 @@ class _ActivitySettingsScreenMobileState extends State<ActivitySettingsScreenMob
 
               /// for class activities...
                Visibility(
-                 visible: activityForm.activityType.activityType == ProfileActivityTypeOption.classesLessons,
+                 visible: (activityForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityTypeOption.classesLessons),
                  child: ActivityClassBackgroundPreview(
                   reservation: widget.reservationItem,
                   model: widget.model,
@@ -287,15 +287,18 @@ class _ActivitySettingsScreenMobileState extends State<ActivitySettingsScreenMob
         // TODO: Handle this case.
         break;
       case SettingNavMarker.activity:
-        return ListTile(
-          onTap: () {
+        return Column(
+          children: (activityForm.activityTypes ?? []).map((e) => ListTile(
+              onTap: () {
 
-          },
-          title: const Text('About the Activity'),
-          subtitle: Text(getTitleForActivityOption(context, activityForm.activityType.activityId) ?? ''),
-          leading:  Icon(getIconDataForActivity(context, activityForm.activityType.activityId), color: widget.model.paletteColor),
-          trailing: Icon(Icons.keyboard_arrow_right_rounded, color: widget.model.paletteColor),
-        );
+              },
+                title: const Text('About the Activity'),
+                subtitle: Text(getTitleForActivityOption(context, e.activity) ?? ''),
+                leading:  Icon(getIconDataForActivity(context, e.activity), color: widget.model.paletteColor),
+                trailing: Icon(Icons.keyboard_arrow_right_rounded, color: widget.model.paletteColor),
+              )
+            ).toList()
+          );
       case SettingNavMarker.accessAndVisibility:
         return ListTile(
           onTap: () {

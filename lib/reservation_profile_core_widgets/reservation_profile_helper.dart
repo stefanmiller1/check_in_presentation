@@ -71,7 +71,10 @@ List<ReservationSettingListModel> resSettingsList(BuildContext context, Activity
 }
 
 
-Widget getHostColumn(BuildContext context, UserProfileModel resOwnerProfile, bool isHost, DashboardModel model) {
+Widget getHostColumn(BuildContext context, String? currentUserId, UserProfileModel resOwnerProfile, bool isHost, DashboardModel model, AttendeeItem? attendee, ReservationItem? reservation, ) {
+
+  final isOwner = currentUserId == resOwnerProfile.userId.getOrCrash();
+
   return Column(
     mainAxisAlignment: MainAxisAlignment.start,
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,9 +160,40 @@ Widget getHostColumn(BuildContext context, UserProfileModel resOwnerProfile, boo
       Text('Response Time: --', style: TextStyle(color: model.paletteColor)),
 
       const SizedBox(height: 18),
+      if (!isOwner) InkWell(
+        onTap: () {
+            showNewMessagePopOver(
+              context,
+              resOwnerProfile,
+              reservation,
+              null,
+              determineNewMessageTypeForReservationInquire(isHost: isHost, attendee: attendee),
+              model,
+            );
+
+        },
+        child: Container(
+          height: 45,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: model.paletteColor, width: 0.5)
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Center(child: Text('Send Message', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold))),
+          ),
+        ),
+      ),
+      const SizedBox(height: 8),
       InkWell(
         onTap: () {
-          dedSelectProfilePopOverOnly(context, model, resOwnerProfile);
+          didSelectProfile(
+            context,
+            resOwnerProfile.userId.getOrCrash(),
+            '${resOwnerProfile.legalName.getOrCrash()} ${resOwnerProfile.legalSurname.getOrCrash()}',
+             ProfileTypeMarker.generalProfile,
+              model
+          );
         },
         child: Container(
           height: 45,
@@ -187,9 +221,10 @@ Widget getHostColumn(BuildContext context, UserProfileModel resOwnerProfile, boo
   );
 }
 
-Widget getPostedOnBehalfColumn(BuildContext context, DashboardModel model, UserProfileModel resOwner, ActivityManagerForm activityForm) {
+Widget getPostedOnBehalfColumn(BuildContext context, DashboardModel model, UserProfileModel resOwner, String? currentUserId, AttendeeItem? currentAttendee, ReservationItem? reservation, ActivityManagerForm activityForm) {
 
   bool hasOrganizerDetails = (activityForm.profileService.postContactEmail != null && activityForm.profileService.postContactEmail?.isNotEmpty == true) || (activityForm.profileService.postContactSocialInstagram != null && activityForm.profileService.postContactSocialInstagram?.isNotEmpty == true) || (activityForm.profileService.postContactSocialInstagram != null && activityForm.profileService.postContactSocialInstagram?.isNotEmpty == true);
+  bool isHost = activityForm.profileService.isTrueOwner == true;
   return Container(
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(40),
@@ -201,10 +236,13 @@ Widget getPostedOnBehalfColumn(BuildContext context, DashboardModel model, UserP
         children: [
           /// who created and posted.
           getHostColumn(
-              context,
-              resOwner,
-              false,
-              model
+            context,
+            currentUserId,
+            resOwner,
+            isHost,
+            model,
+            currentAttendee,
+            reservation
           ),
 
           /// possible organizer contact details for host
@@ -295,7 +333,7 @@ Widget getPostedOnBehalfColumn(BuildContext context, DashboardModel model, UserP
           ),
 
           const SizedBox(height: 18),
-          InkWell(
+          if (isHost == false) InkWell(
             onTap: () async {
               final Uri params = Uri(
                 scheme: 'mailto',
@@ -445,8 +483,6 @@ void presentNewTicketAttendeeJoin(BuildContext context, DashboardModel model, Re
 }
 
 
-
-
 void presentPartnershipRequestAttendee(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activity, UserProfileModel reservationOwner) {
   if (kIsWeb && (Responsive.isMobile(context) == false)) {
     showGeneralDialog(
@@ -560,14 +596,14 @@ void presentNewInstructorAttendee(BuildContext context, DashboardModel model, Re
             isFromInvite: false,
           );
         }
-    )
+      )
     );
   }
 }
 
 
 void presentNewVendorAttendee(BuildContext context, DashboardModel model, VendorMerchantForm? vendorForm, ListingManagerForm listingForm, ReservationItem reservation, ActivityManagerForm activity, UserProfileModel reservationOwner) {
-  if (kIsWeb && (Responsive.isMobile(context) == false)) {
+  if (kIsWeb) {
     showGeneralDialog(
         context: context,
         barrierDismissible: false,
@@ -683,10 +719,11 @@ void presentMoreOptions(BuildContext context, DashboardModel model, bool isReser
                                     builder: (_) {
                                       return DirectChatScreen(
                                         model: model,
-                                        room: null,
+                                        roomId: null,
                                         currentUser: currentUser,
                                         reservationItem: reservation,
                                         isFromReservation: true,
+                                        showOptions: null,
                                       );
                                     }));
 

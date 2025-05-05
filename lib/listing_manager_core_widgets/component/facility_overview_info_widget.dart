@@ -14,12 +14,13 @@ class FacilityOverviewInfoWidget extends StatefulWidget {
   final UserProfileModel listingOwnerProfile;
   final List<ReservationTimeFeeSlotItem>? selectedReservationsSlots;
   final bool isAttendee;
+  final double? topPadding;
   final Function() didSelectItem;
   final Function(SpaceOption) didSelectSpace;
   final Function(SpaceOptionSizeDetail) didSelectSpaceOption;
   final Function(List<ReservationSlotItem> slotItem, String currency) updateBookingItemList;
 
-  const FacilityOverviewInfoWidget({super.key, required this.model, required this.reservations, required this.listingOwnerProfile, required this.listing, this.selectedReservationsSlots, required this.didSelectItem, this.currentSelectedSpace, this.currentSelectedSpaceOption, this.currentListingActivityOption, required this.newFacilityBooking, this.selectedActivityType, required this.didSelectSpace, required this.didSelectSpaceOption, required this.updateBookingItemList, required this.overViewState, required this.isAttendee});
+  const FacilityOverviewInfoWidget({super.key, required this.model, required this.reservations, required this.listingOwnerProfile, required this.listing, this.selectedReservationsSlots, required this.didSelectItem, this.currentSelectedSpace, this.currentSelectedSpaceOption, this.currentListingActivityOption, required this.newFacilityBooking, this.selectedActivityType, required this.didSelectSpace, required this.didSelectSpaceOption, required this.updateBookingItemList, required this.overViewState, required this.isAttendee, this.topPadding});
 
   @override
   State<FacilityOverviewInfoWidget> createState() => _FacilityOverviewInfoWidgetState();
@@ -40,8 +41,9 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (kIsWeb) const SizedBox(height: 80),
-        if (!(kIsWeb)) const SizedBox(height: 155),
+
+        SizedBox(height: widget.topPadding ?? 0),
+
         SizedBox(
           height: 285,
           child: ClipRRect(
@@ -141,7 +143,7 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
 
               /// ---------------------------------------------------- ///
               Visibility(
-                  visible: widget.overViewState == FacilityPreviewState.listing,
+                  visible: widget.overViewState == FacilityPreviewState.listing || widget.overViewState == FacilityPreviewState.listingPreview,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,7 +396,7 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
               /// ---------------------------------------------------- ///
               /// join any internal programs? ///
               Visibility(
-                  visible: widget.reservations.where((element) => element.reservationOwnerId == widget.listing.listingProfileService.backgroundInfoServices.listingOwner || (element.isInternalProgram == true)).isNotEmpty,
+                  visible: widget.reservations.where((element) => element.reservationOwnerId == widget.listing.listingProfileService.backgroundInfoServices.listingOwner).isNotEmpty,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -406,7 +408,7 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
                       Row(
                         children: [
                           Icon(Icons.wysiwyg_sharp, color: widget.model.paletteColor,),
-                          Text('${widget.reservations.where((element) => element.reservationOwnerId == widget.listing.listingProfileService.backgroundInfoServices.listingOwner || (element.isInternalProgram == true)).length} Internal Programs')
+                          Text('${widget.reservations.where((element) => element.reservationOwnerId == widget.listing.listingProfileService.backgroundInfoServices.listingOwner).length} Internal Programs')
                       ],
                     )
                   ],
@@ -425,7 +427,7 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
               /// ---------------------------------------------------- ///
               /// reviews/reservations - or be the first...
               Visibility(
-                visible: widget.overViewState == FacilityPreviewState.listing,
+                visible: widget.overViewState == FacilityPreviewState.listing, 
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,10 +446,12 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
 
                     getHostColumn(
                         context,
+                        facade.FirebaseChatCore.instance.firebaseUser?.uid,
                         widget.listingOwnerProfile,
                         true,
                         widget.model,
-
+                        null,
+                        null,
                     ),
 
                   ],
@@ -655,8 +659,7 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
               // Divider(color: widget.model.paletteColor),
               // const SizedBox(height: 5),
               // /// safety & security
-              //
-
+              
 
               //// --------------------------------------------------- ///
               /// pricing ///
@@ -783,7 +786,7 @@ class _FacilityOverviewInfoWidgetState extends State<FacilityOverviewInfoWidget>
               const SizedBox(height: 8),
               Text('${widget.listing.listingProfileService.listingLocationSetting.city.getOrCrash()}, ${widget.listing.listingProfileService.listingLocationSetting.provinceState.getOrCrash()}, ${widget.listing.listingProfileService.listingLocationSetting.countryRegion}', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold)),
               Visibility(
-                visible: widget.overViewState == FacilityPreviewState.reservation && widget.isAttendee,
+                visible: widget.overViewState == FacilityPreviewState.reservation && widget.isAttendee || widget.overViewState == FacilityPreviewState.listingPreview,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,

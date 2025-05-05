@@ -653,11 +653,11 @@ Widget getDetailListOfReservations(
                                           crossAxisAlignment: CrossAxisAlignment.center,
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Padding(
-                                              padding: const EdgeInsets.only(right: 10.0),
-                                              child: Icon(getIconDataForActivity(context, e.selectedActivityType), color: model.disabledTextColor),
-                                            ),
-                                            Text(getTitleForActivityOption(context, e.selectedActivityType) ?? '', style: TextStyle(color: isReservationSlotItemComplete(e) ? model.disabledTextColor : model.paletteColor, fontWeight: FontWeight.bold))
+                                            // Padding(
+                                            //   padding: const EdgeInsets.only(right: 10.0),
+                                            //   child: Icon(getIconDataForActivity(context, e.activityType), color: model.disabledTextColor),
+                                            // ),
+                                            // Text(getTitleForActivityOption(context, e.) ?? '', style: TextStyle(color: isReservationSlotItemComplete(e) ? model.disabledTextColor : model.paletteColor, fontWeight: FontWeight.bold))
                                           ],
                                         ),
                                       ),

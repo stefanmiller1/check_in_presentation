@@ -248,7 +248,6 @@ class _BackgroundInfoSettingsWidgetState extends State<BackgroundInfoSettingsWid
                               context: context,
                               model: widget.model,
                               activityForm: widget.activityManagerForm,
-                              state: context.read<UpdateActivityFormBloc>().state,
                               contactEmailChanged: (value) {
                                 context.read<UpdateActivityFormBloc>().add(UpdateActivityFormEvent.activityPostContactEmail(value));
                               },
@@ -337,7 +336,6 @@ class _BackgroundInfoSettingsWidgetState extends State<BackgroundInfoSettingsWid
                             context: context,
                             model: widget.model,
                             activityForm: widget.activityManagerForm,
-                            state: context.read<UpdateActivityFormBloc>().state,
                             contactEmailChanged: (value) {
                               context.read<UpdateActivityFormBloc>().add(UpdateActivityFormEvent.activityPostContactEmail(value));
                             },

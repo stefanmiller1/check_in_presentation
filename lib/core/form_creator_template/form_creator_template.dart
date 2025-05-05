@@ -17,6 +17,7 @@ class _FormCreatorDashboardMainState extends State<FormCreatorDashboardMain> wit
 
   final _controller = ScrollController();
   late bool showPreviewer = (MediaQuery.of(context).size.width <= 800) == false;
+  final Map<int, bool> _hoverStates = {};
 
   @override
   void initState() {
@@ -111,12 +112,12 @@ class _FormCreatorDashboardMainState extends State<FormCreatorDashboardMain> wit
                         Icon(Icons.remove_red_eye_outlined, color: (showPreviewer) ? widget.model.paletteColor : widget.model.accentColor,),
                         const SizedBox(width: 8),
                         Text('preview', style: TextStyle(color: (showPreviewer) ? widget.model.paletteColor : widget.model.accentColor)),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
-              )
-          ),
+              ),
+            ),
+          )
+        ),
       ],
     );
   }
@@ -125,8 +126,13 @@ class _FormCreatorDashboardMainState extends State<FormCreatorDashboardMain> wit
     return Column(
       children: [
         const SizedBox(height: 18),
-        ...widget.formContainerItem.map(
-                (e) => Padding(
+        ...widget.formContainerItem.asMap().entries.map(
+                (entry) {
+
+                  final e = entry.value;
+                  final index = entry.key;
+
+            return Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Column(
                 children: [
@@ -138,13 +144,13 @@ class _FormCreatorDashboardMainState extends State<FormCreatorDashboardMain> wit
                       borderRadius: const BorderRadius.all(Radius.circular(15)),
                     ),
                     child: ListTile(
-                      leading: Icon(e.formHeaderIcon, color: (e.isActivated) ? widget.model.paletteColor : widget.model.disabledTextColor),
-                      title: Text(e.formHeaderTitle, style: TextStyle(color: (e.isActivated) ? widget.model.paletteColor : widget.model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize)),
-                      subtitle: (e.formHeaderSubTitle != null || e.showErrorMessage == true) ? Text((e.showErrorMessage == true && (e.errorMessage != null)) ? e.errorMessage! : e.formHeaderSubTitle!, style: TextStyle(color: (e.showErrorMessage == true) ? Colors.red : widget.model.disabledTextColor)) : null,
-                      trailing: Container(
+                      leading: Icon(e.formHeaderIcon, color: (e.isActivated || e.isRequired == true) ? widget.model.paletteColor : widget.model.disabledTextColor),
+                      title: Text(e.formHeaderTitle, style: TextStyle(color: (e.isActivated || e.isRequired == true) ? widget.model.paletteColor : widget.model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize)),
+                      subtitle: (e.formHeaderSubTitle != null || e.showErrorMessage == true) ? Text((e.errorMessage != null) ? e.errorMessage! : e.formHeaderSubTitle!, style: TextStyle(color: (e.showErrorMessage == true) ? Colors.red : widget.model.disabledTextColor)) : null,
+                      trailing: (e.isRequired != true) ? Container(
                         height: 60,
                         width: 60,
-                        child: FlutterSwitch(
+                        child: (e.isLocked == true) ? Icon(Icons.lock, color: widget.model.disabledTextColor, size: 30, semanticLabel: 'Complete the option(s) above to unlock this one.') : FlutterSwitch(
                           width: 60,
                           inactiveToggleColor: widget.model.accentColor,
                           inactiveIcon: Icon(Icons.add, color: widget.model.disabledTextColor),
@@ -158,12 +164,12 @@ class _FormCreatorDashboardMainState extends State<FormCreatorDashboardMain> wit
                             });
                           },
                         ),
-                      ),
+                      ) : null,
                     ),
                   ),
                   const SizedBox(height: 8),
                   AnimatedContainer(
-                    height: (e.isActivated) ? (e.formSubHelper != null) ? e.height + 118 : e.height : 0,
+                    height: (e.isActivated || e.isRequired == true) ? (e.formSubHelper != null) ? e.height + 118 : e.height : 0,
                     duration: const Duration(milliseconds: 400),
                     curve: Curves.easeInOut,
                     child: SingleChildScrollView(
@@ -188,14 +194,42 @@ class _FormCreatorDashboardMainState extends State<FormCreatorDashboardMain> wit
                             ),
                           ),
 
-                          Container(
-                              height: e.height,
-                              width: VendorMerchantCore.forWidth,
-                              decoration: BoxDecoration(
-                                  border: Border.all(color: widget.model.disabledTextColor),
-                                  borderRadius: BorderRadius.circular(25)
-                              ),
-                              child: (e.isLoading == true) ? JumpingDots(numberOfDots: 3, color: widget.model.paletteColor) : e.formMainCreatorWidget
+                            MouseRegion(
+                              onEnter: (_) => setState(() {
+                                _hoverStates[index] = true; // Mark item as hovered
+                              }),
+                              onExit: (_) => setState(() {
+                                _hoverStates[index] = false; // Remove hover effect
+                              }),
+                            child: Container(
+                                height: e.height,
+                                width: VendorMerchantCore.forWidth,
+                                decoration: BoxDecoration(
+                                    border: Border.all(color: widget.model.disabledTextColor),
+                                    borderRadius: BorderRadius.circular(25)
+                                ),
+                                child: (e.isLoading == true) ? 
+                                JumpingDots(numberOfDots: 3, color: widget.model.paletteColor) : 
+                                Stack(
+                                  children: [
+                                    if (_hoverStates[index] == true && e.hasHoverEffect == true) Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Container(
+                                        width: VendorMerchantCore.forWidth,
+                                        height: e.height,
+                                        decoration: BoxDecoration(
+                                          color: widget.model.disabledTextColor.withOpacity(0.23),
+                                          borderRadius: BorderRadius.circular(25)
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: e.formMainCreatorWidget,
+                                    )
+                                ]
+                              )
+                            ),
                           ),
                         ],
                       ),
@@ -203,11 +237,9 @@ class _FormCreatorDashboardMainState extends State<FormCreatorDashboardMain> wit
                   )
                 ],
               ),
-            )
-        ).toList(),
-
-      ],
+            );
+          }
+        ).toList(),      ],
     );
   }
-
 }

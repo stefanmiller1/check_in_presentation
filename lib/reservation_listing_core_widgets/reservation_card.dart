@@ -527,6 +527,8 @@ Widget getReservationMediaFrameFlexible(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(15),
               child: CachedNetworkImage(
+              fadeInDuration: Duration.zero, // Disable fade-in animation
+              fadeOutDuration: Duration.zero,
               imageUrl: retrieveReservationSpacesFromListing(reservationItem, listing).firstWhereOrNull((element) => element.photoUri != null)?.photoUri ?? '',
               imageBuilder: (context, imageProvider) => Image(image: imageProvider, fit: BoxFit.cover),
               errorWidget: (context, url, error) {
@@ -541,14 +543,34 @@ Widget getReservationMediaFrameFlexible(
               )
             ),
           ),
-        ) else Flexible(
+        ) else if (reservationItem.reservationSlotItem.isNotEmpty) Flexible(
           child: getActivityTypeTabOption(
               context, model,
               height,
               false,
               getActivityOptions().firstWhere((element) => element.activityId == reservationItem.reservationSlotItem.first.selectedActivityType)
           ),
-        ),
+        ) else Expanded(
+          child: Container(
+              height: height,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                color: model.webBackgroundColor,
+            ),
+            child: Center(
+                child: Container(
+                  child: Text(
+                    ' Your Pics Go Here',
+                    style: TextStyle(
+                      fontSize: model.secondaryQuestionTitleFontSize,
+                      fontWeight: FontWeight.bold,
+                      color: model.disabledTextColor
+                  ),
+                                ),
+                ),
+            ),
+          ),
+        )
       ],
     ),
   );
@@ -569,9 +591,9 @@ bool hasReservationToday(List<ReservationSlotItem> reservationSlots) {
 Widget getSearchFooterWidget(BuildContext context, DashboardModel model, UniqueId? currentUserId, Color textColor, Color secondaryTextColor, Color backgroundColor, ReservationPreviewer resPreviewer, bool isLoading, {required Function() didSelectItem, required Function() didSelectInterested}) {
 
 
-  final List<ReservationSlotItem> reservationSlots = [];
-  reservationSlots.addAll(resPreviewer.reservation?.reservationSlotItem ?? []);
-  late List<ReservationSlotItem> resSorted = reservationSlots..sort(((a,b) => a.selectedDate.compareTo(b.selectedDate)));
+  // final List<ReservationSlotItem> reservationSlots = [];
+  // reservationSlots.addAll(resPreviewer.reservation?.reservationSlotItem ?? []);
+  // late List<ReservationSlotItem> resSorted = reservationSlots..sort(((a,b) => a.selectedDate.compareTo(b.selectedDate)));
 
   final bool isEnded = resPreviewer.reservation?.reservationState == ReservationSlotState.completed;
 
@@ -580,231 +602,234 @@ Widget getSearchFooterWidget(BuildContext context, DashboardModel model, UniqueI
   }
 
   final String? listingTitle = resPreviewer.listing?.listingProfileService.backgroundInfoServices.listingName.getOrCrash();
-  final String activityTitle = getTitleForActivityOption(context, resPreviewer.reservation!.reservationSlotItem.first.selectedActivityType) ?? 'rent';
+  final String activityTitle = 'rent..';
+  //  getTitleForActivityOption(context, resPreviewer.reservation!.reservationSlotItem.first.selectedActivityType) ?? 'rent';
 
-  return Column(
-    mainAxisAlignment: MainAxisAlignment.start,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(
-            width: 6,
-          ),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
+  return RepaintBoundary(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(
+              width: 6,
+            ),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      // Container(
+                      //   height: 45,
+                      //   width: 45,
+                      //   decoration: BoxDecoration(
+                      //     color: textColor,
+                      //     borderRadius: const BorderRadius.all(Radius.circular(35)),
+                      //   ),
+                      //   child: Padding(
+                      //     padding: const EdgeInsets.all(1.25),
+                      //     child: Container(
+                      //     width: 30,
+                      //     height: 30,
+                      //     decoration:  BoxDecoration(
+                      //         color: backgroundColor,
+                      //         border: Border.all(color: textColor),
+                      //         borderRadius: BorderRadius.all(Radius.circular(30))
+                      //     ),
+                      //     child: CachedNetworkImage(
+                      //       imageUrl: resPreviewer.reservationOwnerProfile?.photoUri ?? '',
+                      //       imageBuilder: (context, imageProvider) => CircleAvatar(backgroundImage: imageProvider),
+                      //       placeholder: (context, url) => CircleAvatar(backgroundImage: Image.asset('assets/profile-avatar.png').image),
+                      //       errorWidget: (context, url, error) => Center(child: Text((resPreviewer.reservationOwnerProfile?.legalName.isValid() == true) ? resPreviewer.reservationOwnerProfile!.legalName.value.fold((l) => resPreviewer.reservationOwnerProfile?.emailAddress.value.fold((l) => '..', (r) => r)[0] ?? '..', (r) => r)[0] : resPreviewer.reservationOwnerProfile?.emailAddress.value.fold((l) => '..', (r) => r)[0] ?? '..', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15))),
+                      //       )
+                      //     ),
+                      //   ),
+                      // ),
+                      const SizedBox(
+                        width: 15,
+                      ),
+                      Expanded(
+                        child: InkWell(
+                          onTap: didSelectItem,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(resPreviewer.activityManagerForm?.profileService.activityBackground.activityTitle.value.fold((l) => (resPreviewer.listing != null) ? '$activityTitle at $listingTitle' : '$activityTitle Activity', (r) => r) ?? '$activityTitle at $listingTitle', style: TextStyle(color: textColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis), maxLines: 1),
+                              Text(resPreviewer.activityManagerForm?.profileService.activityBackground.activityDescription1.value.fold((l) => 'Get Activity Started', (r) => r) ?? 'Get Activity Started', style: TextStyle(color: secondaryTextColor), maxLines: 1, overflow: TextOverflow.ellipsis)
+                              // if (!isEnded) Text('Starts: ${DateFormat.yMMMd().format(resSorted.first.selectedDate)}', style: TextStyle(color: secondaryTextColor), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+    
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      height: 45,
-                      width: 45,
-                      decoration: BoxDecoration(
-                        color: textColor,
-                        borderRadius: const BorderRadius.all(Radius.circular(35)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(1.25),
-                        child: Container(
-                        width: 30,
-                        height: 30,
-                        decoration:  BoxDecoration(
-                            color: backgroundColor,
-                            border: Border.all(color: textColor),
-                            borderRadius: BorderRadius.all(Radius.circular(30))
-                        ),
-                        child: CachedNetworkImage(
-                          imageUrl: resPreviewer.reservationOwnerProfile?.photoUri ?? '',
-                          imageBuilder: (context, imageProvider) => CircleAvatar(backgroundImage: imageProvider),
-                          placeholder: (context, url) => CircleAvatar(backgroundImage: Image.asset('assets/profile-avatar.png').image),
-                          errorWidget: (context, url, error) => Center(child: Text((resPreviewer.reservationOwnerProfile?.legalName.isValid() == true) ? resPreviewer.reservationOwnerProfile!.legalName.value.fold((l) => resPreviewer.reservationOwnerProfile?.emailAddress.value.fold((l) => '..', (r) => r)[0] ?? '..', (r) => r)[0] : resPreviewer.reservationOwnerProfile?.emailAddress.value.fold((l) => '..', (r) => r)[0] ?? '..', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 15))),
-                          )
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 15,
-                    ),
-                    Expanded(
-                      child: InkWell(
-                        onTap: didSelectItem,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(resPreviewer.activityManagerForm?.profileService.activityBackground.activityTitle.value.fold((l) => (resPreviewer.listing != null) ? '$activityTitle at $listingTitle' : '$activityTitle Activity', (r) => r) ?? '$activityTitle at $listingTitle', style: TextStyle(color: textColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis), maxLines: 1),
-                            Text(resPreviewer.activityManagerForm?.profileService.activityBackground.activityDescription1.value.fold((l) => 'Get Activity Started', (r) => r) ?? 'Get Activity Started', style: TextStyle(color: secondaryTextColor), maxLines: 1, overflow: TextOverflow.ellipsis)
-                            // if (!isEnded) Text('Starts: ${DateFormat.yMMMd().format(resSorted.first.selectedDate)}', style: TextStyle(color: secondaryTextColor), maxLines: 1, overflow: TextOverflow.ellipsis),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
+                 // Container(
+                 //   height: 40,
+                 //   width: 40,
+                 //   decoration: BoxDecoration(
+                 //     borderRadius: BorderRadius.circular(30),
+                 //     color: textColor.withOpacity(0.07),
+                 //   ),
+                 //   child: IconButton(
+                 //     padding: EdgeInsets.zero,
+                 //     onPressed: () {
+                 //
+                 //       for (ReservationSlotItem slotItem in reservationSlots) {
+                 //          for (ReservationTimeFeeSlotItem slot in groupConsecutiveSlots(slotItem.selectedSlots)) {
+                 //
+                 //
+                 //         }
+                 //       }
+                 //     },
+                 //     icon: Icon(Icons.calendar_today, size: 21, color: textColor),
+                 //     tooltip: 'Add to Calendar',
+                 //     ),
+                 //   ),
+                 //  const SizedBox(width: 8),
+                  // watchCurrentAttendeeForInterestedState(
+                  //     textColor,
+                  //     backgroundColor,
+                  //     resPreviewer.reservation!.reservationId,
+                  //     currentUserId,
+                  //     isLoading,
+                  //     didSelectInterested: didSelectInterested
+                  // )
               ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Row(
-            children: [
-               // Container(
-               //   height: 40,
-               //   width: 40,
-               //   decoration: BoxDecoration(
-               //     borderRadius: BorderRadius.circular(30),
-               //     color: textColor.withOpacity(0.07),
-               //   ),
-               //   child: IconButton(
-               //     padding: EdgeInsets.zero,
-               //     onPressed: () {
-               //
-               //       for (ReservationSlotItem slotItem in reservationSlots) {
-               //          for (ReservationTimeFeeSlotItem slot in groupConsecutiveSlots(slotItem.selectedSlots)) {
-               //
-               //
-               //         }
-               //       }
-               //     },
-               //     icon: Icon(Icons.calendar_today, size: 21, color: textColor),
-               //     tooltip: 'Add to Calendar',
-               //     ),
-               //   ),
-               //  const SizedBox(width: 8),
-                watchCurrentAttendeeForInterestedState(
-                    textColor,
-                    backgroundColor,
-                    resPreviewer.reservation!.reservationId,
-                    currentUserId,
-                    isLoading,
-                    didSelectInterested: didSelectInterested
-                )
-            ],
-          )
-        ],
-      ),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          const SizedBox(height: 5),
-          if (resPreviewer.reservation!.reservationState == ReservationSlotState.confirmed && !hasReservationToday(reservationSlots)) Chip(
-            padding: EdgeInsets.all(3),
-            side: BorderSide.none,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            backgroundColor: model.paletteColor,
-            label: Row(
-                children: [
-                  Text(DateFormat.d().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.accentColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                  const SizedBox(width: 8),
-                  Text(DateFormat.MMM().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)
-              ]
-            ),
-            avatar: Icon(CupertinoIcons.calendar, size: 30, color: model.accentColor),
-          ),
-          if (resPreviewer.reservation!.reservationState == ReservationSlotState.confirmed && hasReservationToday(reservationSlots)) Chip(
-            padding: EdgeInsets.all(10),
-            side: BorderSide.none,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            backgroundColor: model.paletteColor,
-            label: Text('Starting Soon', style: TextStyle(
-                color: model.accentColor,
-                fontSize: model.secondaryQuestionTitleFontSize,
-                fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            avatar: Icon(CupertinoIcons.calendar, size: 30, color: model.accentColor),
-          ),
-          if (resPreviewer.reservation!.reservationState == ReservationSlotState.current && hasReservationToday(reservationSlots)) Chip(
-            padding: EdgeInsets.all(10),
-            side: BorderSide.none,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            backgroundColor: Colors.red,
-            label: Text('Today', style: TextStyle(
-                color: model.accentColor,
-                fontSize: model.secondaryQuestionTitleFontSize,
-                fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            avatar: Icon(CupertinoIcons.dot_radiowaves_left_right, color: model.accentColor),
-          ),
-          if (resPreviewer.reservation?.reservationState == ReservationSlotState.current && hasReservationToday(reservationSlots) == false) Chip(
-            padding: EdgeInsets.all(5),
-            side: BorderSide.none,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            backgroundColor: Colors.red,
-            label: Row(
-                children: [
-                  Text(DateFormat.d().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.accentColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                  const SizedBox(width: 8),
-                  Text(DateFormat.MMM().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)
-                ]
-            ),
-            avatar: Icon(CupertinoIcons.calendar_today, size: 30, color: model.accentColor),
-          ),
-          if (isEnded) Chip(
-            padding: EdgeInsets.all(3),
-            side: BorderSide.none,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            backgroundColor: backgroundColor,
-            label: Row(
-              children: [
-                Text(DateFormat.d().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.disabledTextColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-                const SizedBox(width: 8),
-                Text(DateFormat.MMM().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)
+            )
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            const SizedBox(height: 5),
+            if (resPreviewer.reservation!.reservationState == ReservationSlotState.confirmed && !hasReservationToday([])) Chip(
+              padding: EdgeInsets.all(3),
+              side: BorderSide.none,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: model.paletteColor,
+              label: Row(
+                  children: [
+                    Text(DateFormat.d().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.accentColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                    const SizedBox(width: 8),
+                    Text(DateFormat.MMM().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)
                 ]
               ),
-            avatar: Icon(CupertinoIcons.calendar, size: 30, color: model.disabledTextColor),
-          ),
-
-          const SizedBox(width: 8),
-          // Visibility(
-          //   visible: isEnded == false || resPreviewer.reservation!.reservationState == ReservationSlotState.current,
-          //   child: Visibility(
-          //       visible: resPreviewer.activityManagerForm?.activityAttendance.isLimitedAttendance == true || resPreviewer.activityManagerForm?.activityAttendance.isTicketBased == null || resPreviewer.activityManagerForm?.activityAttendance.isPassBased == null || resPreviewer.activityManagerForm?.activityAttendance.isLimitedAttendance == null,
-          //       child: InkWell(
-          //         onTap: didSelectItem,
-          //         child: Container(
-          //           width: 100,
-          //           decoration: BoxDecoration(
-          //             color: textColor,
-          //             borderRadius: const BorderRadius.all(Radius.circular(40)),
-          //           ),
-          //           child: Padding(
-          //             padding: const EdgeInsets.all(8.0),
-          //             child: Center(child: Text('Join', style: TextStyle(color: backgroundColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
-          //         ),
-          //       ),
-          //     )
-          //   ),
-          // ),
-          ///  tickets
-          Visibility(
-            visible: isEnded == false || resPreviewer.reservation!.reservationState == ReservationSlotState.current,
-            child: Visibility(
-              visible: resPreviewer.activityManagerForm?.activityAttendance.isTicketBased == true,
-              child: InkWell(
-                onTap: didSelectItem,
-                child: Container(
-                  width: 160,
-                  decoration: BoxDecoration(
-                    color: textColor,
-                    borderRadius: const BorderRadius.all(Radius.circular(40)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Center(child: Text('Find Tickets', style: TextStyle(color: backgroundColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
-                  ),
+              avatar: Icon(CupertinoIcons.calendar, size: 30, color: model.accentColor),
+            ),
+            if (resPreviewer.reservation!.reservationState == ReservationSlotState.confirmed && hasReservationToday([])) Chip(
+              padding: EdgeInsets.all(10),
+              side: BorderSide.none,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: model.paletteColor,
+              label: Text('Starting Soon', style: TextStyle(
+                  color: model.accentColor,
+                  fontSize: model.secondaryQuestionTitleFontSize,
+                  fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              avatar: Icon(CupertinoIcons.calendar, size: 30, color: model.accentColor),
+            ),
+            if (resPreviewer.reservation!.reservationState == ReservationSlotState.current && hasReservationToday([])) Chip(
+              padding: EdgeInsets.all(10),
+              side: BorderSide.none,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: Colors.red,
+              label: Text('Today', style: TextStyle(
+                  color: model.accentColor,
+                  fontSize: model.secondaryQuestionTitleFontSize,
+                  fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              avatar: Icon(CupertinoIcons.dot_radiowaves_left_right, color: model.accentColor),
+            ),
+            if (resPreviewer.reservation?.reservationState == ReservationSlotState.current && hasReservationToday([]) == false) Chip(
+              padding: EdgeInsets.all(5),
+              side: BorderSide.none,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: Colors.red,
+              label: Row(
+                  children: [
+                    Text(DateFormat.d().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.accentColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                    const SizedBox(width: 8),
+                    Text(DateFormat.MMM().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.accentColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)
+                  ]
+              ),
+              avatar: Icon(CupertinoIcons.calendar_today, size: 30, color: model.accentColor),
+            ),
+            if (isEnded) Chip(
+              padding: EdgeInsets.all(3),
+              side: BorderSide.none,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: backgroundColor,
+              label: Row(
+                children: [
+                  Text(DateFormat.d().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.disabledTextColor, fontSize: model.questionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                  const SizedBox(width: 8),
+                  Text(DateFormat.MMM().format(upcomingDateOrFinished(resPreviewer.reservation!) ?? DateTime.now()), style: TextStyle(color: model.disabledTextColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)
+                  ]
                 ),
-              ),
+              avatar: Icon(CupertinoIcons.calendar, size: 30, color: model.disabledTextColor),
             ),
-          ),
-        ],
-      )
-    ],
+    
+            // const SizedBox(width: 8),
+            // Visibility(
+            //   visible: isEnded == false || resPreviewer.reservation!.reservationState == ReservationSlotState.current,
+            //   child: Visibility(
+            //       visible: resPreviewer.activityManagerForm?.activityAttendance.isLimitedAttendance == true || resPreviewer.activityManagerForm?.activityAttendance.isTicketBased == null || resPreviewer.activityManagerForm?.activityAttendance.isPassBased == null || resPreviewer.activityManagerForm?.activityAttendance.isLimitedAttendance == null,
+            //       child: InkWell(
+            //         onTap: didSelectItem,
+            //         child: Container(
+            //           width: 100,
+            //           decoration: BoxDecoration(
+            //             color: textColor,
+            //             borderRadius: const BorderRadius.all(Radius.circular(40)),
+            //           ),
+            //           child: Padding(
+            //             padding: const EdgeInsets.all(8.0),
+            //             child: Center(child: Text('Join', style: TextStyle(color: backgroundColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
+            //         ),
+            //       ),
+            //     )
+            //   ),
+            // ),
+            ///  tickets
+            // Visibility(
+            //   visible: isEnded == false || resPreviewer.reservation!.reservationState == ReservationSlotState.current,
+            //   child: Visibility(
+            //     visible: resPreviewer.activityManagerForm?.activityAttendance.isTicketBased == true,
+            //     child: InkWell(
+            //       onTap: didSelectItem,
+            //       child: Container(
+            //         width: 160,
+            //         decoration: BoxDecoration(
+            //           color: textColor,
+            //           borderRadius: const BorderRadius.all(Radius.circular(40)),
+            //         ),
+            //         child: Padding(
+            //           padding: const EdgeInsets.all(8.0),
+            //           child: Center(child: Text('Find Tickets', style: TextStyle(color: backgroundColor, fontSize: model.secondaryQuestionTitleFontSize, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
+          ],
+        )
+      ],
+    ),
   );
 }
 

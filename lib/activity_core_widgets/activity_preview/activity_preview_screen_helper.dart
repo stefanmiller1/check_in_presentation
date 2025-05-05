@@ -26,7 +26,7 @@ List<EventMerchantVendorProfile> filterProfilesByJoinedAttendees(
   }).toList();
 }
 
-Widget getActivityBackgroundForPreview(BuildContext context, DashboardModel model, bool showSuggestions, bool isOwner, ActivityManagerForm activityForm, ReservationItem reservation, List<UniqueId> linkedCommunities, UserProfileModel? activityOwner) {
+Widget getActivityBackgroundForPreview(BuildContext context, DashboardModel model, bool showSuggestions, bool isOwner, String? currentUserId, ActivityManagerForm activityForm, ReservationItem reservation, List<UniqueId> linkedCommunities, UserProfileModel? activityOwner) {
   return SizedBox(
     width: ReservationHelperCore.previewerWidth,
     child: Column(
@@ -47,7 +47,15 @@ Widget getActivityBackgroundForPreview(BuildContext context, DashboardModel mode
             const SizedBox(height: 8),
             Divider(color: model.disabledTextColor),
             const SizedBox(height: 8),
-            getPostedOnBehalfColumn(context, model, activityOwner, activityForm),
+            getPostedOnBehalfColumn(
+              context, 
+              model,
+              activityOwner,
+              currentUserId,
+              null, 
+              reservation,
+              activityForm,
+            ),
           ]
         ),
         getActivityBackgroundRowTwo(context, 620, model, showSuggestions, activityForm, activityOwner, reservation)
@@ -208,7 +216,7 @@ Widget getActivityBackgroundRowOne(BuildContext context, DashboardModel model, d
           model: model,
           width: width,
           text: activityForm.profileService.activityBackground.activityDescription1.value.fold(
-            (l) => 'Tell them about the what\'s in store. So far, they know Reservation was made ${getTitleForActivityOption(context, activityForm.activityType.activityId) ?? ''}, tell them how you plan to make the space into a unique experience. \n You also have the option to Add more details here.',
+            (l) => 'Tell them about the what\'s in store and how you plan to make the space into a unique experience. \n You also have the option to Add more details here.',
             (r) => r,
           )
         ),
@@ -222,6 +230,31 @@ Widget getActivityBackgroundRowOne(BuildContext context, DashboardModel model, d
             SizedBox(width: 10),
             Expanded(child: Text(activityForm.profileService.activityBackground.activityDescription2?.value.fold((l) => '', (r) => r) ?? '', style: TextStyle(color: model.disabledTextColor), overflow: TextOverflow.ellipsis, maxLines: 2)),
           ],
+        ),
+      ),
+      Visibility(
+        visible: (activityForm.activityTypes ?? []).isNotEmpty,
+        child: Padding(
+          padding: EdgeInsets.only(left: 8),
+            child: Column(
+            children: [
+              ...(activityForm.activityTypes ?? []).take(3).map((e) => 
+              ListTile(
+                leading: Icon(getIconDataForActivity(context, e.activity), size: 28, color: model.paletteColor),
+                title: Text(getTitleForActivityOption(context, e.activity) ?? '', style: TextStyle(color: model.paletteColor, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis, maxLines: 1),
+                subtitle: Text(getDescriptionForActivityTypeOption(context, e.activity), style: TextStyle(color: model.disabledTextColor), overflow: TextOverflow.ellipsis, maxLines: 2),
+              )
+              ).toList(),
+              if ((activityForm.activityTypes ?? []).length > 3)
+              ListTile(
+                leading: Icon(Icons.more_horiz, color: model.paletteColor),
+                title: Text('See all', style: TextStyle(color: model.paletteColor)),
+                onTap: () {
+                // Add your 'see all' functionality here
+                },
+              ),
+            ],
+          )
         ),
       ),
       reservationDatesWrapped(
@@ -327,6 +360,7 @@ Widget getActivityBackgroundRowTwo(BuildContext context, double width, Dashboard
 Widget getActivityRequirementsColumn(BuildContext context, DashboardModel model, bool isLoading, bool showSuggestions, bool isLessThanMain, UserProfileModel? activityOwner, ActivityManagerForm activityForm, ReservationItem reservation, List<AttendeeItem> attendees, List<EventMerchantVendorProfile>? listOfVendors, String? currentUserAttending, {required Function() didSelectAttendees}) {
   bool activityAgeSetting = activityForm.profileService.activityRequirements.minimumAgeRequirement >= 18 && !activityForm.profileService.activityRequirements.isSeventeenAndUnder;
   bool rowOneProvisions = activityForm.profileService.activityRequirements.isSeventeenAndUnder ||
+      activityForm.profileService.activityRequirements.isAgeRestricted == true ||
       activityForm.profileService.activityRequirements.minimumAgeRequirement >= 18 && !(activityForm.profileService.activityRequirements.isSeventeenAndUnder) ||
       activityForm.profileService.activityRequirements.isMensOnly == true ||
       activityForm.profileService.activityRequirements.isWomenOnly == true ||
@@ -527,7 +561,14 @@ Widget getActivityRequirementRowOne(BuildContext context, DashboardModel model, 
           subtitle: Text('This Activity will be catered specifically for kids'),
         ),
       ),
-
+      Visibility(
+        visible: activityForm.profileService.activityRequirements.isAgeRestricted == true,
+        child: ListTile(
+          leading: Icon(Icons.info_outline, color: model.paletteColor),
+          title: Text('For ages 18 and up', style: TextStyle(color: model.paletteColor), overflow: TextOverflow.ellipsis, maxLines: 1),
+          subtitle: Text('This Activity will be catered specifically for adults'),
+        )
+      ),
       Visibility(
         visible: activityForm.profileService.activityRequirements.minimumAgeRequirement >= 18 && !(activityForm.profileService.activityRequirements.isSeventeenAndUnder),
         child: ListTile(

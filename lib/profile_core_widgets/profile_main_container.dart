@@ -17,6 +17,7 @@ class ProfileMainContainer extends StatefulWidget {
 
 class _ProfileMainContainerState extends State<ProfileMainContainer> {
 
+  late bool isLoading = false;
   late bool isGeneralProfileEditorVisible = false;
   late bool isVendorMerchProfileEditorVisible = false;
   late bool isCommunityProfileEditorVisible = false;
@@ -40,7 +41,7 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
         },
         profileType: ProfileTypeMarker.generalProfile,
         profileMainEditor: ProfileEditorWidgetModel(
-          height: 195,
+          height: 400,
           editorItem: GeneralProfileCreatorEditor(
             model: widget.model,
             currentUser: userProfile,
@@ -165,11 +166,25 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
 
   @override
   void initState() {
+    initLoading();
     super.initState();
   }
 
+  void initLoading() {
+    setState(() {
+      isLoading = true;
+      Future.delayed(const Duration(milliseconds: 800), () {
+        setState(() {
+          isLoading = false;
+        });
+      });
+    });
+  }
+  
+
   @override
   Widget build(BuildContext context) {
+    
     if (widget.currentUserProfile != null) {
       return getVendorMerchProfiles(widget.currentUserProfile!);
     }
@@ -177,11 +192,15 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
         child: BlocBuilder<UserProfileWatcherBloc, UserProfileWatcherState>(
             builder: (context, authState) {
               return authState.maybeMap(
+                loadInProgress: (_) => JumpingDots(color: widget.model.paletteColor, numberOfDots: 3),
                 loadSelectedProfileSuccess: (item) {
                     return getVendorMerchProfiles(item.profile);
                   },
                   orElse: () {
                     /// user cant be found
+                    if (isLoading) {
+                      return Container();
+                    }
                     return profileNotFound(context, widget.model);
             }
           );
@@ -218,7 +237,7 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
   }
 
   Widget getReservations(UserProfileModel currentUserProfile, List<ListingManagerForm> listings, List<EventMerchantVendorProfile> vProfiles) {
-    return BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations([ReservationSlotState.current, ReservationSlotState.confirmed], currentUserProfile, false, 3, true)),
+    return BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations([ReservationSlotState.current, ReservationSlotState.confirmed], currentUserProfile, false, 3, null, null, true, null, null, null)),
       child: BlocBuilder<ReservationManagerWatcherBloc, ReservationManagerWatcherState>(
           builder: (context, state) {
             return state.maybeMap(
@@ -231,7 +250,7 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
   }
 
   Widget getReservationsCompleted(UserProfileModel currentUserProfile, List<ListingManagerForm> listings, List<ReservationItem> reservations, List<EventMerchantVendorProfile> vProfiles) {
-    return BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations([ReservationSlotState.completed], currentUserProfile, false, 6, true)),
+    return BlocProvider(create: (_) => getIt<ReservationManagerWatcherBloc>()..add(ReservationManagerWatcherEvent.watchCurrentUsersReservations([ReservationSlotState.completed], currentUserProfile, false, 6, null, null, true, null, null, null)),
       child: BlocBuilder<ReservationManagerWatcherBloc, ReservationManagerWatcherState>(
           builder: (context, state) {
             return state.maybeMap(
@@ -280,6 +299,7 @@ class _ProfileMainContainerState extends State<ProfileMainContainer> {
     return ProfileMainDashboardMain(
         model: widget.model,
         isMobileOnly: widget.isMobileViewOnly == true,
+        initialTab: currentProfileTab,
         profileContainerItem: profileModel(
             currentUserProfile,
             vProfiles,

@@ -75,11 +75,29 @@ class _VendorMerchantProfileWidgetState extends State<VendorMerchantProfileWidge
           mainSectionWidget: _buildAttendingReservations(),
           emptyMainSectionWidget: (widget.isOwner) ? _buildEmptyAttendingOwner() : _buildEmptyAttendingNonOwner(),
           onEditPressed: () {
-            setState(() {
-              didSelectSeeVendorsAppearances(widget.currentUser);
-            });
-          }
+          setState(() {
+            didSelectSeeVendorsAppearances(widget.currentUser);
+          });
+        }
       ),
+      /// profile section for calendar and work status updates
+      // ProfileSectionObject(
+      //     hasValues: false,
+      //     sectionTitle: 'Calendar and Work Status',
+      //     sectionDescription: 'See where ${widget.currentUser.legalName.getOrCrash()} will be next',
+      //     sectionIcon: CupertinoIcons.calendar_badge_plus,
+      //     editButtonTitle: (widget.isOwner) ? 'Edit' : 'See More',
+      //     isLoading: isLoading,
+      //     isOwner: false,
+      //     mainSectionWidget: Container(
+      //     ),
+      //     /// participate to
+      //     emptyMainSectionWidget: Container(
+      //     ),
+      //     onEditPressed: () {
+
+      //     }
+      // ),
       ProfileSectionObject(
           hasValues: false,
           sectionTitle: 'Thoughts and Feedback - Coming Soon',
@@ -149,7 +167,7 @@ class _VendorMerchantProfileWidgetState extends State<VendorMerchantProfileWidge
                   width: 500,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: widget.model.webBackgroundColor,
+                    color: widget.model.accentColor,
                     borderRadius: const BorderRadius.all(Radius.circular(15)),
                   ),
                   child: Align(
@@ -159,9 +177,27 @@ class _VendorMerchantProfileWidgetState extends State<VendorMerchantProfileWidge
               ),
             ],
           ),
-          const SizedBox(height: 25),
-          reportProfileWidget(widget.model, widget.currentUser.userId.getOrCrash())
-
+          if (widget.vendorProfiles.isNotEmpty) buildProfileVisitorActionButtons(
+            context,
+            widget.model,
+            widget.isOwner,
+            [],
+            widget.currentUser,
+            widget.vendorProfiles.isNotEmpty ? widget.vendorProfiles[0] : null,
+            ProfileTypeMarker.vendorProfile,
+            didSelectSendMessage:() {
+              showNewMessagePopOver(
+                  context,
+                  widget.currentUser, 
+                  null,
+                  widget.vendorProfiles.isNotEmpty ? widget.vendorProfiles[0] : null, 
+                  NewMessageTypes.hostInquireVendor,
+                  widget.model,
+                );
+            }
+          ),
+          if (!widget.isOwner) const SizedBox(height: 25),
+          if (!widget.isOwner) reportProfileWidget(widget.model, widget.currentUser.userId.getOrCrash())
         ]
       ),
       profileContent: _buildMainReviewProfile(context, profileSectionsList),
@@ -177,7 +213,6 @@ class _VendorMerchantProfileWidgetState extends State<VendorMerchantProfileWidge
       isMobileOnly: widget.isMobileOnly,
       stickyStartOffset: 50
     );
-
   }
 
   Widget _buildMainReviewProfile(BuildContext context, List<ProfileSectionObject> sectionList) {
@@ -198,9 +233,7 @@ class _VendorMerchantProfileWidgetState extends State<VendorMerchantProfileWidge
   /// create new vendor profile setup
   Widget _buildVendorProfile() {
     if (widget.vendorProfiles.isNotEmpty) {
-
       final EventMerchantVendorProfile profile = widget.vendorProfiles[0];
-
       return getVendorMerchProfileHeader(
           widget.model,
           widget.isOwner,
@@ -360,7 +393,7 @@ class _VendorMerchantProfileWidgetState extends State<VendorMerchantProfileWidge
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Thinking of Participating in an Activity??',
+            'Already participating in an Activity?? - add it to the list!',
             style: TextStyle(
               color: widget.model.disabledTextColor,
               fontWeight: FontWeight.bold,
@@ -375,10 +408,11 @@ class _VendorMerchantProfileWidgetState extends State<VendorMerchantProfileWidge
               borderRadius: BorderRadius.circular(15),
               color: widget.model.accentColor,
             ),
+
           ),
           const SizedBox(height: 8),
           Text(
-            'heck out Organizers and Activities Happening soon near you - find one and apply!.',
+            'Check out Organizers and Activities Happening soon near you - find or add one!.',
             style: TextStyle(color: widget.model.disabledTextColor),
           ),
           const SizedBox(height: 16),
@@ -417,7 +451,7 @@ class _VendorMerchantProfileWidgetState extends State<VendorMerchantProfileWidge
                 color: widget.model.accentColor,
               ),
               child: Center(
-                child: Text('Get Started', style: TextStyle(color: widget.model.disabledTextColor)),
+                child: Text('Add an Activity', style: TextStyle(color: widget.model.disabledTextColor)),
               ),
             ),
           ),
@@ -476,6 +510,9 @@ class _VendorMerchantProfileWidgetState extends State<VendorMerchantProfileWidge
       ),
     );
   }
+
+  //// ----   CALENDAR ---- ////
+  
 
   //// ---- REVIEWS ---- ////
   Widget _buildNoReviewsYet() {

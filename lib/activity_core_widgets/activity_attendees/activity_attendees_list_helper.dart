@@ -54,51 +54,54 @@ Widget getActivityAttendeeTile(DashboardModel model, AttendeeItem attendee, bool
   );
 }
 
-Widget getActivityVendorProfileTile(DashboardModel model, EventMerchantVendorProfile profile, bool isSelected, {required Function(AttendeeItem) didSelectAttendee}) {
+Widget getActivityVendorProfileTile(DashboardModel model, EventMerchantVendorProfile profile, bool isSelected, {required Function(EventMerchantVendorProfile) didSelectAttendee}) {
   return Padding(
     padding: const EdgeInsets.all(4.0),
-    child: Container(
-      decoration: BoxDecoration(
-        color: model.accentColor,
-        borderRadius: BorderRadius.circular(18),
-        border: (isSelected) ? Border.all(color: model.paletteColor) : null,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Stack(
-          children: [
-            getVendorMerchProfileHeader(
-              model,
-              false,
-              profile,
-              null,
-              didSelectShare: () {
+    child: InkWell(
+      onTap: () => didSelectAttendee(profile),
+      child: Container(
+        decoration: BoxDecoration(
+          color: model.accentColor,
+          borderRadius: BorderRadius.circular(18),
+          border: (isSelected) ? Border.all(color: model.paletteColor) : null,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Stack(
+            children: [
+              getVendorMerchProfileHeader(
+                model,
+                false,
+                profile,
+                null,
+                didSelectShare: () {
 
-              },
-              didSelectAddPartners: () {
+                },
+                didSelectAddPartners: () {
 
-              },
-              didSelectEdit: () {
+                },
+                didSelectEdit: () {
 
-              },
-            ),
-            Positioned(
-                top: 10,
-                right: 10,
-                child: retrieveUserProfile(
-                    profile.profileOwner.getOrCrash(),
-                    model,
-                    null,
-                    model.paletteColor,
-                    model.secondaryQuestionTitleFontSize,
-                    profileType: UserProfileType.firstLetterOnlyProfile,
-                    trailingWidget: null,
-                    selectedButton: (e) {
+                },
+              ),
+              Positioned(
+                  top: 10,
+                  right: 10,
+                  child: retrieveUserProfile(
+                      profile.profileOwner.getOrCrash(),
+                      model,
+                      null,
+                      model.paletteColor,
+                      model.secondaryQuestionTitleFontSize,
+                      profileType: UserProfileType.firstLetterOnlyProfile,
+                      trailingWidget: null,
+                      selectedButton: (e) {
 
-                    }
+                  }
                 )
-            )
-          ],
+              )
+            ],
+          ),
         ),
       ),
     ),
@@ -205,4 +208,71 @@ IconData? getIconForAttendeeType(AttendeeType type) {
     case AttendeeType.interested:
       // TODO: Handle this case.
   }
+}
+
+
+void showAttendeesList(BuildContext context, DashboardModel model, ReservationItem reservation, ActivityManagerForm activityForm, List<AttendeeItem> attendees, AttendeeType tabType) {
+   if (kIsWeb && (Responsive.isMobile(context) == false)) {
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Attendees',
+        barrierColor: model.disabledTextColor.withOpacity(0.34),
+        transitionDuration: Duration(milliseconds: 350),
+        pageBuilder: (BuildContext contexts, anim1, anim2) {
+          return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Align(
+                alignment: Alignment.center,
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: model.webBackgroundColor,
+                      borderRadius: BorderRadius.all(Radius.circular(17.5))
+                  ),
+                  width: 750,
+                  height: 900,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(17.5)),
+                    child: ActivityAttendeesListScreen(
+                      model: model,
+                      reservationItem: reservation,
+                      activityManagerForm: activityForm,
+                      attendeeTypeTab: tabType,
+                      attendeeList: attendees,
+                      currentUser: facade.FirebaseChatCore.instance.firebaseUser?.uid,
+                      showHeader: true,
+                      didSelectAttendee: (AttendeeItem attendee, UserProfileModel user) {
+                      },
+                    ),
+                  ),
+              ),
+            )
+          );
+        },
+        transitionBuilder: (context, anim1, anim2, child) {
+          return Transform.scale(
+              scale: anim1.value,
+              child: Opacity(
+              opacity: anim1.value,
+              child: child
+            )
+          );
+        },
+      );
+    } else {
+    Navigator.of(context).push(MaterialPageRoute(builder: (newContext) {
+        return ActivityAttendeesListScreen(
+            model: model,
+            reservationItem: reservation,
+            activityManagerForm: activityForm,
+            attendeeTypeTab: tabType,
+            attendeeList: attendees,
+            currentUser: facade.FirebaseChatCore.instance.firebaseUser?.uid,
+            showHeader: true,
+            didSelectAttendee: (AttendeeItem attendee, UserProfileModel user) {
+
+            },
+        );
+      }));
+    }
 }

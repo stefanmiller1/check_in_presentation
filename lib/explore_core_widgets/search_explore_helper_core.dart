@@ -5,11 +5,13 @@ class ExploreWebHelperCore {
   static late bool isLoading = false;
   // static late bool selectedListing = false;
   // static late bool selectedSearch = false;
-  static SearchExploreHelperMarker searchExploreMarker = SearchExploreHelperMarker.map;
+  static late ExploreFilterObject? currentFilterObject = null;
+  static SearchExploreHelperMarker searchExploreMarker = SearchExploreHelperMarker.search;
   static UniqueId? currentFacilityItemId = null;
   static UniqueId? currentReservationItemId = null;
   static late ListingManagerForm? selectedFacilityItem = null;
   static late ReservationItem? selectedReservationItem = null;
+
 
   static void didSelectFacilityItem(BuildContext context, ListingManagerForm listing) {
     ExploreWebHelperCore.isLoading = true;

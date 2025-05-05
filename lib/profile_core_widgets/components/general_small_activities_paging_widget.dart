@@ -22,7 +22,7 @@ class _PagingSmallActivitiesWidgetState extends State<PagingSmallActivitiesWidge
   int _currentPage = 0;
   late bool showButton = false;
   late final Future<List<ReservationPreviewer>> _getReservationForSmallWidgetList;
-
+  late PageController _reservationPageController;
 
   /// see more activities
 
@@ -100,11 +100,24 @@ class _PagingSmallActivitiesWidgetState extends State<PagingSmallActivitiesWidge
   }
 
 
+@override
+  void dispose() {
+    _reservationPageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Initialize or update PageController when dependencies change
+    _reservationPageController = (kIsWeb) ? PageController(viewportFraction: (Responsive.isDesktop(context)) ? 1/2.1 : 450 / MediaQuery.of(context).size.width) : PageController(viewportFraction: 0.9);
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
-
-    final PageController _reservationPageController = (kIsWeb) ? PageController(viewportFraction: (Responsive.isDesktop(context)) ? 1/2.1 : 450 / MediaQuery.of(context).size.width) : PageController(viewportFraction: 0.9);
 
     return FutureBuilder<List<ReservationPreviewer>>(
         future: _getReservationForSmallWidgetList,
@@ -116,7 +129,7 @@ class _PagingSmallActivitiesWidgetState extends State<PagingSmallActivitiesWidge
           if (snap.connectionState == ConnectionState.waiting) {
             return Container(
               height: widget.height,
-              child: emptyLargeListView(context, 3, Axis.horizontal, kIsWeb),
+              child: emptyLargeListView(context, 3, 300, Axis.horizontal, kIsWeb),
             );
           }
 

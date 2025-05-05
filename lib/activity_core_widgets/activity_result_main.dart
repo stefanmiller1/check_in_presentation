@@ -29,7 +29,7 @@ class _ActivityResultMainState extends State<ActivityResultMain> with TickerProv
 
 
   void updateStateSafely() {
-      Future.delayed(const Duration(milliseconds: 750), () {
+      Future.delayed(const Duration(milliseconds: 350), () {
           isLoading = false;
       });
   }
@@ -235,6 +235,42 @@ class _ActivityResultMainState extends State<ActivityResultMain> with TickerProv
       ),
     );
   }
+}
+
+Future<List<ReservationPreviewer>> getActivitiesWithoutWeight(List<ReservationItem> reservations) async {
+  late List<ReservationPreviewer> resToPreview = [];
+
+  for (ReservationItem reservationItem in reservations) {
+    late int weight = 0;
+
+    ReservationPreviewer resPreview = ReservationPreviewer(
+        reservation: reservationItem,
+        previewWeight: 0
+    );
+
+try {
+      final activityManagerForm = await facade.ActivitySettingsFacade.instance
+          .getActivitySettings(
+          reservationId: reservationItem.reservationId.getOrCrash()
+      );
+      resPreview = resPreview.copyWith(
+          activityManagerForm: activityManagerForm
+      );
+      /// has hero images (10 points)
+      if (activityManagerForm?.profileService.activityBackground.activityProfileImages?.isNotEmpty ?? false) {
+        weight += 10;
+      }
+
+      resPreview = resPreview.copyWith(
+          lookingForVendors: getHasPublishedVendorForms(activityManagerForm?.rulesService.vendorMerchantForms ?? [])
+      );
+
+    } catch (e) {}
+
+    resToPreview.add(resPreview);
+
+  }
+  return resToPreview;
 }
 
 

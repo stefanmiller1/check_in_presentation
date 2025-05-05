@@ -475,7 +475,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   decoration: TextDecoration.underline),),
             ),
             const SizedBox(height: 32),
-            Text('V. 1.1.0', style: TextStyle(color: model.disabledTextColor)),
+            Text('V. 1.1.1 - beta v10', style: TextStyle(color: model.disabledTextColor)),
             const SizedBox(height: 32),
           ],
         ),

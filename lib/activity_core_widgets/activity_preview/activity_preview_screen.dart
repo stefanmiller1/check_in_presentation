@@ -129,8 +129,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                       'Are you sure you want to leave this Activity?',
                       'Leave',
                       didSelectDone: () {
-                        context.read<AttendeeFormBloc>().add(
-                            AttendeeFormEvent.didDeleteAttendee());
+                        context.read<AttendeeFormBloc>().add(AttendeeFormEvent.didDeleteAttendee());
                       }
                   );
                 case AttendeeType.vendor:
@@ -409,6 +408,7 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                             constraints: const BoxConstraints(maxWidth: 800),
                             child: FacilityOverviewInfoWidget(
                               model: model,
+                              topPadding: (kIsWeb) ? 80 : 155,
                               overViewState: FacilityPreviewState.reservation,
                               newFacilityBooking: reservation,
                               reservations: [],

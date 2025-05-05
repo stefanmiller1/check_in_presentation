@@ -1,7 +1,7 @@
 part of check_in_presentation;
 
 enum ListingOverviewMarker {listing, activities}
-enum FacilityPreviewState {listing, reservation}
+enum FacilityPreviewState {listing, reservation, listingPreview}
 
 
 Widget loadingListingProfile(ListingManagerForm listing) {

@@ -32,6 +32,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
   late bool isLoadingBoothOptions = false;
   late bool isLoadingDocumentOptions = false;
   late bool isLoading = false;
+  late bool needsUpdating = true;
 
 
   void _calculateTax(AttendeeFormState state) async {
@@ -1487,7 +1488,64 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
               ),
             )
           )
-        )
+        ),
+
+         if (!(currentUser.legalName.isValid()) && needsUpdating || !(currentUser.legalSurname.isValid()) && needsUpdating) OnBoardingPopOverWidget(
+            height: 600,
+            width: 500,
+            model: widget.model,
+            popOverWidget: Container(
+                height: 600,
+                width: 500,
+                decoration: BoxDecoration(
+                    color: widget.model.webBackgroundColor,
+                    borderRadius: BorderRadius.all(Radius.circular(25))
+                ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GeneralProfileCreatorEditor(
+                  model: widget.model,
+                  currentUser: currentUser,
+                  headerWidget: Column(
+                    children: [
+                      Text('Update Yourn Personal Profile', style: TextStyle(color: widget.model.paletteColor, fontSize: widget.model.secondaryQuestionTitleFontSize),),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: widget.model.paletteColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline, color: widget.model.paletteColor),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Tiny changes - please update your first and last name so we can properly process your payments. please try not to use any special characters.',
+                                style: TextStyle(color: widget.model.paletteColor),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ]
+                  ),
+                  hideCancel: true,
+                  didSaveSuccessfully: () {
+                    setState(() {
+                      needsUpdating = false;
+                    });
+                      // Navigator.of(context).pop();
+                  },
+                    didCancel: () {
+                      // Navigator.of(context).pop();
+                  }
+        
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }

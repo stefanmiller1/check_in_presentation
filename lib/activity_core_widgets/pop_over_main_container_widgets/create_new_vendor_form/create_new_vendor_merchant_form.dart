@@ -783,8 +783,6 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
                 widget.isPublishing(state.vendorMerchantForm);
                 Navigator.of(context).pop();
               }));
-
-
         },
         buildWhen: (p,c) => p.showErrorMessages != c.showErrorMessages || p.vendorMerchantForm != c.vendorMerchantForm || p.isEditingForm != c.isEditingForm || p.isPublishing != c.isPublishing,
         builder: (context, state) {
@@ -844,7 +842,7 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
               actions: state.isPublishing ? [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: JumpingDots(numberOfDots: 3, color: widget.model.paletteColor)
+                    child: JumpingDots(numberOfDots: 3,  color: widget.model.paletteColor)
                 )
               ] : [
                 /// DO not auto-save if already published
@@ -906,7 +904,8 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
                         child: Center(child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text('Publish', style: TextStyle(fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize, color: (isValidForm) ? widget.model.paletteColor : widget.model.disabledTextColor)),
-                        ))
+                        )
+                      )
                     ),
                   ),
                 ),
@@ -948,27 +947,28 @@ class _VendorFormEditorWidgetState extends State<VendorFormEditorWidget> {
                     currentBoothPayments,
                     currentDiscount,
                     state.showErrorMessages),
-                showPreview: true,
-                previewFormWidget:  SingleChildScrollView(
+                    showPreview: true,
+                    previewFormWidget:  SingleChildScrollView(
                     controller: _scrollController,
                     scrollDirection: Axis.horizontal,
+                    physics: const NeverScrollableScrollPhysics(),
                     child: Center(
                       child: Container(
                         height: 950,
                         width: ReservationHelperCore.previewerWidth - 65,
                         child: CreateNewVendorMerchant(
-                            model: widget.model,
-                            listingForm: widget.listing,
-                            reservation: widget.reservation,
-                            resOwner: widget.resOwner,
-                            activityForm: widget.activityForm,
-                            vendorForm: state.vendorMerchantForm,
-                            currentVendorMarkerItem: currentVendorMarkerItem,
-                            isFromInvite: false,
-                            isPreview: false
-                        ),
+                          model: widget.model,
+                          listingForm: widget.listing,
+                          reservation: widget.reservation,
+                          resOwner: widget.resOwner,
+                          activityForm: widget.activityForm,
+                          vendorForm: state.vendorMerchantForm,
+                          currentVendorMarkerItem: currentVendorMarkerItem,
+                          isFromInvite: false,
+                          isPreview: false,
                       ),
                     ),
+                  ),
                 )
               ),
             ),

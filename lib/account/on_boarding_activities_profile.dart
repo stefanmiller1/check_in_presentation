@@ -239,7 +239,7 @@ class _OnBoardingActivitiesProfileState extends State<OnBoardingActivitiesProfil
                   child: Text('How to Vend..', style: TextStyle(color: widget.model.paletteColor, fontWeight: FontWeight.bold, fontSize: widget.model.questionTitleFontSize), textAlign: TextAlign.center),
                 ),
                 const SizedBox(height: 5),
-                Text('Perks of Being a vendor - We want to help vendors maximize their potential at markets with tools designed for you based on feedback you\'ve given us.', style: TextStyle(color: widget.model.disabledTextColor, ), textAlign: TextAlign.center),
+                Text('Perks of Being a vendor - We want to help vendors maximize their potential at markets with tools designed for you based on your feedback.', style: TextStyle(color: widget.model.disabledTextColor, ), textAlign: TextAlign.center),
 
                 ListTile(
                   leading: Icon(Icons.note_alt_outlined, color: widget.model.paletteColor),

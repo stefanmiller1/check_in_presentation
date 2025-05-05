@@ -68,7 +68,7 @@ class _ActivityBackgroundImagePreviewState extends State<ActivityBackgroundImage
             height: 285,
             child: PageView.builder(
                 controller: _activityPageController,
-                itemCount: widget.activityForm.profileService.activityBackground.activityProfileImages?.length ?? 1,
+                itemCount: widget.activityForm.profileService.activityBackground.activityProfileImages?.length ?? 0,
                 onPageChanged: (page) {
                   _currentPage = page;
                 },
@@ -173,11 +173,19 @@ class _ActivityBackgroundImagePreviewMobileWebState extends State<ActivityBackgr
       borderRadius: BorderRadius.circular(25),
       child: Stack(
         children: [
+          
+          if ((widget.activityForm.profileService.activityBackground.activityProfileImages?.length ?? 0) < 1) Center(
+            child: Icon(Icons.image,
+              size: 100,
+              color: widget.model.accentColor,
+            ),
+          ),
+
           SizedBox(
             height: 285,
             child: PageView.builder(
                 controller: _activityPageController,
-                itemCount: widget.activityForm.profileService.activityBackground.activityProfileImages?.length ?? 1,
+                itemCount: widget.activityForm.profileService.activityBackground.activityProfileImages?.length ?? 0,
                 onPageChanged: (page) {
                   setState(() {
                     _currentPage = page;

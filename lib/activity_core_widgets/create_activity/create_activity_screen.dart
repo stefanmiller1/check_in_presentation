@@ -599,15 +599,13 @@ class _CreateNewActivityScreenState extends State<CreateNewActivityScreen> {
   Widget getSetupComplete(BuildContext context, ListingManagerForm listing, ReservationItem reservation, UserProfileModel listingOwnerProfile, UserProfileModel currentUser, ) {
     return BlocProvider(create: (_) => getIt<ReservationFormBloc>()..add(ReservationFormEvent.initializedReservation(
         dart.optionOf(reservation),
-        dart.optionOf(listing),
-        dart.optionOf(listingOwnerProfile)
       )
     ),
     child: BlocConsumer<ReservationFormBloc, ReservationFormState>(
-    listenWhen: (p, c) => p.isSubmitting != c.isSubmitting,
+    listenWhen: (p, c) => p.isPublishing != c.isPublishing,
     listener: (context, state) {
 
-    state.authFailureOrSuccessOption.fold(
+    state.authFailureOrSuccessPublishOption.fold(
             () {},
             (either) => either.fold((failure) {
 
@@ -642,13 +640,11 @@ class _CreateNewActivityScreenState extends State<CreateNewActivityScreen> {
         }));
 
     },
-    buildWhen: (p,c) =>  p.newFacilityBooking != c.newFacilityBooking ||
+    buildWhen: (p,c) =>  p.reservationItem != c.reservationItem ||
       p.isTermsConditionsAccepted != c.isTermsConditionsAccepted ||
       p.currentSelectedSpace != c.currentSelectedSpace ||
       p.currentSelectedSpaceOption != c.currentSelectedSpaceOption ||
-      p.cardItem != c.cardItem ||
-      p.isSavingCard != c.isSavingCard ||
-      p.isSubmitting != c.isSubmitting,
+      p.isPublishing != c.isPublishing,
         builder: (context, state) {
           return Stack(
             alignment: Alignment.center,
@@ -659,7 +655,7 @@ class _CreateNewActivityScreenState extends State<CreateNewActivityScreen> {
                 width: MediaQuery.of(context).size.width,
               ),
 
-              if (state.isSubmitting == false) SingleChildScrollView(
+              if (state.isPublishing == false) SingleChildScrollView(
                 child: Column(
                   children: [
                     const SizedBox(height: 36),
@@ -690,15 +686,15 @@ class _CreateNewActivityScreenState extends State<CreateNewActivityScreen> {
                     const SizedBox(height: 36),
                     InkWell(
                       onTap: () {
-                        context.read<ReservationFormBloc>().add(
-                          ReservationFormEvent.isFinishedCreatingReservation(
-                            currentUser,
-                            0,
-                            listing.listingProfileService.backgroundInfoServices.currency,
-                            null,
-                            listing.listingReservationService.accessVisibilitySetting.isReviewRequired ?? false,
-                          ),
-                        );
+                        // context.read<ReservationFormBloc>().add(
+                        //   ReservationFormEvent.isFinishedCreatingReservation(
+                        //     currentUser,
+                        //     0,
+                        //     listing.listingProfileService.backgroundInfoServices.currency,
+                        //     null,
+                        //     listing.listingReservationService.accessVisibilitySetting.isReviewRequired ?? false,
+                        //   ),
+                        // );
                       },
                       child: Container(
                         height: 50,
@@ -725,7 +721,7 @@ class _CreateNewActivityScreenState extends State<CreateNewActivityScreen> {
                   ],
                 ),
               ),
-              if (state.isSubmitting) JumpingDots(numberOfDots: 3, color: widget.model.paletteColor),
+              if (state.isPublishing) JumpingDots(numberOfDots: 3, color: widget.model.paletteColor),
 
             ],
           );
@@ -777,7 +773,7 @@ class _CreateNewActivityScreenState extends State<CreateNewActivityScreen> {
                             paymentStatus: ReservationItem.empty().paymentStatus,
                             paymentIntentId: ReservationItem.empty().paymentIntentId,
                             reservationSlotItem: [],
-                            isInternalProgram: listing.listingProfileService.backgroundInfoServices.listingOwner.getOrCrash() == currentUser.userId.getOrCrash(),
+                            // isInternalProgram: listing.listingProfileService.backgroundInfoServices.listingOwner.getOrCrash() == currentUser.userId.getOrCrash(),
                             customFieldRuleSetting: listing.listingReservationService.customFieldRuleSetting,
                             dateCreated: DateTime.now()
               )

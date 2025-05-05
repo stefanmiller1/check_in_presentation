@@ -327,11 +327,11 @@ Widget reservationSlotItemWidget(
                             color: model.paletteColor,
                             borderRadius: BorderRadius.circular(25),
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(25),
-                            child: SvgPicture.asset(getIconPathForActivity(context, e.selectedActivityType) ?? '', color: model.accentColor,
-                            ),
-                          )
+                          // child: ClipRRect(
+                          //   borderRadius: BorderRadius.circular(25),
+                          //   child: SvgPicture.asset(getIconPathForActivity(context, e.selectedActivityType) ?? '', color: model.accentColor,
+                          //   ),
+                          // )
                         )
                       ],
                     ),

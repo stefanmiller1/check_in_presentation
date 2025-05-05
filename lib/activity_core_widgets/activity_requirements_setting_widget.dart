@@ -94,7 +94,7 @@ Widget mainContainerForSectionOneRowOneReq({required BuildContext context, requi
 
         /// games and class based req.
         Visibility(
-          visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.classesLessons,
+          visible: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityTypeOption.classesLessons),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,7 +175,7 @@ Widget mainContainerForSectionOneRowOneReq({required BuildContext context, requi
         ),
 
         Visibility(
-          visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.classesLessons,
+          visible: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains( ProfileActivityTypeOption.classesLessons),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,7 +286,7 @@ Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, requi
 
       /// what is sold - specifically for events.
       Visibility(
-        visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity != ProfileActivityOption.toRent || context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activity == ProfileActivityOption.tournament,
+        visible: !(context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityOption.toRent) || (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityOption.tournament),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,7 +307,7 @@ Widget mainContainerForSectionOneRowTwoReq({required BuildContext context, requi
                     const SizedBox(width: 5),
                   ],
                 ),
-                if (state.activitySettingsForm.activityType.activity == ProfileActivityOption.tournament) Icon(Icons.sports_handball_rounded, color: model.paletteColor),
+                if ((context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityOption.tournament)) Icon(Icons.sports_handball_rounded, color: model.paletteColor),
                 const SizedBox(width: 15),
                 Expanded(child: Text('What are You Selling?', style: TextStyle(color: model.paletteColor, fontSize: model.secondaryQuestionTitleFontSize))),
               ],
@@ -606,7 +606,7 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
       children: [
         /// what will be provided for non event activities (i.e classes, games, experiences)
         Visibility(
-          visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType != ProfileActivityTypeOption.experiences,
+          visible: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityTypeOption.experiences),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -673,7 +673,7 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                     ),
                     const SizedBox(width: 16),
                     Visibility(
-                      visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.gameMatches,
+                      visible: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityTypeOption.gameMatches),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -698,7 +698,7 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
                     ),
                     const SizedBox(width: 16),
                     Visibility(
-                      visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.gameMatches,
+                      visible: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityTypeOption.gameMatches),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -734,7 +734,7 @@ Widget mainContainerForSectionFooterReq({required BuildContext context, required
         /// what will be provided specifically for events
         /// TODO: WILL DEPEND ON FACILITY RULES
         Visibility(
-          visible: context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityType.activityType == ProfileActivityTypeOption.experiences,
+          visible: (context.read<UpdateActivityFormBloc>().state.activitySettingsForm.activityTypes ?? []).map((e) => e.activityType).contains(ProfileActivityTypeOption.experiences),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
