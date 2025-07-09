@@ -145,7 +145,7 @@ class _FormCreatorDashboardMainState extends State<FormCreatorDashboardMain> wit
                     ),
                     child: ListTile(
                       leading: Icon(e.formHeaderIcon, color: (e.isActivated || e.isRequired == true) ? widget.model.paletteColor : widget.model.disabledTextColor),
-                      title: Text(e.formHeaderTitle, style: TextStyle(color: (e.isActivated || e.isRequired == true) ? widget.model.paletteColor : widget.model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: widget.model.secondaryQuestionTitleFontSize)),
+                      title: Text(e.formHeaderTitle, style: TextStyle(color: (e.isActivated || e.isRequired == true) ? widget.model.paletteColor : widget.model.disabledTextColor, fontWeight: FontWeight.bold, fontSize: widget.model.questionTitleFontSize)),
                       subtitle: (e.formHeaderSubTitle != null || e.showErrorMessage == true) ? Text((e.errorMessage != null) ? e.errorMessage! : e.formHeaderSubTitle!, style: TextStyle(color: (e.showErrorMessage == true) ? Colors.red : widget.model.disabledTextColor)) : null,
                       trailing: (e.isRequired != true) ? Container(
                         height: 60,

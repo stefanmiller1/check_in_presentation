@@ -160,7 +160,7 @@ void didSelectReviewApplicationsWeb(BuildContext context, UserProfileModel profi
 
 
 void didSelectReservationPreview(BuildContext context, DashboardModel model, ReservationPreviewer item) async {
-  if (item.listing != null && item.reservation != null) {
+  if (item.reservation != null) {
 
     final newUrl = getUrlForActivity(item.reservation!.instanceId.getOrCrash(), item.reservation!.reservationId.getOrCrash());
 

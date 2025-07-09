@@ -117,9 +117,9 @@ class _ManageAttendeeSettingsSubContainerState extends State<ManageAttendeeSetti
                                                       reservationItem: widget.reservationItem,
                                                       activityManagerForm: activityForm,
                                                       activityOwnerProfile: ownerUserProfile
-                                                  );
-                                                }
-                                                )
+                                                      );
+                                                    }
+                                                  )
                                                 );
                                               }
                                               break;

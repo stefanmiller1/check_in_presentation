@@ -640,11 +640,11 @@ Widget reservationDatesWrapped(
                               ).toList(),
                               const SizedBox(width: 10),
                               Icon(Icons.calendar_today_outlined, size: 24, color: model.disabledTextColor),
-                  ],
-                ),
-                                  )
-                                )
-                              );
+                    ],
+                  ),
+                )
+              )
+            );
           }
         ).toList()
       ),

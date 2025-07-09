@@ -116,7 +116,7 @@ void showReservationFilterPopOver(BuildContext context, ReservationFilterObject?
 
 class ReservationCoreHelper {
 
-  static ResOverViewTabs resOverViewTabs = ResOverViewTabs.discussion;
+  static ResOverViewTabs resOverViewTabs = ResOverViewTabs.activity;
   static late bool showSuggestions = true;
   static late PageController? pageController = null;
   static int currentTabPageIndex = 0;

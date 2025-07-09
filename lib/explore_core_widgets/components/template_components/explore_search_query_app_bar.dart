@@ -38,24 +38,27 @@ class _ExploreSearchFilterQueryBarState extends State<ExploreSearchFilterQueryBa
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 460),
-      child: TextField(
-        controller: widget.searchController,
-        focusNode: widget.focusNode, // Attach the focus node
-        onChanged: widget.onSearchQueryChanged,
-        onSubmitted: widget.onSearchSubmitted,
-        decoration: InputDecoration(
-          prefixIcon: const Icon(Icons.search),
-          hintText: 'Search...',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(25.0),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
-          fillColor: widget.model.accentColor,
-          suffixIcon: IconButton(
-            icon: const Icon(CupertinoIcons.slider_horizontal_3),
-            onPressed: widget.didSelectFilter,
+      constraints: BoxConstraints(maxWidth: (Responsive.isMobile(context)) ? 340 : 460),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: (Responsive.isMobile(context)) ? 30 : 0),
+        child: TextField(
+          controller: widget.searchController,
+          focusNode: widget.focusNode, // Attach the focus node
+          onChanged: widget.onSearchQueryChanged,
+          onSubmitted: widget.onSearchSubmitted,
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search),
+            hintText: 'Search...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(25.0),
+              borderSide: BorderSide.none,
+            ),
+            filled: true,
+            fillColor: widget.model.accentColor,
+            suffixIcon: IconButton(
+              icon: const Icon(CupertinoIcons.slider_horizontal_3),
+              onPressed: widget.didSelectFilter,
+            ),
           ),
         ),
       ),

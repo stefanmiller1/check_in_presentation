@@ -140,6 +140,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'core/ios_core/new_payment_method_widget_mobile.dart' if (dart.library.html) 'core/web_core/payment_core/widgets/new_payment_method_widget_web.dart';
 import 'package:hovering/hovering.dart';
 
+
 part 'check_in_theme_model.dart';
 part 'misc.dart';
 part 'reservation_listing_core_widgets/reservation_card.dart';
@@ -174,6 +175,7 @@ part 'messages_core_widgets/rooms_helper_core.dart';
 part 'messages_core_widgets/rooms_screen.dart';
 part 'messages_core_widgets/pop_over/new_chat_pop_over/send_new_chat_container.dart';
 part 'messages_core_widgets/pop_over/new_chat_pop_over/new_chat_pop_over_helper.dart';
+part 'messages_core_widgets/pop_over/create_new_chat.dart';
 part 'messages_core_widgets/components/chat_headers.dart';
 part 'messages_core_widgets/components/chat_details_sidebar.dart';
 part 'messages_core_widgets/components/filter_components/rooms_filter_header.dart';

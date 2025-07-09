@@ -214,6 +214,7 @@ class _BrowseMainContainerWidgetState extends State<BrowseMainContainerWidget> {
       //     mainSectionWidget:  getFilterByCalendarSelectionWidget(),
       //     onEditPressed: () {}
       // ),
+      
       if (upcomingRes.isNotEmpty) BrowseSectionObject(
           hasValues: true,
           sectionTitle: 'Unforgettable Experiences Starting Soon',

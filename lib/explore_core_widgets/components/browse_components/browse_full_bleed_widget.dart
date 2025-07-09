@@ -67,7 +67,7 @@ class _BrowseFullBleedWidgetState extends State<BrowseFullBleedWidget> with Tick
         itemBuilder: (context, index) {
           final reservation = widget.reservations[index];
           final imageUrl = ((reservation.reservationMetadata?.activityMainMedia ?? []).isNotEmpty == true) ? (reservation.reservationMetadata?.activityMainMedia ?? [])[0].uriPath ?? '' : '';
-      
+          
           return Container(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
@@ -89,7 +89,7 @@ class _BrowseFullBleedWidgetState extends State<BrowseFullBleedWidget> with Tick
                         Colors.transparent,
                         Colors.transparent,
                         Colors.transparent,
-                        Colors.black.withOpacity(0.6),
+                        Colors.black.withOpacity(0.2),
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -143,7 +143,7 @@ class _BrowseFullBleedWidgetState extends State<BrowseFullBleedWidget> with Tick
                           const SizedBox(width: 16),
                           Icon(Icons.people, color: Colors.white70, size: 16),
                           const SizedBox(width: 4),
-                          Text(
+                          if ((reservation.reservationMetadata?.attendeeCount ?? 0) >= 2) Text(
                             '${reservation.reservationMetadata?.attendeeCount} attending',
                             style: TextStyle(color: Colors.white70),
                           ),
@@ -157,7 +157,7 @@ class _BrowseFullBleedWidgetState extends State<BrowseFullBleedWidget> with Tick
                                   style: TextStyle(color: Colors.white70),
                               ),
                             ],
-                          )
+                          ) 
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -165,7 +165,11 @@ class _BrowseFullBleedWidgetState extends State<BrowseFullBleedWidget> with Tick
                         alignment: Alignment.centerRight,
                         child: HoverButton(
                           onpressed: () {
-
+                            print('tapped');
+                            didSelectReservationPreview(context, widget.model, ReservationPreviewer(
+                              reservation: reservation,
+                              previewWeight: 1,
+                            ));
                           },
                           color: widget.model.accentColor,
                           hoverColor: widget.model.disabledTextColor.withOpacity(0.2),
@@ -207,5 +211,38 @@ class _BrowseFullBleedWidgetState extends State<BrowseFullBleedWidget> with Tick
         },
       ),
     );
+  }
+}
+
+
+Future<Color> getAverageColorFromImageUrl(String imageUrl) async {
+  try {
+    final response = await http.get(Uri.parse(imageUrl));
+    final bytes = Uint8List.fromList(response.bodyBytes);
+    final codec = await UI.instantiateImageCodec(bytes, targetWidth: 20, targetHeight: 20); // Downscale for performance
+    final frame = await codec.getNextFrame();
+    final UI.Image image = frame.image;
+
+    final byteData = await image.toByteData(format: UI.ImageByteFormat.rawRgba);
+    if (byteData == null) return Colors.black;
+
+    final pixels = byteData.buffer.asUint8List();
+    int r = 0, g = 0, b = 0, count = 0;
+
+    for (int i = 0; i < pixels.length; i += 4) {
+      r += pixels[i];     // Red
+      g += pixels[i + 1]; // Green
+      b += pixels[i + 2]; // Blue
+      count++;
+    }
+
+    r = (r / count).round();
+    g = (g / count).round();
+    b = (b / count).round();
+
+    return Color.fromARGB(255, r, g, b);
+  } catch (e) {
+    print('Error calculating color: $e');
+    return Colors.black;
   }
 }

@@ -64,11 +64,11 @@ class _ReservationResultMainState extends State<ReservationResultMain> with Tick
  @override
   void initState() {
     _selectedFileSpaceImage = [];
-    int tabIndex = tabItems([]).indexWhere((element) => element.tabMarker == ReservationCoreHelper.resOverViewTabs);
+    int tabIndex =  tabItems([]).indexWhere((element) => element.tabMarker == ReservationCoreHelper.resOverViewTabs);
 
     _resOnlyTabController = TabController(length: 1, vsync: this);
-    _tabController = TabController(initialIndex: tabIndex, length: ResOverViewTabs.values.length, vsync: this);
-    ReservationCoreHelper.pageController = PageController(initialPage: tabIndex, keepPage: true);
+    _tabController = TabController(initialIndex: 0, length: tabItems([]).length, vsync: this);
+    ReservationCoreHelper.pageController = PageController(initialPage: 0, keepPage: true);
     facade.ActivityFormUpdateFacade.instance.updateViewCount(activityResId: widget.reservationId);
 
     super.initState();

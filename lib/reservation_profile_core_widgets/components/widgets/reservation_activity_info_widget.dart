@@ -304,7 +304,7 @@ class ReservationActivityInfoWidget extends StatelessWidget {
                     configuration: RouteInformation(
                         location: reservationSettingsRoute(reservation.reservationId.getOrCrash(), SettingNavMarker.vendorForm.name)
                     ),
-                    rebuild: false
+                    rebuild: true
                 );
                 context.read<ListingsSearchRequirementsBloc>().add(const ListingsSearchRequirementsEvent.currentDashboardMarker(DashboardMarker.resSettings));
                 final SettingNavMarker navItem = getReservationSettingNavMarker(SettingNavMarker.vendorForm.name);

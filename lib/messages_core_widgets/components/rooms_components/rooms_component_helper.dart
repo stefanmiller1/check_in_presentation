@@ -82,6 +82,10 @@ bool areAllRoomsContained(List<types.Room>? snapshotRooms, List<types.Room> room
     final currentUserId = currentUser.userId.getOrCrash();
 
    return (messages ?? []).where((element) {
+
+      if (element.type == types.MessageType.system) {
+        return false; // Skip system messages
+      }
       if (element.author.id == facade.FirebaseChatCore.instance.firebaseUser?.uid) {
         return false; // Skip messages sent by the current user
       }
@@ -101,7 +105,12 @@ Widget getDirectRoomListTile(DashboardModel model, Room room, bool selected, boo
   final hasImage = room.imageUrl != null;
   final hasMessages = messages.isNotEmpty;
   final types.Message? lastMessage = hasMessages ? messages.first : null;
-  final textMessage = (lastMessage != null) ? lastMessage as types.TextMessage : null;
+  final textMessage = (lastMessage != null && lastMessage is types.TextMessage)
+      ? lastMessage as types.TextMessage
+      : null;
+  final systemMessage = (lastMessage != null && lastMessage is types.SystemMessage)
+      ? lastMessage as types.SystemMessage
+      : null;
   final String lastMessageTime = formatLastMessageTime(lastMessage?.createdAt);
 
   return HoverButton(
@@ -180,7 +189,7 @@ Widget getDirectRoomListTile(DashboardModel model, Room room, bool selected, boo
                       ],
                     ),
                     const SizedBox(height: 3),
-                    Text(textMessage?.text ?? 'Start Chatting', style: TextStyle(color: (selected) ? model.paletteColor : model.disabledTextColor, fontWeight: hasNewMessage ? FontWeight.bold : FontWeight.normal), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    Text(textMessage?.text ?? systemMessage?.text ?? 'Start Chatting', style: TextStyle(color: (selected) ? model.paletteColor : model.disabledTextColor, fontWeight: hasNewMessage ? FontWeight.bold : FontWeight.normal), maxLines: 2, overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
@@ -202,7 +211,12 @@ Widget getGroupRoomListTile(DashboardModel model, Room room, bool selected, bool
 
   final hasMessages = messages.isNotEmpty;
   final types.Message? lastMessage = hasMessages ? messages.first : null;
-  final textMessage = (lastMessage != null) ? lastMessage as types.TextMessage : null;
+  final textMessage = (lastMessage != null && lastMessage is types.TextMessage)
+      ? lastMessage as types.TextMessage
+      : null;
+  final systemMessage = (lastMessage != null && lastMessage is types.SystemMessage)
+      ? lastMessage as types.SystemMessage
+      : null;
   final String lastMessageTime = formatLastMessageTime(lastMessage?.createdAt);
   late List<ReservationSlotItem> resSorted = slots..sort(((a,b) => a.selectedDate.compareTo(b.selectedDate)));
   final bool resHasStarted = (resSorted.isNotEmpty && resSorted.first.selectedSlots.isNotEmpty) ? resSorted.first.selectedSlots.first.slotRange.start.isBefore(DateTime.now()) : false;
@@ -283,7 +297,7 @@ Widget getGroupRoomListTile(DashboardModel model, Room room, bool selected, bool
                       ],
                     ),
                     const SizedBox(height: 3),
-                    Text(textMessage?.text ?? 'Start the Conversation', style: TextStyle(color: (selected) ? model.paletteColor : model.disabledTextColor, fontWeight: hasNewMessage ? FontWeight.bold : FontWeight.normal), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    Text(textMessage?.text ?? systemMessage?.text ?? 'Start the Conversation', style: TextStyle(color: (selected) ? model.paletteColor : model.disabledTextColor, fontWeight: hasNewMessage ? FontWeight.bold : FontWeight.normal), maxLines: 2, overflow: TextOverflow.ellipsis),
                     /// number of reservations under current profile
                     /// reservations coming up?
                     /// reservations ended?

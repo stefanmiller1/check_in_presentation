@@ -461,17 +461,43 @@ class _ReservationScreenState extends State<ReservationScreen> with SingleTicker
                         },
                         reservations: e.item.map((e) => e.reservationId).toList(),
                       ),
+
+                      if (e.item.isEmpty) Column(
+                        children: [
+                          getAttendingRequestedReservation(
+                            context,
+                            currentUser,
+                            notifications
+                          ),
+                          getAttendingJoinedReservations(
+                            context,
+                            currentUser,
+                            notifications
+                          ),
+                        ],
+                      ),
+
+
                   ]
                 );
               },
-            orElse: () => noItemsFound(
-                widget.model,
-                Icons.calendar_today_outlined,
-                'No Reservations Yet!',
-                'Start a Pop-Up Shop in your backyard or Rent out a basement for your next underground Rave.',
-                'Start Booking',
-                didTapStartButton: () {
-              }
+            orElse: () => Column(
+              children: [
+                Column(
+                  children: [
+                    getAttendingRequestedReservation(
+                      context,
+                      currentUser,
+                      notifications
+                    ),
+                    getAttendingJoinedReservations(
+                      context,
+                      currentUser,
+                      notifications
+                    ),
+                  ],
+                ),
+              ],
             )
           );
         }

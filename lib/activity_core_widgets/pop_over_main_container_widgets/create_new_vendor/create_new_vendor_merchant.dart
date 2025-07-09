@@ -538,11 +538,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
 
                                 late VendorMerchantForm? newVForm = state.attendeeItem.vendorForm;
                                 late MVCustomOption? newDocumentOption = getDocumentRuleOption(newVForm);
-
-
                                 late MVCustomOption? currentOption = getDocumentRuleOption(widget.vendorForm);
-
-
 
                                 try {
                                   DocumentFormOption newDocument = await FilePickerPreviewerWidget.handleFileSelection(context, widget.model);
@@ -1052,7 +1048,181 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
     ),
 
 
-
+     NewAttendeeContainerModel(
+        markerItem: NewAttendeeStepsMarker.getStarted,
+        subVendorMarkerItem: AttendeeVendorMarker.applicationSent,
+        childWidget: SingleChildScrollView(
+        child: (state.isSubmitting == false)
+            ? state.authFailureOrSuccessOption.fold(
+                () => Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 30),
+                    JumpingDots(numberOfDots: 3, color: widget.model.paletteColor),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Submitting Application...Please do not close this window',
+                      style: TextStyle(
+                        color: widget.model.paletteColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: widget.model.secondaryQuestionTitleFontSize,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+                (either) => either.fold((failure) => Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 30),
+                        Icon(Icons.error_outline, size: 70, color: Colors.red),
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text(
+                            'Application Failed',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: widget.model.questionTitleFontSize,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        ListTile(
+                          title: Text(
+                            'There was a problem submitting your application.',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: widget.model.secondaryQuestionTitleFontSize,
+                            ),
+                          ),
+                          subtitle: Text(
+                            failure.maybeMap(
+                              attendeeWaitingForPaymentConfirmation: (e) => 'waiting for payment confirmation',
+                              attendeeServerError: (e) => e.failed ?? AppLocalizations.of(context)!.serverError,
+                              attendeePermissionDenied: (e) => 'Sorry, you don\'t have permission to do that',
+                              orElse: () => 'A Problem Happened',
+                            ),
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: widget.model.paletteColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text(
+                              'Close',
+                              style: TextStyle(
+                                color: widget.model.accentColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: widget.model.secondaryQuestionTitleFontSize,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  (_) => Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 30),
+                        Icon(Icons.check_circle_outline_rounded, size: 70, color: widget.model.paletteColor),
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text(
+                            'Application Sent',
+                            style: TextStyle(
+                              color: widget.model.paletteColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: widget.model.questionTitleFontSize,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        ListTile(
+                          title: Text(
+                            'Your Application has been sent!',
+                            style: TextStyle(
+                              color: widget.model.paletteColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: widget.model.secondaryQuestionTitleFontSize,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'You can check the status of your application in your profile.',
+                            style: TextStyle(color: widget.model.paletteColor),
+                          ),
+                        ),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: widget.model.paletteColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text(
+                              'Close',
+                              style: TextStyle(
+                                color: widget.model.accentColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: widget.model.secondaryQuestionTitleFontSize,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 30),
+                  JumpingDots(numberOfDots: 3, color: widget.model.paletteColor),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Submitting Application...Please do not close this window',
+                    style: TextStyle(
+                      color: widget.model.paletteColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: widget.model.secondaryQuestionTitleFontSize,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              )
+            )
+          ),
     // if (activityHasRules(widget.activityForm)) NewAttendeeContainerModel(
     //     markerItem: NewAttendeeStepsMarker.addActivityRules,
     //     childWidget: rulesToAdd(
@@ -1164,11 +1334,12 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                     content: Text('Application Sent!', style: TextStyle(color: widget.model.webBackgroundColor))
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                if (widget.isFromInvite == false) {
-                  Navigator.of(context).pop(context);
-                } else {
-
-                }
+                currentVendorMarkerItem = AttendeeVendorMarker.applicationSent;
+                // if (widget.isFromInvite == false && Responsive.isMobile(context) == false) {
+                //   Navigator.of(context).pop(context);
+                // } else {
+                  
+                // }
             }));
         },
         buildWhen: (p,c) => p.isSubmitting != c.isSubmitting || p.attendeeItem != c.attendeeItem,
@@ -1186,7 +1357,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                 centerTitle: true,
                 backgroundColor: widget.model.paletteColor,
                 leadingWidth: 70,
-                leading:  (currentMarkerItem != NewAttendeeStepsMarker.joinComplete || currentMarkerItem != NewAttendeeStepsMarker.requestToJoinComplete) ? (widget.isPreview == false && state.isSubmitting == false) ? IconButton(
+                leading:  (currentMarkerItem != NewAttendeeStepsMarker.joinComplete || currentMarkerItem != AttendeeVendorMarker.applicationSent || currentMarkerItem != NewAttendeeStepsMarker.requestToJoinComplete) ? (widget.isPreview == false && state.isSubmitting == false) ? IconButton(
                   icon: Icon(Icons.cancel, color: widget.model.accentColor, size: 40,),
                   tooltip: 'Cancel',
                   onPressed: () {
@@ -1267,10 +1438,10 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                 retrieveAuthenticationState(context, state),
 
 
-                if (state.isSubmitting) SizedBox(
-                    height: 220,
-                    child: JumpingDots(numberOfDots: 3, color: widget.model.paletteColor)
-                ),
+                // if (state.isSubmitting) SizedBox(
+                //     height: 220,
+                //     child: JumpingDots(numberOfDots: 3, color: widget.model.paletteColor)
+                // ),
 
               ]
             )
@@ -1386,7 +1557,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                     widget.activityForm,
                     state,
                     widget.vendorForm,
-                    attendeeMainContainer(context, currentUser, profiles, state).last.markerItem == currentMarkerItem && (currentVendorMarkerItem != null) ? attendeeMainContainer(context, currentUser, profiles, state).last.subVendorMarkerItem == currentVendorMarkerItem : true,
+                    currentVendorMarkerItem == AttendeeVendorMarker.review,
                     didSelectBack: () {
 
                       setState(() {
@@ -1452,7 +1623,7 @@ class _CreateNewVendorMerchantState extends State<CreateNewVendorMerchant> {
                         }
 
                         /// get item at index + 1
-                        if (isLastIndex) {
+                        if (isSecondLastIndex) {
                           if (kIsWeb) {
                             context.read<AttendeeFormBloc>().add(const AttendeeFormEvent.attendeeIsSaving(true));
                           }

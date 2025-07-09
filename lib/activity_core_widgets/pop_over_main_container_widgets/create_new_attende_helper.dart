@@ -1,7 +1,7 @@
 part of check_in_presentation;
 
 enum NewAttendeeStepsMarker {chooseAttendingType, getStarted, addActivityRules, addActivityCustomRules, requestToJoinComplete, joinComplete}
-enum AttendeeVendorMarker {formMessage, welcomeMessage, availableTime, boothType, customDocuments, customLists, disclaimer, review, selectPaymentMethod, profileSelection}
+enum AttendeeVendorMarker {formMessage, welcomeMessage, availableTime, boothType, customDocuments, customLists, disclaimer, review, applicationSent, selectPaymentMethod, profileSelection}
 
 
 class NewAttendeeContainerModel {
@@ -369,7 +369,7 @@ bool antendeeDiscountCodeIsValid() {
   return false;
 }
 
-bool isNextEnabled(NewAttendeeStepsMarker marker, CardItem? cardItem, AttendeeVendorMarker? vendorAttendeeMarker, ActivityManagerForm activityForm, VendorMerchantForm? refVendor, AttendeeFormState state) {
+bool isNextEnabled(NewAttendeeStepsMarker marker, CardItem? cardItem, AttendeeVendorMarker? vendorAttendeeMarker, VendorMerchantForm? refVendor, AttendeeFormState state) {
   switch (marker) {
     case NewAttendeeStepsMarker.chooseAttendingType:
       return false;
@@ -400,9 +400,12 @@ bool isNextEnabled(NewAttendeeStepsMarker marker, CardItem? cardItem, AttendeeVe
               return state.attendeeItem.eventMerchantVendorProfile != null;
             case AttendeeVendorMarker.selectPaymentMethod:
               return cardItem != null;
+            case AttendeeVendorMarker.applicationSent:
+              return false;
             case null:
               // TODO: Handle this case.
               break;
+
           }
           return false;
         default:
@@ -468,6 +471,8 @@ String? getTitleForError(NewAttendeeStepsMarker marker, AttendeeVendorMarker? ve
             return 'select or create a new profile above';
           case AttendeeVendorMarker.selectPaymentMethod:
             return 'select or add a new card above';
+          case AttendeeVendorMarker.applicationSent:
+            return null;
           case null:
           // TODO: Handle this case.
             break;
@@ -499,7 +504,7 @@ Widget footerWidgetForNewAttendee(
     ActivityManagerForm activityForm,
     AttendeeFormState state,
     VendorMerchantForm? vendorForm,
-    bool isLast, {
+    bool isSecondLast, {
       required Function() didSelectBack,
       required Function() didSelectNext,
       required Function() didSelectDisabledNext,
@@ -522,7 +527,7 @@ Widget footerWidgetForNewAttendee(
             child: Row(
             children: [
               Visibility(
-                visible: showBackButton(marker),
+                visible: showBackButton(marker) && vendorAttendeeMarker != AttendeeVendorMarker.applicationSent,
                 child: IconButton(
                     onPressed: () {
                         didSelectBack();
@@ -578,10 +583,10 @@ Widget footerWidgetForNewAttendee(
           ),
 
           Visibility(
-            visible: state.isSubmitting == false,
+            visible: state.isSubmitting == false && vendorAttendeeMarker != AttendeeVendorMarker.applicationSent,
             child: InkWell(
               onTap: () {
-                if (isNextEnabled(marker, cardItem, vendorAttendeeMarker, activityForm, vendorForm, state)) {
+                if (isNextEnabled(marker, cardItem, vendorAttendeeMarker, vendorForm, state)) {
                   didSelectNext();
                 } else {
                   didSelectDisabledNext();
@@ -594,14 +599,14 @@ Widget footerWidgetForNewAttendee(
                 height: 45,
                 width: 185,
                 decoration: BoxDecoration(
-                  color: (isNextEnabled(marker, cardItem, vendorAttendeeMarker, activityForm, vendorForm, state)) ? model.paletteColor : model.disabledTextColor.withOpacity(0.3),
+                  color: (isNextEnabled(marker, cardItem, vendorAttendeeMarker, vendorForm, state)) ? model.paletteColor : model.disabledTextColor.withOpacity(0.3),
                   borderRadius: const BorderRadius.all(Radius.circular(40)),
                 ),
                 child: Center(child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: Text(
-                      isLast ? (activityRequiresVendorFee(state.attendeeItem.vendorForm) && state.attendeeItem.attendeeType == AttendeeType.vendor) ? 'Check Out & Apply' : 'Apply' : getTitleForNextButton(marker),
-                      style: TextStyle(color: (isNextEnabled(marker, cardItem, vendorAttendeeMarker, activityForm, vendorForm, state)) ? model.accentColor : model.disabledTextColor,
+                      isSecondLast ? (activityRequiresVendorFee(state.attendeeItem.vendorForm) && state.attendeeItem.attendeeType == AttendeeType.vendor) ? 'Check Out & Apply' : 'Apply' : getTitleForNextButton(marker),
+                      style: TextStyle(color: (isNextEnabled(marker, cardItem, vendorAttendeeMarker, vendorForm, state)) ? model.accentColor : model.disabledTextColor,
                           fontSize: model.secondaryQuestionTitleFontSize,
                           fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis, maxLines: 1),
@@ -613,5 +618,4 @@ Widget footerWidgetForNewAttendee(
         ],
       ),
     );
-
 }

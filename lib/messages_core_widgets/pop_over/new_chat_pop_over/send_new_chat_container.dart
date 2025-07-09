@@ -88,7 +88,7 @@ class _SendNewChatContainerState extends State<SendNewChatContainer> {
   @override
   void initState() {  
     super.initState();
-    // if (!kIsWeb) {
+    if (!kIsWeb) {
       _textFieldFocusNode.addListener(() {
         print('Focus changed: ${_textFieldFocusNode.hasFocus}');
         if (_textFieldFocusNode.hasFocus) {
@@ -103,7 +103,7 @@ class _SendNewChatContainerState extends State<SendNewChatContainer> {
             });
           }
       });
-    // }
+    }
   }
 
   void dispose() {
@@ -373,7 +373,7 @@ class _SendNewChatContainerState extends State<SendNewChatContainer> {
           //   color: widget.model.webBackgroundColor,
           // ),
       
-          if (_textFieldFocusNode.hasFocus == false && !kIsWeb) Padding(
+          if (kIsWeb && !Responsive.isMobile(context) || !_textFieldFocusNode.hasFocus) Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
             child: Container(
               height: 60,

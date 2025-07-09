@@ -101,11 +101,11 @@ class _ExploreSearchhMainLayoutState extends State<ExploreSearchhMainLayout> {
   double getPaddingForMainContainer() {
     switch (currentContainerType) {
       case ExploreContainerType.browse:
-        return (Responsive.isMobile(context)) ? 38 : 0;
+        return 0;
       case ExploreContainerType.queryProfile:
         return 100;
       case ExploreContainerType.userProfile:
-        return (Responsive.isMobile(context)) ? 38 : 100;
+        return (Responsive.isMobile(context)) ? 120 : 100;
       default:
         return 0;
     }
@@ -301,33 +301,33 @@ void _onTextChanged(String text, {bool isSubmitted = false}) {
       },
       child: Scaffold(
         backgroundColor: widget.model.webBackgroundColor,
-        appBar: Responsive.isMobile(context)
-            ? AppBar(
-              backgroundColor: widget.model.mobileBackgroundColor,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              automaticallyImplyLeading: false,
-              centerTitle: true,
-              toolbarHeight: 100,
-              title: Center(
-                child: ExploreSearchFilterQueryBar(
-                  searchController: _searchController,
-                  initialQuery: currentQuery,
-                  onSearchQueryChanged: (query) => _onTextChanged(query),
-                  onSearchSubmitted: (query) => _onTextChanged(query, isSubmitted: true),
-                  mobileSearchView: Container(color: Colors.red),
-                  didSelectFilter: () {},
-                  webDropdownView: (query) => Container(color: Colors.blue),
-                  model: widget.model,
-                  focusNode: _searchFocusNode,
-                ),
-              ),
-              bottom: (getBottomAppBarFromSearchType(currentContainerType) != null) ? PreferredSize(
-                preferredSize: const Size.fromHeight(64),
-                child: Center(child: getBottomAppBarFromSearchType(currentContainerType)!)
-              ) : null,
-            )
-          : null,
+        // appBar: Responsive.isMobile(context)
+        //     ? AppBar(
+        //       backgroundColor: widget.model.mobileBackgroundColor,
+        //       elevation: 0,
+        //       scrolledUnderElevation: 0,
+        //       automaticallyImplyLeading: false,
+        //       centerTitle: true,
+        //       toolbarHeight: 100,
+        //       title: Center(
+        //         child: ExploreSearchFilterQueryBar(
+        //           searchController: _searchController,
+        //           initialQuery: currentQuery,
+        //           onSearchQueryChanged: (query) => _onTextChanged(query),
+        //           onSearchSubmitted: (query) => _onTextChanged(query, isSubmitted: true),
+        //           mobileSearchView: Container(color: Colors.red),
+        //           didSelectFilter: () {},
+        //           webDropdownView: (query) => Container(color: Colors.blue),
+        //           model: widget.model,
+        //           focusNode: _searchFocusNode,
+        //         ),
+        //       ),
+        //       bottom: (getBottomAppBarFromSearchType(currentContainerType) != null) ? PreferredSize(
+        //         preferredSize: const Size.fromHeight(64),
+        //         child: Center(child: getBottomAppBarFromSearchType(currentContainerType)!)
+        //       ) : null,
+        //     )
+        //   : null,
         body: LayoutBuilder(
           builder: (context, constraints) {
 
@@ -357,18 +357,21 @@ void _onTextChanged(String text, {bool isSubmitted = false}) {
                   child: Stack(
                     alignment: Alignment.topCenter,
                     children: [
-                      if (!Responsive.isMobile(context)) Positioned(
+                      Positioned(
                           top: 25,
-                          child: ExploreSearchFilterQueryBar(
-                            searchController: _searchController,
-                            initialQuery: currentQuery,
-                            onSearchQueryChanged: (query) => _onTextChanged(query),
-                            onSearchSubmitted: (query) => _onTextChanged(query, isSubmitted: true),
-                            mobileSearchView: Container(color: Colors.red),
-                            didSelectFilter: () {},
-                            webDropdownView: (query) => Container(color: Colors.blue),
-                            model: widget.model,
-                            focusNode: _searchFocusNode,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                            child: ExploreSearchFilterQueryBar(
+                              searchController: _searchController,
+                              initialQuery: currentQuery,
+                              onSearchQueryChanged: (query) => _onTextChanged(query),
+                              onSearchSubmitted: (query) => _onTextChanged(query, isSubmitted: true),
+                              mobileSearchView: Container(color: Colors.red),
+                              didSelectFilter: () {},
+                              webDropdownView: (query) => Container(color: Colors.blue),
+                              model: widget.model,
+                              focusNode: _searchFocusNode,
+                            ),
                           ),
                         ),
                                     
@@ -384,13 +387,13 @@ void _onTextChanged(String text, {bool isSubmitted = false}) {
                       ),
                   
                       if (!Responsive.isMobile(context) && getAppBarLeadingButtonWidget() != null) Positioned(
-                          top: 25,
+                          top: 85,
                           left: 0,
                           child: getAppBarLeadingButtonWidget()!
                       ),
                         
                       if (_isDropdownVisible) Positioned(
-                          top: (Responsive.isMobile(context)) ? 20 : 110,
+                          top: (Responsive.isMobile(context)) ? 120 : 110,
                           child: Focus(
                             focusNode: _dropdownFocusNode,
                             child: SlideInTransitionWidget(
@@ -547,6 +550,8 @@ void _onTextChanged(String text, {bool isSubmitted = false}) {
                     )
                   );
 
+                    _isDropdownVisible = false;
+
                     Beamer.of(context).update(
                       configuration: RouteInformation(
                         uri: Uri.parse(searchExploreByProfileRoute(user.userId.getOrCrash(), ProfileTypeMarker.generalProfile.name, _searchController.text)),
@@ -591,7 +596,7 @@ void _onTextChanged(String text, {bool isSubmitted = false}) {
                               profileId: vendor.profileOwner,
                             )
                           );
-                          
+                          _isDropdownVisible = false;
                            Beamer.of(context).update(
                               configuration: RouteInformation(
                               uri: Uri.parse(searchExploreByProfileRoute(vendor.profileOwner.getOrCrash(), ProfileTypeMarker.vendorProfile.name, vendor.brandName.value.fold((l) => 'profile', (r) => r))),

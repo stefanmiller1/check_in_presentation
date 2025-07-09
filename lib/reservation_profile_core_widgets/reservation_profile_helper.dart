@@ -66,7 +66,7 @@ List<ReservationSettingListModel> resSettingsList(BuildContext context, Activity
     ReservationSettingListModel(title: 'Add Dates to Calendar', icon: Icons.calendar_today_outlined, marker: ResSettingMarker.addCalendar),
     if (isOwner) ReservationSettingListModel(title: 'Get Receipt', icon: Icons.receipt_long_rounded, marker: ResSettingMarker.receipts),
     ReservationSettingListModel(title: 'Show Listing', icon: Icons.home_outlined, marker: ResSettingMarker.showListing),
-    if (!isOwner) ReservationSettingListModel(title: 'Leave Listing', icon: Icons.cancel_outlined, marker: ResSettingMarker.leaveReservation),
+    // if (!isOwner) ReservationSettingListModel(title: 'Leave Listing', icon: Icons.cancel_outlined, marker: ResSettingMarker.leaveReservation),
   ];
 }
 
@@ -603,7 +603,7 @@ void presentNewInstructorAttendee(BuildContext context, DashboardModel model, Re
 
 
 void presentNewVendorAttendee(BuildContext context, DashboardModel model, VendorMerchantForm? vendorForm, ListingManagerForm listingForm, ReservationItem reservation, ActivityManagerForm activity, UserProfileModel reservationOwner) {
-  if (kIsWeb) {
+  if (kIsWeb && Responsive.isMobile(context) == false) {
     showGeneralDialog(
         context: context,
         barrierDismissible: false,

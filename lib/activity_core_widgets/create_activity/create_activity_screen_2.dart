@@ -1327,12 +1327,14 @@ class _CreateReservationActivityFormWidgetState extends State<CreateReservationA
                 left: 0,
                 right: 0,
                 child: AppBar(
+                  scrolledUnderElevation: 0,
                   toolbarHeight: 90,
                   elevation: 0,
-                  backgroundColor: widget.model.paletteColor,
+                  shadowColor: Colors.transparent,
+                  backgroundColor: widget.model.webBackgroundColor,
                   centerTitle: true,
                   leading: IconButton(
-                    icon: Icon(Icons.cancel, color: widget.model.accentColor, size: 40,),
+                    icon: Icon(Icons.cancel, color: widget.model.paletteColor, size: 40,),
                     tooltip: 'Cancel',
                     onPressed: () {
                       Navigator.of(context).pop();
@@ -1340,15 +1342,15 @@ class _CreateReservationActivityFormWidgetState extends State<CreateReservationA
                   ),
                   title: Column(
                     children: [
-                      Text((_currentActivityForm.profileService.activityBackground.activityTitle.isValid() == true) ? 'Creating: ${_currentActivityForm.profileService.activityBackground.activityTitle.getOrCrash()}' : 'Create Your Activity', style: TextStyle(color: widget.model.accentColor)),
+                      Text((_currentActivityForm.profileService.activityBackground.activityTitle.isValid() == true) ? 'Creating: ${_currentActivityForm.profileService.activityBackground.activityTitle.getOrCrash()}' : 'Create Your Activity', style: TextStyle(color: widget.model.paletteColor)),
                       const SizedBox(height: 5),
-                      Text(state.reservationItem.formStatus?.name ?? FormStatus.inProgress.name, style: TextStyle(color: widget.model.accentColor,  fontSize: 14)),
+                      Text(state.reservationItem.formStatus?.name ?? FormStatus.inProgress.name, style: TextStyle(color: widget.model.disabledTextColor,  fontSize: 14)),
                     ],
                   ),
                   actions: (state.isPublishing || state.isSaving) ? [
                     Padding(
                       padding: const EdgeInsets.only(right: 24.0),
-                    child: JumpingDots(numberOfDots: 3,  color: widget.model.accentColor)
+                    child: JumpingDots(numberOfDots: 3,  color: widget.model.paletteColor)
                     )
                   ] : [
                     

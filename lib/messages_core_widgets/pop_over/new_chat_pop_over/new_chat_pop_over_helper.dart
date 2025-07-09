@@ -251,7 +251,7 @@ List<SendNewChatMessage> getPresetMessages({ReservationItem? reservation, EventM
 }
 
 void showNewMessagePopOver(BuildContext context, UserProfileModel userProfile, ReservationItem? reservationItem, EventMerchantVendorProfile? eventMerchantVendorProfile, NewMessageTypes type, DashboardModel model) {
-  if (kIsWeb &&(Responsive.isMobile(context) == false)) {
+  if (kIsWeb && (Responsive.isMobile(context) == false)) {
       showGeneralDialog(
         context: context,
         barrierDismissible: true,
@@ -259,30 +259,27 @@ void showNewMessagePopOver(BuildContext context, UserProfileModel userProfile, R
         barrierColor: model.disabledTextColor.withOpacity(0.34),
         transitionDuration: Duration(milliseconds: 350),
         pageBuilder: (BuildContext contexts, anim1, anim2) {
-          return Scaffold(
-              backgroundColor: model.webBackgroundColor,
-              body: Align(
+          return  Align(
                 alignment: Alignment.center,
-                child: Container(
-                  decoration: BoxDecoration(
-                      color: model.webBackgroundColor,
-                      borderRadius: BorderRadius.all(Radius.circular(17.5))
-                  ),
-                  width: 550,
-                  height: 800,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(17.5)),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(25)),
+                  child: Container(
+                    decoration: BoxDecoration(
+                        color: model.webBackgroundColor,
+                        borderRadius: BorderRadius.all(Radius.circular(17.5))
+                    ),
+                    width: 550,
+                    height: 800,
                     child: SendNewChatContainer(
-                      userProfile: userProfile,
-                      messageType: type,
-                      reservation: reservationItem,
-                      eventMerchantVendorProfile: eventMerchantVendorProfile,
-                      showHeader: true,
-                      model: model,
-                  )
-                ),
+                        userProfile: userProfile,
+                        messageType: type,
+                        reservation: reservationItem,
+                        eventMerchantVendorProfile: eventMerchantVendorProfile,
+                        showHeader: true,
+                        model: model,
+                )
               ),
-            )
+            ),
           );
         },
         transitionBuilder: (context, anim1, anim2, child) {
@@ -332,5 +329,52 @@ void didSelectOpRoom(BuildContext context, DashboardModel model, UserProfileMode
         }
       )
     );
+  }
+}
+
+
+void showCreateNewChatPopOver(BuildContext context, DashboardModel model) {
+  if (kIsWeb && (Responsive.isMobile(context) == false)) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'New Message',
+      barrierColor: model.disabledTextColor.withOpacity(0.34),
+      transitionDuration: Duration(milliseconds: 350),
+      pageBuilder: (BuildContext contexts, anim1, anim2) {
+        return Align(
+          alignment: Alignment.center,
+          child: ClipRRect(
+            borderRadius: BorderRadius.all(Radius.circular(25)),
+            child: Container(
+              decoration: BoxDecoration(
+                color: model.webBackgroundColor,
+                borderRadius: BorderRadius.all(Radius.circular(17.5))
+              ),
+              width: 550,
+              height: 800,
+              child: CreateNewChatContainer(
+                  model: model,
+              )
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return Transform.scale(
+          scale: anim1.value,
+          child: Opacity(
+            opacity: anim1.value,
+            child: child
+          )
+        );
+      },
+    );
+  } else {
+    Navigator.of(context).push(MaterialPageRoute(builder: (newContext) {
+        return CreateNewChatContainer(
+            model: model
+        );
+      }));
   }
 }

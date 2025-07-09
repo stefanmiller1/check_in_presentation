@@ -135,12 +135,14 @@ class _ActivityPreviewScreenState extends State<ActivityPreviewScreen> with Sing
                 case AttendeeType.vendor:
                   if (kIsWeb) {
                     Beamer.of(context).update(
-                        configuration: RouteInformation(
-                            location: '/${DashboardMarker.resSettings.name.toString()}'
-                        ),
-                        rebuild: false
+                    configuration: RouteInformation(
+                        location: reservationSettingsRoute(reservation.reservationId.getOrCrash(), SettingNavMarker.vendorForm.name)
+                    ),
+                    rebuild: true
                     );
                     context.read<ListingsSearchRequirementsBloc>().add(const ListingsSearchRequirementsEvent.currentDashboardMarker(DashboardMarker.resSettings));
+                    final SettingNavMarker navItem = getReservationSettingNavMarker(SettingNavMarker.vendorForm.name);
+                    ReservationHelperCore.currentSettingsItemModel = (subActivitySettingItems(null).isNotEmpty && subActivitySettingItems(null).where((e) => e.navItem == navItem).isNotEmpty) ? subActivitySettingItems(null).where((e) => e.navItem == navItem).first : subActivitySettingItems(null)[0];
                   } else {
                     Navigator.of(context).push(MaterialPageRoute(builder: (_) {
                       return ManageAttendeeSettingsSubContainer(
