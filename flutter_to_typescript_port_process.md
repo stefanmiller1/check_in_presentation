@@ -62,7 +62,7 @@ LegalName legalName         → string legalName
 LegalSurname? legalSurname  → string? legalSurname
 EmailAddress emailAddress  → string emailAddress
 PhoneNumber? phoneNumber    → string? phoneNumber
-DateTime createdAt          → string createdAt (ISO string)
+DateTime createdAt          → Date createdAt (JavaScript Date object)
 ```
 
 ### Step 4: Create TypeScript Interface (Exact Naming)
@@ -76,7 +76,7 @@ export interface UserProfileModel {  // ✅ EXACT name from Flutter
   emailAddress: string;               // EmailAddress.getOrCrash() → string
   phoneNumber?: string;               // PhoneNumber?.value → optional string
   profileImageUrl?: string;           // ProfileImageUrl?.value → optional string
-  dateOfBirth?: string;               // DateOfBirth? → optional ISO string
+  dateOfBirth?: Date;                 // DateOfBirth? → optional Date object
   
   // Sub-models (nested objects - exact names)
   address?: Address;                  // Address? → optional nested object
@@ -85,8 +85,8 @@ export interface UserProfileModel {  // ✅ EXACT name from Flutter
   privacySettings: PrivacySettings;   // PrivacySettings → nested object
   
   // Metadata (Firebase compatible)
-  createdAt: string;                  // DateTime → ISO string
-  updatedAt: string;                  // DateTime → ISO string
+  createdAt: Date;                    // DateTime → Date object
+  updatedAt: Date;                    // DateTime → Date object
 }
 ```
 
@@ -128,10 +128,49 @@ export interface PrivacySettings {
 }
 ```
 
-### Step 6: Firebase JSON Structure Verification
-Ensure the TypeScript model produces Firebase-compatible JSON:
+### Step 6: Firebase Date Handling Strategy
 
-```json
+#### 6.1 Firebase Date Storage Options
+Firebase can store dates in multiple formats. We'll use **Timestamp** for optimal compatibility:
+
+```typescript
+// Firebase storage formats
+// Option 1: Firestore Timestamp (RECOMMENDED)
+import { Timestamp } from 'firebase/firestore';
+
+// Option 2: ISO String (for simple compatibility)
+// Option 3: JavaScript Date (converts to Timestamp automatically)
+```
+
+#### 6.2 TypeScript Model with Date Objects
+```typescript
+// TypeScript model uses native Date objects
+export interface UserProfileModel {
+  userId: string;
+  legalName: string;
+  legalSurname?: string;
+  emailAddress: string;
+  phoneNumber?: string;
+  profileImageUrl?: string;
+  dateOfBirth?: Date;                 // JavaScript Date object
+  
+  // Sub-models
+  address?: Address;
+  socialMediaProfiles: SocialMediaProfile[];
+  accountSettings: AccountSettings;
+  privacySettings: PrivacySettings;
+  
+  // Metadata as Date objects
+  createdAt: Date;                    // JavaScript Date object
+  updatedAt: Date;                    // JavaScript Date object
+}
+```
+
+#### 6.3 Firebase Document Structure
+When stored in Firebase, dates automatically convert to Firestore Timestamps:
+
+```typescript
+// What gets stored in Firebase (automatic conversion)
 {
   "userId": "string-uuid",
   "legalName": "John",
@@ -139,7 +178,7 @@ Ensure the TypeScript model produces Firebase-compatible JSON:
   "emailAddress": "john@example.com",
   "phoneNumber": "+1234567890",
   "profileImageUrl": "https://example.com/image.jpg",
-  "dateOfBirth": "1990-01-01T00:00:00.000Z",
+  "dateOfBirth": Timestamp { seconds: 631152000, nanoseconds: 0 }, // Firebase Timestamp
   "address": {
     "street": "123 Main St",
     "city": "City",
@@ -169,8 +208,49 @@ Ensure the TypeScript model produces Firebase-compatible JSON:
     "showPhone": false,
     "showAddress": true
   },
-  "createdAt": "2024-01-01T00:00:00.000Z",
-  "updatedAt": "2024-01-01T00:00:00.000Z"
+  "createdAt": Timestamp { seconds: 1704067200, nanoseconds: 0 }, // Firebase Timestamp
+  "updatedAt": Timestamp { seconds: 1704067200, nanoseconds: 0 }  // Firebase Timestamp
+}
+```
+
+#### 6.4 Date Conversion Utilities
+```typescript
+// src/utils/date-conversion.utils.ts
+import { Timestamp } from 'firebase/firestore';
+
+export class DateConverter {
+  // Convert Firebase Timestamp to JavaScript Date
+  static timestampToDate(timestamp: Timestamp | string | Date): Date {
+    if (timestamp instanceof Date) {
+      return timestamp;
+    }
+    
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate();
+    }
+    
+    // Handle ISO string (legacy or from Flutter)
+    if (typeof timestamp === 'string') {
+      return new Date(timestamp);
+    }
+    
+    throw new Error('Invalid timestamp format');
+  }
+  
+  // Convert JavaScript Date to Firebase Timestamp
+  static dateToTimestamp(date: Date): Timestamp {
+    return Timestamp.fromDate(date);
+  }
+  
+  // Convert Flutter DateTime ISO string to JavaScript Date
+  static flutterDateTimeToDate(flutterDateTime: string): Date {
+    return new Date(flutterDateTime);
+  }
+  
+  // Convert JavaScript Date to Flutter-compatible ISO string
+  static dateToFlutterDateTime(date: Date): string {
+    return date.toISOString();
+  }
 }
 ```
 
@@ -187,7 +267,7 @@ export const UserProfileModelSchema = z.object({
   emailAddress: z.string().email(),
   phoneNumber: z.string().optional(),
   profileImageUrl: z.string().url().optional(),
-  dateOfBirth: z.string().datetime().optional(),
+  dateOfBirth: z.date().optional(),
   
   // Sub-model validation
   address: z.object({
@@ -221,8 +301,8 @@ export const UserProfileModelSchema = z.object({
     showAddress: z.boolean(),
   }),
   
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 // Type inference from Zod schema
@@ -254,49 +334,155 @@ test('Flutter data validates with TypeScript schema', () => {
 
 #### 8.2 Firebase Compatibility Check
 ```typescript
-// Test Firebase read/write compatibility
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+// Test Firebase read/write compatibility with Date objects
+import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { DateConverter } from '@/utils/date-conversion.utils';
 
 async function testFirebaseCompatibility() {
   const userData: UserProfileModel = {
     userId: "test-uuid",
     legalName: "John",
-    // ... complete user data
+    legalSurname: "Doe",
+    emailAddress: "john@example.com",
+    phoneNumber: "+1234567890",
+    dateOfBirth: new Date('1990-01-01'),    // JavaScript Date
+    address: {
+      street: "123 Main St",
+      city: "City",
+      state: "State",
+      zipCode: "12345",
+      country: "USA"
+    },
+    socialMediaProfiles: [],
+    accountSettings: {
+      notifications: true,
+      privacy: 'public',
+      language: 'en',
+      timezone: 'America/New_York'
+    },
+    privacySettings: {
+      showEmail: false,
+      showPhone: false,
+      showAddress: true
+    },
+    createdAt: new Date(),                  // JavaScript Date
+    updatedAt: new Date()                   // JavaScript Date
   };
   
-  // Write to Firebase
+  // Write to Firebase (dates auto-convert to Timestamps)
   await setDoc(doc(db, 'users', userData.userId), userData);
   
   // Read from Firebase
   const docSnap = await getDoc(doc(db, 'users', userData.userId));
   const retrievedData = docSnap.data();
   
-  // Validate retrieved data
-  const validatedData = UserProfileModelSchema.parse(retrievedData);
-  console.log('Firebase compatibility verified ✅');
+  // Convert Firebase Timestamps back to Date objects
+  const convertedData = {
+    ...retrievedData,
+    dateOfBirth: retrievedData?.dateOfBirth ? 
+      DateConverter.timestampToDate(retrievedData.dateOfBirth) : undefined,
+    createdAt: DateConverter.timestampToDate(retrievedData?.createdAt),
+    updatedAt: DateConverter.timestampToDate(retrievedData?.updatedAt)
+  };
+  
+  // Validate converted data
+  const validatedData = UserProfileModelSchema.parse(convertedData);
+  console.log('Firebase Date compatibility verified ✅');
+  
+  // Verify date integrity
+  console.log('Original createdAt:', userData.createdAt);
+  console.log('Retrieved createdAt:', validatedData.createdAt);
+  console.log('Dates match:', userData.createdAt.getTime() === validatedData.createdAt.getTime());
 }
 ```
 
-#### 8.3 Cross-Platform Data Flow Test
+#### 8.3 Cross-Platform Date Flow Test
 ```typescript
-// Verify Flutter app can read TypeScript-generated data
-async function testCrossPlatformCompatibility() {
-  // 1. TypeScript creates user data
+// Verify Flutter ↔ TypeScript date compatibility
+async function testCrossPlatformDateCompatibility() {
+  // 1. TypeScript creates user data with Date objects
   const tsUserData: UserProfileModel = {
     userId: "ts-generated-uuid",
     legalName: "Jane",
     legalSurname: "Smith",
     emailAddress: "jane@example.com",
-    // ... complete data
+    dateOfBirth: new Date('1985-05-15'),    // TypeScript Date
+    socialMediaProfiles: [],
+    accountSettings: {
+      notifications: true,
+      privacy: 'private',
+      language: 'en',
+      timezone: 'America/Los_Angeles'
+    },
+    privacySettings: {
+      showEmail: true,
+      showPhone: false,
+      showAddress: false
+    },
+    createdAt: new Date('2024-01-01T10:30:00Z'),  // TypeScript Date
+    updatedAt: new Date()                         // TypeScript Date
   };
   
-  // 2. Save to Firebase
+  // 2. Save to Firebase (auto-converts to Timestamps)
   await setDoc(doc(db, 'users', tsUserData.userId), tsUserData);
   
-  // 3. Flutter app should be able to read this data
-  // 4. Flutter UserProfileModel.fromJson() should work correctly
+  // 3. Simulate Flutter reading the data
+  const docSnap = await getDoc(doc(db, 'users', tsUserData.userId));
+  const firebaseData = docSnap.data();
   
-  console.log('Cross-platform compatibility verified ✅');
+  // 4. Convert to Flutter-compatible ISO strings
+  const flutterCompatibleData = {
+    ...firebaseData,
+    dateOfBirth: firebaseData?.dateOfBirth ? 
+      DateConverter.dateToFlutterDateTime(DateConverter.timestampToDate(firebaseData.dateOfBirth)) : null,
+    createdAt: DateConverter.dateToFlutterDateTime(DateConverter.timestampToDate(firebaseData?.createdAt)),
+    updatedAt: DateConverter.dateToFlutterDateTime(DateConverter.timestampToDate(firebaseData?.updatedAt))
+  };
+  
+  console.log('Flutter-compatible data:', flutterCompatibleData);
+  
+  // 5. Simulate Flutter writing data back as ISO strings
+  const flutterGeneratedData = {
+    userId: "flutter-generated-uuid",
+    legalName: "Bob",
+    emailAddress: "bob@example.com",
+    dateOfBirth: "1992-12-25T00:00:00.000Z",  // Flutter DateTime.toIso8601String()
+    socialMediaProfiles: [],
+    accountSettings: {
+      notifications: false,
+      privacy: "public",
+      language: "es",
+      timezone: "Europe/Madrid"
+    },
+    privacySettings: {
+      showEmail: false,
+      showPhone: true,
+      showAddress: false
+    },
+    createdAt: "2024-01-15T14:20:30.000Z",    // Flutter DateTime.toIso8601String()
+    updatedAt: "2024-01-15T14:20:30.000Z"     // Flutter DateTime.toIso8601String()
+  };
+  
+  // 6. Save Flutter data to Firebase
+  await setDoc(doc(db, 'users', flutterGeneratedData.userId), flutterGeneratedData);
+  
+  // 7. TypeScript reads Flutter data and converts to Date objects
+  const flutterDocSnap = await getDoc(doc(db, 'users', flutterGeneratedData.userId));
+  const flutterFirebaseData = flutterDocSnap.data();
+  
+  const convertedFlutterData: UserProfileModel = {
+    ...flutterFirebaseData,
+    dateOfBirth: flutterFirebaseData?.dateOfBirth ? 
+      DateConverter.flutterDateTimeToDate(flutterFirebaseData.dateOfBirth) : undefined,
+    createdAt: DateConverter.flutterDateTimeToDate(flutterFirebaseData?.createdAt),
+    updatedAt: DateConverter.flutterDateTimeToDate(flutterFirebaseData?.updatedAt)
+  };
+  
+  // 8. Validate with Zod schema
+  const validatedFlutterData = UserProfileModelSchema.parse(convertedFlutterData);
+  
+  console.log('Cross-platform Date compatibility verified ✅');
+  console.log('TypeScript → Firebase → Flutter → Firebase → TypeScript: SUCCESS');
 }
 ```
 
@@ -313,7 +499,7 @@ async function testCrossPlatformCompatibility() {
 
 ### ✅ **Type Mapping Verification**
 - [ ] Flutter value objects → TypeScript simple types
-- [ ] `DateTime` → ISO string
+- [ ] `DateTime` → JavaScript `Date` object
 - [ ] `bool` → `boolean`
 - [ ] Enums → string literals
 - [ ] Optional types properly handled
@@ -322,7 +508,8 @@ async function testCrossPlatformCompatibility() {
 - [ ] JSON structure is Firebase-friendly
 - [ ] No complex nested objects that Firebase can't handle
 - [ ] All field types are JSON-serializable
-- [ ] Dates stored as ISO strings
+- [ ] Dates stored as Firebase Timestamps (auto-conversion from JS Date)
+- [ ] Date conversion utilities handle Timestamp ↔ Date ↔ ISO string
 
 ### ✅ **Validation Integration**
 - [ ] Zod schema matches TypeScript interface exactly
@@ -335,6 +522,8 @@ async function testCrossPlatformCompatibility() {
 - [ ] TypeScript app can read Flutter-generated data
 - [ ] No data loss in round-trip conversion
 - [ ] Field names match exactly across platforms
+- [ ] Date objects preserve exact time values across platforms
+- [ ] Flutter DateTime ↔ TypeScript Date ↔ Firebase Timestamp conversion works flawlessly
 
 ---
 
@@ -349,6 +538,7 @@ src/domain/
 ├── types/
 │   └── common.types.ts                 # Shared sub-interfaces
 └── utils/
+    ├── date-conversion.utils.ts         # Date conversion utilities
     ├── flutter-compatibility.test.ts   # Compatibility tests
     └── firebase-compatibility.test.ts  # Firebase integration tests
 ```
