@@ -305,11 +305,14 @@ export const AttendeeTypeValues = {
 } as const;
 ```
 
-#### Enum Step 4: Zod Enum Validation
+#### Enum Step 4: Zod Enum Validation (ESSENTIAL for Runtime Validation)
+Zod enum validation is **critical** for runtime type safety in APIs and form validation:
+
 ```typescript
 // src/domain/schemas/attendee.schema.ts
 import { z } from 'zod';
 
+// Zod enum schema for runtime validation
 export const AttendeeTypeSchema = z.enum([
   'free',
   'tickets', 
@@ -321,13 +324,28 @@ export const AttendeeTypeSchema = z.enum([
   'interested'
 ]);
 
-// Use in larger schemas
+// Use in larger schemas for nested validation
 export const AttendeeItemSchema = z.object({
   attendeeId: z.string().uuid(),
   attendeeType: AttendeeTypeSchema,  // Validates against exact Flutter enum values
+  attendeeOwnerId: z.string().uuid(),
   // ... other fields
 });
+
+// Example API usage with validation
+export async function createAttendee(data: unknown) {
+  const validatedData = AttendeeItemSchema.parse(data);  // Runtime validation
+  // validatedData.attendeeType is now guaranteed to be a valid enum value
+  return await saveAttendee(validatedData);
+}
 ```
+
+**Why Zod enum validation is essential:**
+- ✅ **Runtime Safety**: Prevents invalid enum values from reaching your database
+- ✅ **API Validation**: Validates incoming requests contain valid enum values
+- ✅ **Form Validation**: Ensures UI forms only accept valid enum values
+- ✅ **Error Messages**: Provides clear error messages for invalid enum values
+- ✅ **Type Inference**: Maintains TypeScript type safety from validation
 
 #### Enum Step 5: Firebase Compatibility Check
 ```typescript
@@ -385,242 +403,9 @@ const attendeeData = {
 
 ---
 
-## 3. Core Domain Enums
+## 3. Domain Services & Aggregates
 
-### 3.1 User & Profile Enums
-
-```typescript
-enum ProfileTypeMarker {
-  GENERAL_PROFILE = 'generalProfile',
-  VENDOR_PROFILE = 'vendorProfile',
-  COMMUNITY_PROFILE = 'communityProfile'
-}
-
-enum AccountStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  SUSPENDED = 'suspended',
-  PENDING_VERIFICATION = 'pendingVerification'
-}
-```
-
-### 3.2 Activity & Event Enums
-
-```typescript
-enum ActivityType {
-  CLASSES_LESSONS = 'classesLessons',
-  GAME_MATCHES = 'gameMatches',
-  EXPERIENCES = 'experiences',
-  EVENTS = 'events',
-  TO_RENT = 'toRent'
-}
-
-enum ActivityStatus {
-  DRAFT = 'draft',
-  PUBLISHED = 'published',
-  ACTIVE = 'active',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled'
-}
-
-enum ReservationType {
-  SINGLE_SLOT = 'singleSlot',
-  MULTIPLE_SLOTS = 'multipleSlots',
-  RECURRING = 'recurring',
-  PASS = 'pass'
-}
-
-enum ReservationStatus {
-  PENDING = 'pending',
-  CONFIRMED = 'confirmed',
-  CANCELLED = 'cancelled',
-  COMPLETED = 'completed',
-  NO_SHOW = 'noShow'
-}
-```
-
-### 3.3 Attendee & Participation Enums
-
-```typescript
-enum AttendeeType {
-  FREE = 'free',
-  TICKETS = 'tickets',
-  PASS = 'pass',
-  VENDOR = 'vendor',
-  INSTRUCTOR = 'instructor',
-  PARTNER = 'partner',
-  ORGANIZATION = 'organization',
-  INTERESTED = 'interested'
-}
-
-enum ContactStatus {
-  REQUESTED = 'requested',
-  INVITED = 'invited',
-  JOINED = 'joined',
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  DECLINED = 'declined',
-  CANCELLED = 'cancelled'
-}
-
-enum PaymentStatus {
-  NO_STATUS = 'noStatus',
-  PENDING = 'pending',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  REFUNDED = 'refunded',
-  CANCELLED = 'cancelled'
-}
-```
-
-### 3.4 Messaging & Communication Enums
-
-```typescript
-enum MessageType {
-  TEXT = 'text',
-  IMAGE = 'image',
-  FILE = 'file',
-  SYSTEM = 'system',
-  POST = 'post'
-}
-
-enum RoomType {
-  DIRECT = 'direct',
-  GROUP = 'group',
-  CHANNEL = 'channel',
-  ACTIVITY = 'activity'
-}
-```
-
-### 3.5 Vendor & Merchant Enums
-
-```typescript
-enum VendorApplicationStatus {
-  DRAFT = 'draft',
-  SUBMITTED = 'submitted',
-  UNDER_REVIEW = 'underReview',
-  APPROVED = 'approved',
-  REJECTED = 'rejected'
-}
-
-enum ProductCategory {
-  FOOD_BEVERAGE = 'foodBeverage',
-  CRAFTS_ARTS = 'craftsArts',
-  CLOTHING_ACCESSORIES = 'clothingAccessories',
-  HEALTH_WELLNESS = 'healthWellness',
-  TECHNOLOGY = 'technology',
-  SERVICES = 'services',
-  OTHER = 'other'
-}
-```
-
----
-
-## 4. Value Objects & Complex Types
-
-### 4.1 Location & Address Value Objects
-```typescript
-interface Address {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  coordinates?: Coordinates;
-}
-
-interface Coordinates {
-  latitude: number;
-  longitude: number;
-}
-
-interface Location extends Address {
-  name?: string;
-  description?: string;
-  placeId?: string; // Google Places ID
-}
-```
-
-### 4.2 Time & Scheduling Value Objects
-```typescript
-interface TimeSlot {
-  id: string;
-  start: Date;
-  end: Date;
-  isAvailable: boolean;
-  capacity?: number;
-  bookedCount: number;
-}
-
-interface AvailabilitySettings {
-  timeZone: string;
-  operatingHours: OperatingHours[];
-  blackoutDates: DateRange[];
-  minimumBookingNotice: number; // hours
-  maximumBookingAdvance: number; // days
-}
-
-interface OperatingHours {
-  dayOfWeek: number; // 0-6
-  isOpen: boolean;
-  openTime?: string; // HH:mm format
-  closeTime?: string; // HH:mm format
-}
-```
-
-### 4.3 Pricing & Payment Value Objects
-```typescript
-interface PricingBreakdown {
-  basePrice: number;
-  taxes: number;
-  fees: number;
-  discounts: number;
-  total: number;
-  currency: string;
-}
-
-interface PaymentInformation {
-  paymentMethodId?: string;
-  paymentIntentId?: string;
-  stripeCustomerId?: string;
-  lastFourDigits?: string;
-  paymentMethod: PaymentMethod;
-}
-
-enum PaymentMethod {
-  CARD = 'card',
-  BANK_TRANSFER = 'bankTransfer',
-  DIGITAL_WALLET = 'digitalWallet',
-  CASH = 'cash'
-}
-```
-
-### 4.4 Media & File Value Objects
-```typescript
-interface MediaFile {
-  id: string;
-  url: string;
-  type: MediaType;
-  size: number;
-  filename: string;
-  alt?: string;
-  uploadedAt: Date;
-}
-
-enum MediaType {
-  IMAGE = 'image',
-  VIDEO = 'video',
-  DOCUMENT = 'document',
-  AUDIO = 'audio'
-}
-```
-
----
-
-## 5. Domain Services & Aggregates
-
-### 5.1 Activity Aggregate
+### 3.1 Activity Aggregate
 ```typescript
 class ActivityAggregate {
   private constructor(
@@ -644,7 +429,7 @@ class ActivityAggregate {
 }
 ```
 
-### 5.2 Reservation Aggregate
+### 3.2 Reservation Aggregate
 ```typescript
 class ReservationAggregate {
   private constructor(
@@ -670,7 +455,7 @@ class ReservationAggregate {
 
 ---
 
-## 9. Priority Implementation Matrix
+## 4. Priority Implementation Matrix
 
 ### High Priority (Phase 1 - Foundation)
 1. **Core Entities** - User, Activity, Reservation models
@@ -695,9 +480,9 @@ class ReservationAggregate {
 
 ---
 
-## 10. Testing Strategy
+## 5. Testing Strategy
 
-### 10.1 Domain Model Tests
+### 5.1 Domain Model Tests
 ```typescript
 // Unit tests for domain models
 describe('ActivityAggregate', () => {
@@ -718,7 +503,7 @@ describe('ActivityAggregate', () => {
 });
 ```
 
-### 10.2 Schema Validation Tests
+### 5.2 Schema Validation Tests
 ```typescript
 // Validation schema tests
 describe('ActivitySchema', () => {
@@ -746,15 +531,15 @@ describe('ActivitySchema', () => {
 
 ---
 
-## 11. Performance Considerations
+## 6. Performance Considerations
 
-### 11.1 Data Loading Strategies
+### 6.1 Data Loading Strategies
 - **Lazy Loading**: Load related entities on demand
 - **Eager Loading**: Pre-load frequently accessed relationships
 - **Pagination**: Implement cursor-based pagination for large datasets
 - **Caching**: Redis caching for frequently accessed domain objects
 
-### 11.2 Optimization Patterns
+### 6.2 Optimization Patterns
 ```typescript
 // Optimized domain queries
 interface ActivityQuery {
