@@ -41,235 +41,347 @@ src/
 
 ---
 
-## 2. Core Domain Models Analysis
+## 2. Flutter to TypeScript Model Port Process
 
-### 2.1 User & Profile Domain
+### Overview
+This section outlines the **exact process** for porting Flutter domain models from `stefanmiller/check_in_domain` to TypeScript while maintaining 100% field compatibility and Firebase JSON structure compatibility.
 
-#### **UserProfileModel**
-**Current Implementation**: Core user entity with comprehensive profile data
+### 🔒 **Port Process Rules**
+1. **Source**: All backend models live in `stefanmiller/check_in_domain`
+2. **Naming**: Do NOT change the naming of any existing models
+3. **Fields**: Capture every single value within the model
+4. **Structure**: Create sub-models contained within the primary model
+5. **Storage**: Firebase-friendly JSON structure
+6. **Verification**: TS compatibility check with Firebase and existing Flutter model
+
+---
+
+### Step-by-Step Model Port Process
+
+#### Step 1: Locate Source Model
+```bash
+# Example source location
+stefanmiller/check_in_domain/lib/domain/auth/profile_services/profile/user/user_profile_item.dart
+```
+
+#### Step 2: Analyze Flutter Model Structure
+Extract the exact field structure from the Flutter domain model:
+
 ```dart
+// Flutter Source (check_in_domain)
 class UserProfileModel {
-  final UniqueId userId;
+  final UserId userId;
   final LegalName legalName;
+  final LegalSurname? legalSurname;
   final EmailAddress emailAddress;
-  final PhoneNumber phoneNumber;
-  final ProfileImageUrl profileImageUrl;
-  final DateOfBirth dateOfBirth;
-  final Address address;
+  final PhoneNumber? phoneNumber;
+  final ProfileImageUrl? profileImageUrl;
+  final DateOfBirth? dateOfBirth;
+  
+  // Sub-models
+  final Address? address;
   final List<SocialMediaProfile> socialMediaProfiles;
   final AccountSettings accountSettings;
   final PrivacySettings privacySettings;
+  
+  // Metadata
+  final DateTime createdAt;
+  final DateTime updatedAt;
 }
 ```
 
-**Features Identified**:
-- ✅ Unique identifier management
-- ✅ Legal name and contact information
-- ✅ Profile image and media handling
-- ✅ Address and location data
-- ✅ Social media integration
-- ✅ Account and privacy settings
-- ✅ Multi-profile support (general, vendor, merchant)
+#### Step 2.1: Analyze Flutter Value Object Validators (Optional)
+Check for existing validators in Flutter value objects:
 
-**TypeScript Implementation**:
-```typescript
-interface UserProfile {
-  id: string;
-  legalName: string;
-  email: string;
-  phone?: string;
-  profileImageUrl?: string;
-  dateOfBirth?: Date;
-  address?: Address;
-  socialMediaProfiles: SocialMediaProfile[];
-  accountSettings: AccountSettings;
-  privacySettings: PrivacySettings;
-  createdAt: Date;
-  updatedAt: Date;
-}
+```bash
+# Check for validators in value objects
+stefanmiller/check_in_domain/lib/domain/auth/profile_services/profile/value_objects.dart
 ```
 
-#### **EventMerchantVendorProfile** 
-**Current Implementation**: Vendor-specific profile for marketplace participants
+Example Flutter validators to extract:
 ```dart
-class EventMerchantVendorProfile {
-  final UniqueId profileId;
-  final BusinessName businessName;
-  final BusinessDescription description;
-  final List<ProductCategory> categories;
-  final BusinessLicense license;
-  final ContactInformation contactInfo;
-  final PaymentInformation paymentInfo;
+// Flutter value object validators
+class EmailAddress {
+  static Either<ValueFailure<String>, EmailAddress> create(String input) {
+    return validateEmailAddress(input).fold(
+      (failure) => left(failure),
+      (validEmail) => right(EmailAddress._(validEmail)),
+    );
+  }
+}
+
+class LegalName {
+  static Either<ValueFailure<String>, LegalName> create(String input) {
+    return validateStringNotEmpty(input)
+        .flatMap((a) => validateSingleLine(a))
+        .flatMap((a) => validateMaxLength(a, 100))
+        .fold(
+          (failure) => left(failure),
+          (validName) => right(LegalName._(validName)),
+        );
+  }
 }
 ```
 
-**TypeScript Implementation**:
+#### Step 3: Identify Value Objects vs Simple Fields
+Map Flutter value objects to TypeScript simple types:
+
 ```typescript
-interface VendorProfile {
-  id: string;
-  businessName: string;
-  description: string;
-  categories: ProductCategory[];
-  license?: BusinessLicense;
-  contactInfo: ContactInformation;
-  paymentInfo: PaymentInformation;
-  isVerified: boolean;
-  rating: number;
-  reviewCount: number;
+// Flutter Value Object → TypeScript Simple Type
+UserId userId               → string userId
+LegalName legalName         → string legalName  
+LegalSurname? legalSurname  → string? legalSurname
+EmailAddress emailAddress  → string emailAddress
+PhoneNumber? phoneNumber    → string? phoneNumber
+DateTime createdAt          → Date createdAt (JavaScript Date object)
+```
+
+#### Step 4: Create TypeScript Interface (Exact Naming)
+```typescript
+// src/domain/entities/user-profile.entity.ts
+export interface UserProfileModel {  // ✅ EXACT name from Flutter
+  // Primary fields (exact field names)
+  userId: string;                     // UserId.getOrCrash() → string
+  legalName: string;                  // LegalName.getOrCrash() → string
+  legalSurname?: string;              // LegalSurname?.value.fold() → optional string
+  emailAddress: string;               // EmailAddress.getOrCrash() → string
+  phoneNumber?: string;               // PhoneNumber?.value → optional string
+  profileImageUrl?: string;           // ProfileImageUrl?.value → optional string
+  dateOfBirth?: Date;                 // DateOfBirth? → optional Date object
+  
+  // Sub-models (nested objects - exact names)
+  address?: Address;                  // Address? → optional nested object
+  socialMediaProfiles: SocialMediaProfile[];  // List<SocialMediaProfile> → array
+  accountSettings: AccountSettings;   // AccountSettings → nested object
+  privacySettings: PrivacySettings;   // PrivacySettings → nested object
+  
+  // Metadata (Firebase compatible)
+  createdAt: Date;                    // DateTime → Date object
+  updatedAt: Date;                    // DateTime → Date object
 }
 ```
 
-### 2.2 Activity & Event Management Domain
+#### Step 5: Create Sub-Models (Exact Structure)
+```typescript
+// Sub-model: Address (maintain exact Flutter structure)
+export interface Address {
+  street: string;                     // From Flutter Address model
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  coordinates?: {                     // Optional nested coordinate object
+    latitude: number;
+    longitude: number;
+  };
+}
+```
 
-#### **ActivityManagerForm**
-**Current Implementation**: Comprehensive activity creation and management
+#### Step 6: Firebase Date Handling Strategy
+
+Firebase can store dates in multiple formats. We'll use **Timestamp** for optimal compatibility:
+
+```typescript
+// Firebase storage formats
+// Option 1: Firestore Timestamp (RECOMMENDED)
+import { Timestamp } from 'firebase/firestore';
+
+// Date conversion utilities
+export class DateConverter {
+  // Convert Firebase Timestamp to JavaScript Date
+  static timestampToDate(timestamp: Timestamp | string | Date): Date {
+    if (timestamp instanceof Date) return timestamp;
+    if (timestamp instanceof Timestamp) return timestamp.toDate();
+    if (typeof timestamp === 'string') return new Date(timestamp);
+    throw new Error('Invalid timestamp format');
+  }
+  
+  // Convert JavaScript Date to Flutter-compatible ISO string
+  static dateToFlutterDateTime(date: Date): string {
+    return date.toISOString();
+  }
+}
+```
+
+#### Step 7: Map Flutter Validators to Zod (Optional)
+If Flutter value objects have validators, extract and map them to Zod:
+
+```typescript
+// Flutter Validator → Zod Equivalent Mapping
+const FlutterToZodMapping = {
+  validateStringNotEmpty: (field: string) => z.string().min(1, `${field} cannot be empty`),
+  validateSingleLine: (field: string) => z.string().regex(/^[^\n\r]*$/, `${field} must be single line`),
+  validateMaxLength: (field: string, max: number) => z.string().max(max, `${field} cannot exceed ${max} characters`),
+  validateEmailAddress: (field: string) => z.string().email(`Invalid ${field} format`),
+};
+```
+
+#### Step 8: Create Zod Validation Schema
+Apply Flutter validator mappings to create comprehensive Zod schema:
+
+```typescript
+// src/domain/schemas/user-profile.schema.ts
+import { z } from 'zod';
+
+export const UserProfileModelSchema = z.object({
+  userId: z.string().uuid(),
+  
+  // LegalName validators: validateStringNotEmpty + validateSingleLine + validateMaxLength(100)
+  legalName: z.string()
+    .min(1, "Legal name cannot be empty")
+    .max(100, "Legal name cannot exceed 100 characters")
+    .regex(/^[^\n\r]*$/, "Legal name must be single line"),
+  
+  // EmailAddress validators: validateEmailAddress
+  emailAddress: z.string()
+    .email("Invalid email address format"),
+  
+  phoneNumber: z.string().optional(),
+  profileImageUrl: z.string().url().optional(),
+  dateOfBirth: z.date().optional(),
+  
+  // Sub-models and metadata
+  address: AddressSchema.optional(),
+  socialMediaProfiles: z.array(SocialMediaProfileSchema),
+  accountSettings: AccountSettingsSchema,
+  privacySettings: PrivacySettingsSchema,
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export type UserProfileModel = z.infer<typeof UserProfileModelSchema>;
+```
+
+---
+
+### Flutter to TypeScript Enum Port Process
+
+#### Enum Step 1: Locate Source Enum
+```bash
+# Example enum source location
+stefanmiller/check_in_domain/lib/domain/attendee_services/attendee/attendee_type.dart
+```
+
+#### Enum Step 2: Analyze Flutter Enum Structure
+Extract the exact enum values from Flutter:
+
 ```dart
-class ActivityManagerForm {
-  final UniqueId activityFormId;
-  final ActivityType activityType;
-  final ActivityBackground activityBackground;
-  final ActivityAvailability activityAvailability;
-  final ActivityAttendance activityAttendance;
-  final RulesService rulesService;
-  final ProfileService profileService;
-  final SettingsService settingsService;
+// Flutter Source (check_in_domain)
+enum AttendeeType {
+  free,
+  tickets,
+  pass,
+  vendor,
+  instructor,
+  partner,
+  organization,
+  interested
 }
 ```
 
-**Features Identified**:
-- ✅ Multi-type activity support (classes, games, experiences, events)
-- ✅ Background information and media
-- ✅ Availability and scheduling
-- ✅ Attendee management
-- ✅ Rules and requirements
-- ✅ Pricing and payment settings
-
-**TypeScript Implementation**:
+#### Enum Step 3: Create TypeScript String Literal Union (Exact Naming)
 ```typescript
-interface Activity {
-  id: string;
-  type: ActivityType;
-  title: string;
-  description: string;
-  background: ActivityBackground;
-  availability: ActivityAvailability;
-  attendance: ActivityAttendance;
-  rules: ActivityRules;
-  pricing: ActivityPricing;
-  location: Location;
-  organizer: UserProfile;
-  status: ActivityStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}
+// src/domain/enums/attendee.enums.ts
+export type AttendeeType = 
+  | 'free'                    // AttendeeType.free → 'free'
+  | 'tickets'                 // AttendeeType.tickets → 'tickets'
+  | 'pass'                    // AttendeeType.pass → 'pass'
+  | 'vendor'                  // AttendeeType.vendor → 'vendor'
+  | 'instructor'              // AttendeeType.instructor → 'instructor'
+  | 'partner'                 // AttendeeType.partner → 'partner'
+  | 'organization'            // AttendeeType.organization → 'organization'
+  | 'interested';             // AttendeeType.interested → 'interested'
+
+// Optional: Create constants object for easy access
+export const AttendeeTypeValues = {
+  FREE: 'free' as const,
+  TICKETS: 'tickets' as const,
+  PASS: 'pass' as const,
+  VENDOR: 'vendor' as const,
+  INSTRUCTOR: 'instructor' as const,
+  PARTNER: 'partner' as const,
+  ORGANIZATION: 'organization' as const,
+  INTERESTED: 'interested' as const,
+} as const;
 ```
 
-#### **ReservationItem**
-**Current Implementation**: Booking and reservation management
-```dart
-class ReservationItem {
-  final UniqueId reservationId;
-  final UniqueId instanceId;
-  final UniqueId reservationOwnerId;
-  final ReservationType reservationType;
-  final List<TimeSlot> selectedSlots;
-  final PricingBreakdown pricing;
-  final ReservationStatus status;
-  final PaymentInformation paymentInfo;
-}
-```
-
-**TypeScript Implementation**:
+#### Enum Step 4: Zod Enum Validation
 ```typescript
-interface Reservation {
-  id: string;
-  activityId: string;
-  userId: string;
-  type: ReservationType;
-  timeSlots: TimeSlot[];
-  pricing: PricingBreakdown;
-  status: ReservationStatus;
-  paymentInfo: PaymentInformation;
-  createdAt: Date;
-  updatedAt: Date;
-}
+// src/domain/schemas/attendee.schema.ts
+import { z } from 'zod';
+
+export const AttendeeTypeSchema = z.enum([
+  'free',
+  'tickets', 
+  'pass',
+  'vendor',
+  'instructor',
+  'partner',
+  'organization',
+  'interested'
+]);
+
+// Use in larger schemas
+export const AttendeeItemSchema = z.object({
+  attendeeId: z.string().uuid(),
+  attendeeType: AttendeeTypeSchema,  // Validates against exact Flutter enum values
+  // ... other fields
+});
 ```
 
-### 2.3 Facility & Listing Management Domain
-
-#### **ListingManagerForm**
-**Current Implementation**: Facility and venue management
-```dart
-class ListingManagerForm {
-  final UniqueId listingServiceId;
-  final FacilityName facilityName;
-  final FacilityDescription description;
-  final List<SpaceOption> spaces;
-  final List<Amenity> amenities;
-  final ContactInformation contactInfo;
-  final PricingModel pricing;
-  final AvailabilitySettings availability;
-  final List<Rule> rules;
-}
-```
-
-**TypeScript Implementation**:
+#### Enum Step 5: Firebase Compatibility Check
 ```typescript
-interface Listing {
-  id: string;
-  name: string;
-  description: string;
-  spaces: Space[];
-  amenities: Amenity[];
-  contactInfo: ContactInformation;
-  pricing: PricingModel;
-  availability: AvailabilitySettings;
-  rules: Rule[];
-  location: Location;
-  owner: UserProfile;
-  images: string[];
-  status: ListingStatus;
-}
+// Verify enum values work with Firebase
+const attendeeData = {
+  attendeeId: "uuid-string",
+  attendeeType: "vendor" as AttendeeType,  // Stored as string in Firebase
+  // ...
+};
+
+// Firebase stores: { attendeeType: "vendor" }
+// Flutter reads: AttendeeType.vendor
+// TypeScript reads: "vendor" as AttendeeType
 ```
 
-### 2.4 Attendee & Participation Domain
+### Verification Checklist
 
-#### **AttendeeItem**
-**Current Implementation**: Participant management for activities
-```dart
-class AttendeeItem {
-  final UniqueId attendeeId;
-  final UniqueId attendeeOwnerId;
-  final UniqueId reservationId;
-  final AttendeeType attendeeType;
-  final ContactStatus contactStatus;
-  final PaymentStatusType paymentStatus;
-  final String cost;
-  final String paymentIntentId;
-  final EventMerchantVendorProfile? eventMerchantVendorProfile;
-  final List<TicketItem>? ticketItems;
-  final VendorMerchantForm? vendorForm;
-}
-```
+#### ✅ **Model Structure Verification**
+- [ ] Exact model name preserved (`UserProfileModel`)
+- [ ] Every Flutter field captured in TypeScript
+- [ ] Sub-models created for nested objects
+- [ ] Optional fields properly marked with `?`
+- [ ] Array types correctly mapped from `List<T>`
 
-**TypeScript Implementation**:
-```typescript
-interface Attendee {
-  id: string;
-  userId: string;
-  activityId: string;
-  type: AttendeeType;
-  contactStatus: ContactStatus;
-  paymentStatus: PaymentStatus;
-  cost: number;
-  paymentIntentId?: string;
-  vendorProfile?: VendorProfile;
-  tickets?: Ticket[];
-  vendorForm?: VendorForm;
-  applicationDate: Date;
-  approvalDate?: Date;
-}
-```
+#### ✅ **Type Mapping Verification**
+- [ ] Flutter value objects → TypeScript simple types
+- [ ] `DateTime` → JavaScript `Date` object
+- [ ] `bool` → `boolean`
+- [ ] Enums → string literals
+- [ ] Optional types properly handled
+
+#### ✅ **Firebase Compatibility**
+- [ ] JSON structure is Firebase-friendly
+- [ ] Dates stored as Firebase Timestamps (auto-conversion from JS Date)
+- [ ] Date conversion utilities handle Timestamp ↔ Date ↔ ISO string
+- [ ] Enum values stored as strings
+
+#### ✅ **Validation Integration**
+- [ ] Zod schema matches TypeScript interface exactly
+- [ ] Flutter validators mapped to equivalent Zod validations
+- [ ] Validation error messages match Flutter error semantics
+- [ ] Runtime type safety for API boundaries
+
+#### ✅ **Cross-Platform Compatibility**
+- [ ] Flutter app can read TypeScript-generated data
+- [ ] TypeScript app can read Flutter-generated data
+- [ ] No data loss in round-trip conversion
+- [ ] Field names match exactly across platforms
+- [ ] Date objects preserve exact time values across platforms
+- [ ] Flutter DateTime ↔ TypeScript Date ↔ Firebase Timestamp conversion works flawlessly
+
+---
+
+**Apply this process to each model**: `UserProfileModel`, `ReservationItem`, `AttendeeItem`, `ActivityManagerForm`, `ListingManagerForm`, `EventMerchantVendorProfile`, etc.
 
 ---
 
@@ -552,183 +664,6 @@ class ReservationAggregate {
 
   cancelReservation(reason: string): void {
     // Domain logic for cancellation
-  }
-}
-```
-
----
-
-## 6. Validation Schemas (Zod)
-
-### 6.1 User Profile Schema
-```typescript
-import { z } from 'zod';
-
-export const UserProfileSchema = z.object({
-  id: z.string().uuid(),
-  legalName: z.string().min(2).max(100),
-  email: z.string().email(),
-  phone: z.string().optional(),
-  profileImageUrl: z.string().url().optional(),
-  dateOfBirth: z.date().optional(),
-  address: AddressSchema.optional(),
-  socialMediaProfiles: z.array(SocialMediaProfileSchema),
-  accountSettings: AccountSettingsSchema,
-  privacySettings: PrivacySettingsSchema,
-  createdAt: z.date(),
-  updatedAt: z.date()
-});
-
-export type UserProfile = z.infer<typeof UserProfileSchema>;
-```
-
-### 6.2 Activity Schema
-```typescript
-export const ActivitySchema = z.object({
-  id: z.string().uuid(),
-  type: z.nativeEnum(ActivityType),
-  title: z.string().min(3).max(200),
-  description: z.string().min(10).max(2000),
-  background: ActivityBackgroundSchema,
-  availability: AvailabilitySettingsSchema,
-  attendance: ActivityAttendanceSchema,
-  rules: ActivityRulesSchema,
-  pricing: PricingModelSchema,
-  location: LocationSchema,
-  organizer: UserProfileSchema,
-  status: z.nativeEnum(ActivityStatus),
-  createdAt: z.date(),
-  updatedAt: z.date()
-});
-
-export type Activity = z.infer<typeof ActivitySchema>;
-```
-
----
-
-## 7. Migration Strategy from Flutter Domain Models
-
-### 7.1 Data Type Conversions
-```typescript
-// Flutter Dart → TypeScript conversions
-const typeMapping = {
-  'UniqueId': 'string',           // UUID strings
-  'dart.Either': 'Result<T, E>',  // Result type pattern
-  'dart.Option': 'T | null',      // Optional values
-  'DateTime': 'Date',             // JavaScript Date
-  'List<T>': 'T[]',              // Arrays
-  'Map<K,V>': 'Record<K, V>',    // Objects/Maps
-};
-```
-
-### 7.2 Value Object Pattern
-```typescript
-// Instead of Dart value objects, use branded types
-type UserId = string & { readonly brand: unique symbol };
-type Email = string & { readonly brand: unique symbol };
-
-// Factory functions for validation
-export const createUserId = (id: string): UserId => {
-  if (!isValidUUID(id)) throw new Error('Invalid user ID');
-  return id as UserId;
-};
-
-export const createEmail = (email: string): Email => {
-  if (!isValidEmail(email)) throw new Error('Invalid email');
-  return email as Email;
-};
-```
-
-### 7.3 Domain Event System
-```typescript
-// Domain events for cross-aggregate communication
-export abstract class DomainEvent {
-  public readonly occurredOn: Date = new Date();
-  public readonly aggregateId: string;
-  
-  constructor(aggregateId: string) {
-    this.aggregateId = aggregateId;
-  }
-}
-
-export class ActivityCreatedEvent extends DomainEvent {
-  constructor(
-    aggregateId: string,
-    public readonly activity: Activity
-  ) {
-    super(aggregateId);
-  }
-}
-```
-
----
-
-## 8. Next.js Implementation Recommendations
-
-### 8.1 Repository Pattern
-```typescript
-// Domain repository interfaces
-export interface UserRepository {
-  findById(id: UserId): Promise<UserProfile | null>;
-  save(user: UserProfile): Promise<void>;
-  findByEmail(email: Email): Promise<UserProfile | null>;
-}
-
-export interface ActivityRepository {
-  findById(id: string): Promise<Activity | null>;
-  save(activity: Activity): Promise<void>;
-  findByLocation(location: Location): Promise<Activity[]>;
-  findByDateRange(start: Date, end: Date): Promise<Activity[]>;
-}
-```
-
-### 8.2 Use Case Layer
-```typescript
-// Application use cases
-export class CreateActivityUseCase {
-  constructor(
-    private activityRepo: ActivityRepository,
-    private userRepo: UserRepository,
-    private eventBus: EventBus
-  ) {}
-
-  async execute(command: CreateActivityCommand): Promise<Activity> {
-    // Validate permissions
-    const organizer = await this.userRepo.findById(command.organizerId);
-    if (!organizer) throw new Error('Organizer not found');
-
-    // Create activity aggregate
-    const activity = ActivityAggregate.create(command.activityData);
-    
-    // Save and publish events
-    await this.activityRepo.save(activity.activity);
-    await this.eventBus.publish(new ActivityCreatedEvent(activity.activity.id, activity.activity));
-    
-    return activity.activity;
-  }
-}
-```
-
-### 8.3 API Layer Integration
-```typescript
-// Next.js API route with domain validation
-import { NextRequest, NextResponse } from 'next/server';
-import { ActivitySchema } from '@/domain/schemas';
-
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const activityData = ActivitySchema.parse(body);
-    
-    const useCase = container.get<CreateActivityUseCase>('CreateActivityUseCase');
-    const activity = await useCase.execute({ activityData });
-    
-    return NextResponse.json(activity, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ errors: error.errors }, { status: 400 });
-    }
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 ```
