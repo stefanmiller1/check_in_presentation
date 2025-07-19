@@ -1,8 +1,12 @@
-# Check-In Application: Eliminating Flutter BLoC Complexity
-## Why BLoC Pattern Should NOT Be Ported to TypeScript/Next.js
+# Check-In Application: ELIMINATED - Not Ported
+## Decision: Void the Entire Flutter BLoC Application Layer
 
 ### Executive Summary
-The `check_in_application` package implements an overly complex Flutter BLoC (Business Logic Component) architecture that should be **completely eliminated** in the Next.js port. This analysis demonstrates why BLoC patterns are unnecessary in TypeScript/React and provides a strategy for achieving the same functionality with dramatically simpler, native Next.js/React patterns.
+**DECISION**: The `check_in_application` package will be **completely voided** and not ported to the TypeScript/Next.js implementation. The entire Flutter BLoC (Business Logic Component) architecture is unnecessary complexity in the React ecosystem and will be replaced with native Next.js/React patterns.
+
+**RATIONALE**: BLoC patterns solve Flutter-specific problems that don't exist in React/TypeScript. Porting this layer would create anti-patterns and unnecessary complexity.
+
+**RESULT**: 90% less state management code, standard React patterns, better performance.
 
 ---
 
@@ -552,25 +556,50 @@ function usePaymentStatus(paymentId: string) {
 
 ---
 
-## 8. Implementation Roadmap
+## 8. Implementation Strategy: Direct Domain → UI
 
-### Phase 1: Foundation (2-3 weeks)
+### What We're NOT Building
+- ❌ No BLoC layer
+- ❌ No complex event/state systems  
+- ❌ No stream controllers
+- ❌ No application services layer
+- ❌ No Flutter-style dependency injection
+
+### What We ARE Building
+- ✅ Direct domain model usage in components
+- ✅ Server Components for data fetching
+- ✅ Server Actions for mutations
+- ✅ Simple React hooks for local state
+- ✅ TanStack Query for server state (when needed)
+
+### Simplified Architecture
+```
+Flutter Architecture (COMPLEX):
+Domain → Application (BLoC) → Presentation → UI
+
+Next.js Architecture (SIMPLE):
+Domain → UI Components (with Server Components/Actions)
+```
+
+### Implementation Phases
+
+#### Phase 1: Foundation (1-2 weeks)
 1. Set up Next.js App Router structure
-2. Implement basic authentication with Zustand
-3. Create TanStack Query setup
-4. Build first Server Component + Server Action flow
+2. Port domain models (following our established process)
+3. Create first Server Component + Server Action flow
+4. Skip application layer entirely
 
-### Phase 2: Core Features (4-6 weeks)
-1. User profile management (eliminate user BLoCs)
-2. Activity creation/editing (eliminate form BLoCs)
-3. Reservation system (eliminate booking BLoCs)
-4. Basic real-time features with polling
+#### Phase 2: Core Features (3-4 weeks)
+1. User profile pages (direct domain → UI)
+2. Activity creation forms (React Hook Form + Server Actions)
+3. Reservation system (Server Components + optimistic updates)
+4. Real-time features with polling/WebSocket
 
-### Phase 3: Advanced Features (3-4 weeks)
-1. Real-time notifications with WebSocket
-2. Payment flow with Stripe webhooks
-3. Advanced caching strategies
-4. Performance optimization
+#### Phase 3: Polish (1-2 weeks)
+1. Performance optimization
+2. Advanced caching with Next.js
+3. Error handling and loading states
+4. Testing simple React components
 
 ---
 
