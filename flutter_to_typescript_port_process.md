@@ -23,7 +23,7 @@ This document outlines the **exact process** for porting Flutter domain models f
 ### Step 1: Locate Source Model
 ```bash
 # Source location
-stefanmiller/check_in_domain/lib/models/user_profile_model.dart
+stefanmiller/check_in_domain/lib/domain/auth/profile_services/profile/user/user_profile_item.dart
 ```
 
 ### Step 2: Analyze Flutter Model Structure
@@ -49,6 +49,39 @@ class UserProfileModel {
   // Metadata
   final DateTime createdAt;
   final DateTime updatedAt;
+}
+```
+
+### Step 2.1: Analyze Flutter Value Object Validators (Optional)
+Check for existing validators in Flutter value objects:
+
+```bash
+# Check for validators in value objects
+stefanmiller/check_in_domain/lib/domain/auth/profile_services/profile/value_objects.dart
+```
+
+Example Flutter validators to extract:
+```dart
+// Flutter value object validators
+class EmailAddress {
+  static Either<ValueFailure<String>, EmailAddress> create(String input) {
+    return validateEmailAddress(input).fold(
+      (failure) => left(failure),
+      (validEmail) => right(EmailAddress._(validEmail)),
+    );
+  }
+}
+
+class LegalName {
+  static Either<ValueFailure<String>, LegalName> create(String input) {
+    return validateStringNotEmpty(input)
+        .flatMap((a) => validateSingleLine(a))
+        .flatMap((a) => validateMaxLength(a, 100))
+        .fold(
+          (failure) => left(failure),
+          (validName) => right(LegalName._(validName)),
+        );
+  }
 }
 ```
 
@@ -254,18 +287,84 @@ export class DateConverter {
 }
 ```
 
-### Step 7: Create Zod Validation Schema
+### Step 7: Map Flutter Validators to Zod (Optional)
+If Flutter value objects have validators, extract and map them to Zod:
+
+#### 7.1 Extract Flutter Validation Rules
+```dart
+// From stefanmiller/check_in_domain/lib/domain/auth/profile_services/profile/value_objects.dart
+
+// EmailAddress validation
+validateEmailAddress(String input) {
+  const emailRegex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+  if (RegExp(emailRegex).hasMatch(input)) {
+    return right(input);
+  } else {
+    return left(ValueFailure.invalidEmail(failedValue: input));
+  }
+}
+
+// LegalName validation chain
+validateStringNotEmpty(String input) => input.isNotEmpty ? right(input) : left(ValueFailure.empty(failedValue: input));
+validateSingleLine(String input) => !input.contains('\n') ? right(input) : left(ValueFailure.multiline(failedValue: input));
+validateMaxLength(String input, int maxLength) => input.length <= maxLength ? right(input) : left(ValueFailure.exceedingLength(failedValue: input, max: maxLength));
+```
+
+#### 7.2 Create Flutter-to-Zod Validation Mapping
+```typescript
+// Flutter Validator → Zod Equivalent Mapping
+const FlutterToZodMapping = {
+  // String validations
+  validateStringNotEmpty: (field: string) => z.string().min(1, `${field} cannot be empty`),
+  validateSingleLine: (field: string) => z.string().regex(/^[^\n\r]*$/, `${field} must be single line`),
+  validateMaxLength: (field: string, max: number) => z.string().max(max, `${field} cannot exceed ${max} characters`),
+  
+  // Email validations  
+  validateEmailAddress: (field: string) => z.string().email(`Invalid ${field} format`),
+  
+  // Phone validations (if they exist)
+  validatePhoneNumber: (field: string) => z.string().regex(/^\+?[1-9]\d{1,14}$/, `Invalid ${field} format`),
+  
+  // URL validations
+  validateUrl: (field: string) => z.string().url(`Invalid ${field} format`),
+};
+```
+
+### Step 8: Create Zod Validation Schema
+Apply Flutter validator mappings to create comprehensive Zod schema:
+
 ```typescript
 // src/domain/schemas/user-profile.schema.ts
 import { z } from 'zod';
 
-// Zod schema matching EXACT TypeScript interface
+// Flutter validator mapping to Zod:
+// validateEmailAddress(input) → z.string().email()
+// validateStringNotEmpty(input) → z.string().min(1)
+// validateSingleLine(input) → z.string().regex(/^[^\n\r]*$/)
+// validateMaxLength(input, 100) → z.string().max(100)
+
 export const UserProfileModelSchema = z.object({
   userId: z.string().uuid(),
-  legalName: z.string().min(1).max(100),
-  legalSurname: z.string().max(100).optional(),
-  emailAddress: z.string().email(),
+  
+  // LegalName validators: validateStringNotEmpty + validateSingleLine + validateMaxLength(100)
+  legalName: z.string()
+    .min(1, "Legal name cannot be empty")
+    .max(100, "Legal name cannot exceed 100 characters")
+    .regex(/^[^\n\r]*$/, "Legal name must be single line"),
+  
+  // LegalSurname validators: validateSingleLine + validateMaxLength(100)
+  legalSurname: z.string()
+    .max(100, "Legal surname cannot exceed 100 characters")
+    .regex(/^[^\n\r]*$/, "Legal surname must be single line")
+    .optional(),
+  
+  // EmailAddress validators: validateEmailAddress
+  emailAddress: z.string()
+    .email("Invalid email address format"),
+  
+  // PhoneNumber validators (if any exist in Flutter value objects)
   phoneNumber: z.string().optional(),
+  
   profileImageUrl: z.string().url().optional(),
   dateOfBirth: z.date().optional(),
   
@@ -309,9 +408,9 @@ export const UserProfileModelSchema = z.object({
 export type UserProfileModel = z.infer<typeof UserProfileModelSchema>;
 ```
 
-### Step 8: Compatibility Verification
+### Step 9: Compatibility Verification
 
-#### 8.1 Flutter → TypeScript Compatibility Check
+#### 9.1 Flutter → TypeScript Compatibility Check
 ```typescript
 // src/utils/flutter-compatibility.test.ts
 import { UserProfileModelSchema } from '@/domain/schemas/user-profile.schema';
@@ -332,7 +431,7 @@ test('Flutter data validates with TypeScript schema', () => {
 });
 ```
 
-#### 8.2 Firebase Compatibility Check
+#### 9.2 Firebase Compatibility Check
 ```typescript
 // Test Firebase read/write compatibility with Date objects
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
@@ -396,7 +495,7 @@ async function testFirebaseCompatibility() {
 }
 ```
 
-#### 8.3 Cross-Platform Date Flow Test
+#### 9.3 Cross-Platform Date Flow Test
 ```typescript
 // Verify Flutter ↔ TypeScript date compatibility
 async function testCrossPlatformDateCompatibility() {
@@ -514,6 +613,8 @@ async function testCrossPlatformDateCompatibility() {
 ### ✅ **Validation Integration**
 - [ ] Zod schema matches TypeScript interface exactly
 - [ ] All validations appropriate for field types
+- [ ] Flutter validators mapped to equivalent Zod validations
+- [ ] Validation error messages match Flutter error semantics
 - [ ] Runtime type safety for API boundaries
 - [ ] Error handling for invalid data
 
