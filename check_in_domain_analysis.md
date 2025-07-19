@@ -399,6 +399,37 @@ const attendeeData = {
 
 ---
 
+### File Organization for Models and Enums
+
+```
+src/domain/
+├── entities/
+│   ├── user-profile.entity.ts          # UserProfileModel interface
+│   ├── attendee-item.entity.ts         # AttendeeItem interface
+│   ├── reservation-item.entity.ts      # ReservationItem interface
+│   ├── activity-manager-form.entity.ts # ActivityManagerForm interface
+│   └── vendor-profile.entity.ts        # EventMerchantVendorProfile interface
+├── enums/
+│   ├── attendee.enums.ts               # AttendeeType, ContactStatus
+│   ├── activity.enums.ts               # ActivityType, ReservationStatus
+│   ├── payment.enums.ts                # PaymentStatus, PaymentMethod
+│   └── user.enums.ts                   # ProfileTypeMarker, AccountStatus
+├── schemas/
+│   ├── user-profile.schema.ts          # UserProfileModelSchema (Zod)
+│   ├── attendee.schema.ts              # AttendeeItemSchema + AttendeeTypeSchema
+│   ├── reservation.schema.ts           # ReservationItemSchema (Zod)
+│   └── activity.schema.ts              # ActivityManagerFormSchema (Zod)
+├── types/
+│   ├── common.types.ts                 # Shared interfaces (Address, ContactInfo)
+│   └── api.types.ts                    # API request/response types
+└── utils/
+    ├── date-conversion.utils.ts        # Firebase Date conversion utilities
+    ├── flutter-compatibility.test.ts   # Cross-platform compatibility tests
+    └── firebase-compatibility.test.ts  # Firebase integration tests
+```
+
+---
+
 **Apply this process to each model**: `UserProfileModel`, `ReservationItem`, `AttendeeItem`, `ActivityManagerForm`, `ListingManagerForm`, `EventMerchantVendorProfile`, etc.
 
 ---
