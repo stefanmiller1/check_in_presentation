@@ -251,46 +251,42 @@ function ActivitySettingsForm() {
 }
 ```
 
-### 3.2 Real-time Data Migration
+### 3.2 Real-time Data: Application vs Facade Layer Separation
 
-#### **Flutter BLoC Watcher Pattern**
+#### **Flutter BLoC Watcher (Application Layer)**
 ```dart
-// Flutter: Complex stream-based watcher
+// Flutter: BLoC handles both network AND state management
 class StripePaymentWatcherBloc extends Bloc<StripePaymentWatcherEvent, StripePaymentWatcherState> {
-  // Stream subscriptions, event dispatching, state management
-  // Complex cleanup and memory management
+  // MIXED CONCERNS:
+  // 1. Firebase/Stripe network calls (should be in facade)
+  // 2. Stream subscriptions (should be in facade)  
+  // 3. State management (unnecessary in React)
+  // 4. Event dispatching (unnecessary in React)
 }
 ```
 
-#### **React Query + Subscriptions Pattern (Simplified)**
+#### **React: Proper Separation of Concerns**
 ```typescript
-// React: Simple real-time data with TanStack Query
-function usePaymentStatus(paymentIntentId: string) {
-  return useQuery({
+// The NETWORK LOGIC belongs in check_in_facade port:
+// - Firebase real-time subscriptions
+// - Stripe webhook handling  
+// - WebSocket connections
+// - API polling logic
+
+// The APPLICATION LAYER (this file) becomes just:
+function PaymentStatusComponent({ paymentIntentId }: { paymentIntentId: string }) {
+  // Simple hook that uses facade's network functions
+  const { data: paymentStatus, isLoading } = useQuery({
     queryKey: ['payment-status', paymentIntentId],
-    queryFn: () => fetchPaymentStatus(paymentIntentId),
-    refetchInterval: 2000, // Poll every 2 seconds
-    enabled: !!paymentIntentId
+    queryFn: () => getPaymentStatus(paymentIntentId), // facade function
+    refetchInterval: 2000
   });
+
+  if (isLoading) return <div>Checking payment...</div>;
+  return <div>Payment Status: {paymentStatus}</div>;
 }
 
-// Or with WebSocket/SSE for true real-time
-function usePaymentStatusRealtime(paymentIntentId: string) {
-  const [status, setStatus] = useState<PaymentStatus>('pending');
-  
-  useEffect(() => {
-    const eventSource = new EventSource(`/api/payments/${paymentIntentId}/stream`);
-    
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      setStatus(data.status);
-    };
-    
-    return () => eventSource.close();
-  }, [paymentIntentId]);
-  
-  return status;
-}
+// NOTE: The actual real-time implementation details belong in check_in_facade analysis!
 ```
 
 ### 3.3 Global State Migration
@@ -640,3 +636,29 @@ By **completely avoiding** the BLoC pattern and using native React/Next.js patte
 4. **Use standard React patterns** for state management
 
 The Flutter BLoC complexity exists because Flutter needed to solve state management problems. **React solved these problems natively from the beginning** - so we should use React's solutions, not recreate Flutter's workarounds.
+
+---
+
+## Important Note: Separation of Concerns
+
+This document focuses on **eliminating the application/state management layer**. However, the network/data logic currently mixed into Flutter BLoCs needs to be properly separated:
+
+### **check_in_application** (THIS DOCUMENT - VOIDED)
+- ❌ BLoC event/state management (eliminated)
+- ❌ Complex stream controllers (eliminated)  
+- ❌ Application services (eliminated)
+
+### **check_in_facade** (SEPARATE ANALYSIS NEEDED)
+- ✅ Firebase real-time subscriptions
+- ✅ Stripe webhook handling
+- ✅ API client implementations
+- ✅ Network retry logic
+- ✅ Authentication handling
+
+### **UI Components** (SIMPLE & DIRECT)
+- ✅ Use facade functions directly
+- ✅ Simple React hooks for local state
+- ✅ TanStack Query for server state caching
+- ✅ Standard React patterns
+
+The real-time data examples in section 3.2 are simplified - the actual implementation details for Firebase/Stripe integration belong in the **check_in_facade port analysis**.
